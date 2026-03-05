@@ -8,7 +8,7 @@
     <style>
         body { 
             overflow: hidden; 
-            touch-action: pan-y;
+            touch-action: none; 
             background-color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
         }
@@ -49,47 +49,35 @@
             border-radius: 50%;
         }
 
-        .cell-info-wrapper {
+        #searchContainer {
+            position: relative;
+            height: 48px;
             display: flex;
-            flex-direction: column;
-            gap: 1px;
-            margin-top: 4px;
-            width: 100%;
-            flex-grow: 1;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
         }
-        .cell-title { font-size: 10px; font-weight: 800; color: #1e293b; line-height: 1.2; word-break: break-all; }
-        .cell-time { font-size: 8px; font-weight: 500; color: #64748b; line-height: 1; margin-bottom: 2px; }
-        .cell-hours { font-size: 8px; font-weight: 600; color: #3b82f6; line-height: 1; }
-        .cell-salary { font-size: 10px; font-weight: 900; color: #0f172a; line-height: 1.2; margin-top: 2px; }
-        .cell-note { font-size: 7px; color: #94a3b8; line-height: 1.2; border-top: 1px solid #f1f5f9; padding-top: 3px; margin-top: auto; }
 
-        .ios-switch { position: relative; display: inline-block; width: 44px; height: 26px; }
-        .ios-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9e9ea; transition: .3s; border-radius: 26px; }
-        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        input:checked + .slider { background-color: #34c759; }
-        input:checked + .slider:before { transform: translateX(18px); }
-
-        /* 修復後的搜尋欄樣式 */
         #searchWrapper { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            width: 36px; 
-            height: 36px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            width: 44px; 
+            height: 44px;
             overflow: hidden; 
             display: flex; 
             align-items: center; 
             background-color: #f1f5f9;
             border-radius: 9999px;
             position: relative;
-            z-index: 60;
+            flex-shrink: 0;
+            border: 1px solid #e2e8f0;
         }
+        
         #searchWrapper.active { 
-            width: 100%; 
+            flex-grow: 1;
+            width: 100%;
             background-color: #f1f5f9; 
-            position: absolute; 
-            left: 0; 
-            right: 0; 
         }
+
         #searchInput { 
             opacity: 0; 
             transition: opacity 0.2s; 
@@ -97,20 +85,41 @@
             font-size: 14px; 
             border: none; 
             background: transparent; 
-            padding: 0 40px; 
+            padding: 0 44px; 
             height: 100%;
+            display: none;
         }
-        #searchWrapper.active #searchInput { opacity: 1; }
         
-        #clearSearchBtn {
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
+        #searchWrapper.active #searchInput { 
+            opacity: 1; 
+            display: block;
         }
-        #searchWrapper.active #clearSearchBtn {
-            opacity: 1;
-            pointer-events: auto;
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f5f9;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            flex-shrink: 0;
         }
+        
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            color: #64748b;
+        }
+
+        .ios-switch { position: relative; display: inline-block; width: 44px; height: 26px; }
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9e9ea; transition: .3s; border-radius: 26px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        input:checked + .slider { background-color: #34c759; }
+        input:checked + .slider:before { transform: translateX(18px); }
 
         .picker-container {
             position: relative; height: 120px; overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -186,48 +195,52 @@
             </button>
             <div class="flex flex-col items-center">
                 <h1 id="yearDisplay" onclick="toggleView()" class="text-xl font-black text-slate-900 cursor-pointer hover:text-blue-600 transition-colors">2026年</h1>
-                <h2 id="monthDisplay" class="text-sm font-black text-blue-500">3月</h2>
+                <h2 id="monthDisplay" class="text-sm font-black text-blue-500">2月</h2>
             </div>
             <button onclick="changeDate(1)" class="p-2 text-slate-400 active:bg-slate-50 rounded-full transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
             </button>
         </div>
 
-        <!-- Action Bar -->
-        <div class="relative flex items-center justify-between px-1 h-10 mb-2">
-            <!-- Search Container -->
+        <div id="searchContainer" class="px-1 mb-2">
+            <!-- Search Wrapper -->
             <div id="searchWrapper">
-                <button onclick="openSearch()" class="absolute left-0 w-9 h-9 flex items-center justify-center text-slate-500 z-10">
+                <button onclick="openSearch()" class="absolute left-0 w-11 h-11 flex items-center justify-center text-slate-500 z-10">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
-                <input type="text" id="searchInput" oninput="execSearch()" onblur="handleSearchBlur()" placeholder="搜尋紀錄標題或備註..." class="font-bold outline-none">
-                <button onclick="closeSearch()" id="clearSearchBtn" class="absolute right-0 w-9 h-9 flex items-center justify-center text-slate-400 z-10">
+                <input type="text" id="searchInput" oninput="execSearch()" onblur="handleSearchBlur()" placeholder="搜尋紀錄標題..." class="font-bold outline-none">
+                <button onclick="closeSearch()" id="clearSearchBtn" class="absolute right-0 w-11 h-11 flex items-center justify-center text-slate-400 z-10 hidden">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <div id="centerActions" class="flex justify-center items-center flex-grow transition-opacity">
-                <button id="todayBtn" onclick="goToToday()" class="px-6 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black border border-slate-900 uppercase tracking-widest transition-all shadow-md active:scale-95">Today</button>
+            <!-- Today Button Group (Hidden when search active) -->
+            <div id="centerActions" class="flex-grow flex justify-center items-center">
+                <button id="todayBtn" onclick="goToToday()" class="px-8 py-2.5 bg-[#0f172a] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Today</button>
             </div>
 
-            <button id="settingsBtn" onclick="toggleSettings()" class="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-600 rounded-full border border-slate-200 transition-opacity">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <!-- Settings Button -->
+            <button id="settingsBtn" onclick="toggleSettings()" class="icon-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
             </button>
         </div>
 
-        <div id="statsBar" class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-100 p-4 rounded-2xl mt-4 shadow-sm">
-            <div class="border-r border-slate-200">
+        <div id="statsBar" class="grid grid-cols-2 gap-3 bg-white border border-slate-100 p-4 rounded-[1.5rem] mt-4 shadow-sm">
+            <div class="border-r border-slate-100 pr-2">
                 <p id="labelSalary" class="text-[9px] uppercase text-slate-400 font-black mb-1">預估本月薪資</p>
                 <p id="totalSalaryNet" class="text-2xl font-black text-blue-600 leading-none">$0</p>
             </div>
-            <div class="pl-3">
+            <div class="pl-2">
                 <p id="labelHours" class="text-[9px] uppercase text-slate-400 font-black mb-1">本月累計工時</p>
-                <p id="totalHoursNet" class="text-xl font-black text-slate-800 leading-none">0 <span class="text-[10px] font-normal opacity-50">hr</span></p>
+                <p id="totalHoursNet" class="text-2xl font-black text-slate-800 leading-none">0.0 <span class="text-[10px] font-normal opacity-50">hr</span></p>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <div class="relative flex-grow overflow-hidden" id="mainViewArea">
         <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-3 rounded-b-[2rem] border-b border-slate-100"></div>
         <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar">
@@ -255,7 +268,7 @@
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-7 my-auto transform transition-all">
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 id="modalDate" class="text-2xl font-black text-slate-900">2026/03/05</h2>
+                    <h2 id="modalDate" class="text-2xl font-black text-slate-900">2026/02/05</h2>
                     <span id="holidayTag" class="hidden inline-block px-3 py-1 bg-red-100 text-red-600 text-[10px] font-black rounded-full mt-2 uppercase tracking-wide">國定假日 2x</span>
                 </div>
                 <button onclick="closeModal()" class="p-2 bg-slate-100 rounded-full text-slate-400 active:scale-90 transition">
@@ -340,6 +353,7 @@
     
     let touchStartX = 0;
     let touchEndX = 0;
+    let pinchStartDist = 0;
     const swipeThreshold = 50;
 
     let storageData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { 
@@ -452,11 +466,14 @@
         pickers.eH = new iOSPicker('endHourPicker', hours, 18, () => updatePreview());
         pickers.eM = new iOSPicker('endMinutePicker', minutes, 0, () => updatePreview());
         renderCalendar();
-        setupSwipeEvents();
+        setupGestureEvents();
     }
 
-    function toggleView() {
-        isYearView = !isYearView;
+    function toggleView(forceView) {
+        if (forceView === 'year') isYearView = true;
+        else if (forceView === 'month') isYearView = false;
+        else isYearView = !isYearView;
+
         document.getElementById('monthView').classList.toggle('hidden', isYearView);
         document.getElementById('yearView').classList.toggle('hidden', !isYearView);
         document.getElementById('navHeader').classList.toggle('hidden', isYearView);
@@ -534,12 +551,11 @@
             if (data) {
                 const mult = isH ? 2 : 1;
                 const totalPay = Math.round(data.hours * data.rate * mult);
-                infoHtml = `<div class="cell-info-wrapper">`;
-                if (s.showTitle !== false) infoHtml += `<div class="cell-title">${data.title}</div>`;
-                if (s.showTime === true) infoHtml += `<div class="cell-time">${data.startTime}-${data.endTime}</div>`;
-                if (s.showHours !== false) infoHtml += `<div class="cell-hours">${data.hours.toFixed(1)}h</div>`;
-                if (s.showSalary !== false) infoHtml += `<div class="cell-salary">$${totalPay.toLocaleString()}</div>`;
-                if (s.showNote === true && data.note) infoHtml += `<div class="cell-note">${data.note}</div>`;
+                infoHtml = `<div class="cell-info-wrapper flex flex-col gap-1 mt-1">`;
+                if (s.showTitle !== false) infoHtml += `<div class="text-[9px] font-black leading-tight truncate">${data.title}</div>`;
+                if (s.showTime === true) infoHtml += `<div class="text-[7px] text-slate-400 font-bold">${data.startTime}-${data.endTime}</div>`;
+                if (s.showHours !== false) infoHtml += `<div class="text-[8px] text-blue-500 font-black">${data.hours.toFixed(1)}h</div>`;
+                if (s.showSalary !== false) infoHtml += `<div class="text-[10px] font-black text-slate-900">$${totalPay.toLocaleString()}</div>`;
                 infoHtml += `</div>`;
             }
             
@@ -561,12 +577,13 @@
             for (let d = 1; d <= dim; d++) {
                 const ds = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const hasR = !!workData[ds], isT = ds === todayStr, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(year,m,d).getDay());
-                let cls = 'text-[7px] h-3.5 w-3.5 flex items-center justify-center ';
-                if (isT) cls += 'bg-blue-500 text-white rounded-full'; else if (hasR) cls += 'bg-slate-200 text-slate-900 rounded-sm'; else if (isH) cls += 'text-red-500 font-black'; else if (isW) cls += 'text-red-300'; else cls += 'text-slate-300';
-                h += `<div class="${cls}">${d}</div>`;
+                let baseCls = 'text-[7px] h-3.5 w-3.5 flex items-center justify-center ';
+                let textCls = isH ? 'text-red-500 font-black' : (isW ? 'text-red-300 font-bold' : (isT ? 'text-white' : (hasR ? 'text-slate-900 font-bold' : 'text-slate-300')));
+                let bgCls = isT ? 'bg-blue-500 rounded-full' : (hasR ? 'bg-slate-200 rounded-sm' : '');
+                h += `<div class="${baseCls} ${bgCls} ${textCls}">${d}</div>`;
             }
             mDiv.innerHTML = h + `</div>`; 
-            mDiv.onclick = () => { currentDate.setMonth(m); toggleView(); };
+            mDiv.onclick = () => { currentDate.setMonth(m); toggleView('month'); };
             container.appendChild(mDiv);
         }
     }
@@ -585,7 +602,7 @@
         }, 150);
     }
     
-    function goToToday() { currentDate = new Date(); if (isYearView) toggleView(); renderCalendar(); }
+    function goToToday() { currentDate = new Date(); if (isYearView) toggleView('month'); renderCalendar(); }
 
     function toggleBreakInput(forceState) {
         const btn = document.getElementById('breakBtn'), wrap = document.getElementById('breakInputWrapper');
@@ -611,13 +628,10 @@
         document.getElementById('breakMinutes').value = data.breakMinutes || 0;
         document.getElementById('inputNote').value = data.note || "";
         toggleBreakInput((data.breakMinutes || 0) > 0);
-        
         const hName = dynamicHolidays[dateStr], tag = document.getElementById('holidayTag');
         if (hName) { tag.innerText = `${hName} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
-        
         const [sh, sm] = data.startTime.split(':').map(Number), [eh, em] = data.endTime.split(':').map(Number);
         pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
-        
         updatePreview(); 
         document.getElementById('editModal').classList.replace('hidden', 'flex');
     }
@@ -653,20 +667,29 @@
         document.getElementById('totalSalaryNet').innerText = `$${Math.round(sal).toLocaleString()}`;
     }
 
-    /* 修復搜尋功能邏輯 */
     function openSearch() { 
-        document.getElementById('searchWrapper').classList.add('active'); 
-        document.getElementById('centerActions').style.opacity = "0"; 
-        document.getElementById('settingsBtn').style.opacity = "0"; 
-        document.getElementById('settingsBtn').style.pointerEvents = "none";
-        setTimeout(() => document.getElementById('searchInput').focus(), 50); 
+        // 核心修正：將 Today 按鈕與設定按鈕設為 hidden，讓搜尋欄能 flex-grow 到最右側
+        document.getElementById('centerActions').classList.add('hidden'); 
+        document.getElementById('settingsBtn').classList.add('hidden'); 
+        
+        const wrapper = document.getElementById('searchWrapper');
+        wrapper.classList.add('active'); 
+        
+        document.getElementById('clearSearchBtn').classList.remove('hidden');
+        setTimeout(() => {
+            const input = document.getElementById('searchInput');
+            input.focus();
+        }, 50); 
     }
 
     function closeSearch() { 
         document.getElementById('searchWrapper').classList.remove('active'); 
-        document.getElementById('centerActions').style.opacity = "1"; 
-        document.getElementById('settingsBtn').style.opacity = "1"; 
-        document.getElementById('settingsBtn').style.pointerEvents = "auto";
+        
+        // 恢復按鈕顯示
+        document.getElementById('centerActions').classList.remove('hidden'); 
+        document.getElementById('settingsBtn').classList.remove('hidden'); 
+        
+        document.getElementById('clearSearchBtn').classList.add('hidden');
         document.getElementById('searchInput').value = ''; 
         document.getElementById('searchResultsOverlay').classList.add('hidden'); 
     }
@@ -692,19 +715,53 @@
     }
     
     function handleSearchBlur() { 
-        // 延遲關閉，避免點擊結果清單前搜尋框就縮回去
         setTimeout(() => { 
             if (document.getElementById('searchInput').value.trim() === "") closeSearch(); 
         }, 200); 
     }
 
-    function setupSwipeEvents() {
-        const area = document.getElementById('mainViewArea');
-        area.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-        area.addEventListener('touchend', (e) => { touchEndX = e.changedTouches[0].screenX; handleSwipeAction(); }, { passive: true });
+    function getPinchDist(e) {
+        return Math.hypot(
+            e.touches[0].pageX - e.touches[1].pageX,
+            e.touches[0].pageY - e.touches[1].pageY
+        );
+    }
+
+    function setupGestureEvents() {
+        const area = document.getElementById('app');
+        
+        area.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].pageX;
+            } else if (e.touches.length === 2) {
+                pinchStartDist = getPinchDist(e);
+            }
+        }, { passive: true });
+
+        area.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchStartDist > 0) {
+                e.preventDefault();
+                const currentDist = getPinchDist(e);
+                const ratio = currentDist / pinchStartDist;
+                
+                if (!isYearView && ratio < 0.75) {
+                    toggleView('year');
+                    pinchStartDist = 0; 
+                }
+            }
+        }, { passive: false });
+
+        area.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1 && e.touches.length === 0) {
+                touchEndX = e.changedTouches[0].pageX;
+                handleSwipeAction();
+            }
+            pinchStartDist = 0;
+        }, { passive: true });
+
         let isDrag = false;
-        area.addEventListener('mousedown', (e) => { isDrag = true; touchStartX = e.screenX; });
-        window.addEventListener('mouseup', (e) => { if (!isDrag) return; isDrag = false; touchEndX = e.screenX; handleSwipeAction(); });
+        area.addEventListener('mousedown', (e) => { isDrag = true; touchStartX = e.pageX; });
+        window.addEventListener('mouseup', (e) => { if (!isDrag) return; isDrag = false; touchEndX = e.pageX; handleSwipeAction(); });
     }
 
     function handleSwipeAction() {
