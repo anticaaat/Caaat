@@ -266,6 +266,15 @@
                     </div>
                 </div>
 
+                <div class="bg-blue-50 rounded-3xl p-5 border border-blue-100 space-y-4">
+                    <label class="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">資料備份 (更換圖示用)</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="exportData()" class="py-3 bg-white border border-blue-200 text-blue-600 text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯出資料代碼</button>
+                        <button onclick="importData()" class="py-3 bg-blue-600 text-white text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯入資料代碼</button>
+                    </div>
+                    <p class="text-[9px] text-blue-400 font-bold text-center">※ 更換 App 圖示前請先匯出代碼並存於記事本</p>
+                </div>
+
                 <button onclick="saveSettings()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-lg">完成設定</button>
             </div>
         </div>
@@ -696,6 +705,37 @@
         storageData.settings.defaultRate = parseFloat(document.getElementById('settingDefaultRate').value) || 0; 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
         toggleSettings(); updateStats(); renderCalendar();
+    }
+
+    // 新增：匯出資料功能
+    function exportData() {
+        const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(storageData))));
+        const tempInput = document.createElement("textarea");
+        tempInput.value = dataStr;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("資料代碼已複製到剪貼簿！\n請貼到 Line 或記事本保存。");
+    }
+
+    // 新增：匯入資料功能
+    function importData() {
+        const code = prompt("請貼上之前匯出的資料代碼：");
+        if (code) {
+            try {
+                const decodedData = JSON.parse(decodeURIComponent(escape(atob(code))));
+                if (confirm("確定要匯入嗎？這將會蓋掉現有的所有紀錄！")) {
+                    storageData = decodedData;
+                    workData = storageData.records;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+                    alert("資料匯入成功！");
+                    location.reload(); // 重新整理頁面以套用資料
+                }
+            } catch (e) {
+                alert("代碼錯誤，請確保貼上的是正確的資料串。");
+            }
+        }
     }
 
     function renderCalendar() {
@@ -1188,4 +1228,3 @@
 </script>
 </body>
 </html>
-
