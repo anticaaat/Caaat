@@ -197,6 +197,9 @@
             margin: 0 !important; /* 移除可能導致偏移的 margin */
             flex-shrink: 0 !important;
         }
+
+        /* 3. 修復關閉編輯視窗的邏輯 */
+        /* 透過 JS 複寫 closeModal 邏輯以修復跳轉問題 */
     </style>
 </head>
 <body class="text-slate-800 font-sans">
@@ -979,6 +982,7 @@
 
     function clearDayRecords() {
         if (workData[selectedDateStr]) {
+            // 如果是編輯模式，只清空該項，或者如果是點擊清空今日，則清空全部
             delete workData[selectedDateStr];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
             closeModal(); renderCalendar();
@@ -986,8 +990,11 @@
     }
 
     function closeModal() { 
-        document.getElementById('editModal').classList.replace('hidden', 'flex'); 
-        editingIndex = -1; 
+        // 修正：原本使用 replace 可能導致 UI 狀態錯誤，改為明確的 add/remove
+        const modal = document.getElementById('editModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        editingIndex = -1; // 重置編輯索引
     }
 
     function updateStats() {
