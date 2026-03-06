@@ -31,7 +31,7 @@
             background-color: white;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
             height: 100%;
-            min-height: 60px;
+            min-height: 85px;
         }
         
         .day-cell:active { transform: scale(0.95); background-color: #f1f5f9; }
@@ -136,13 +136,44 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         #monthView, #yearView { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; }
+
+        /* Floating Add Button */
+        .add-btn-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+        .add-btn {
+            width: 60px;
+            height: 60px;
+            background-color: #0f172a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+            border: 4px solid white;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .add-btn:active { transform: scale(0.9) translateY(5px); }
+
+        /* 顏色選擇器樣式 */
+        .color-dot {
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;
+        }
+        .color-dot.selected { border-color: #0f172a; transform: scale(1.1); }
+        
+        /* 新增：隱藏預設時薪欄位 */
+        #defaultRateSection { display: none; }
     </style>
 </head>
 <body class="text-slate-800 font-sans">
 
 <div id="app" class="max-w-md mx-auto h-screen flex flex-col bg-white shadow-xl relative">
     
-    <!-- Settings Overlay -->
     <div id="settingsOverlay" class="fixed inset-0 bg-slate-900/60 z-[110] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
         <div id="settingsPanel" class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col items-center max-h-[85vh] overflow-y-auto no-scrollbar">
             <div class="w-full flex justify-between items-center mb-6">
@@ -153,7 +184,7 @@
             </div>
             
             <div class="w-full space-y-5">
-                <div class="flex flex-col">
+                <div id="defaultRateSection" class="flex flex-col">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">預設時薪</label>
                     <input type="number" id="settingDefaultRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-black text-xl text-center outline-none focus:border-blue-500 transition shadow-sm">
                 </div>
@@ -187,7 +218,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-white px-4 pt-6 pb-2 border-b shrink-0 z-50">
         <div id="navHeader" class="flex justify-between items-center mb-4">
             <button onclick="changeDate(-1)" class="p-2 text-slate-400 active:bg-slate-50 rounded-full transition">
@@ -203,7 +233,6 @@
         </div>
 
         <div id="searchContainer" class="px-1 mb-2">
-            <!-- Search Wrapper -->
             <div id="searchWrapper">
                 <button onclick="openSearch()" class="absolute left-0 w-11 h-11 flex items-center justify-center text-slate-500 z-10">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -214,12 +243,10 @@
                 </button>
             </div>
 
-            <!-- Today Button Group (Hidden when search active) -->
             <div id="centerActions" class="flex-grow flex justify-center items-center">
                 <button id="todayBtn" onclick="goToToday()" class="px-8 py-2.5 bg-[#0f172a] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Today</button>
             </div>
 
-            <!-- Settings Button -->
             <button id="settingsBtn" onclick="toggleSettings()" class="icon-btn">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -240,10 +267,9 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <div class="relative flex-grow overflow-hidden" id="mainViewArea">
         <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-3 rounded-b-[2rem] border-b border-slate-100"></div>
-        <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar">
+        <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar pb-32">
             <main id="monthView" class="p-4">
                 <div class="calendar-grid text-center mb-3">
                     <div class="text-[10px] font-black text-red-400 uppercase">S</div>
@@ -263,8 +289,37 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[100] backdrop-blur-sm p-4 overflow-y-auto">
+    <!-- 每日紀錄快速檢視視窗 -->
+    <div id="dailyListModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[115] backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl p-6 transform transition-all">
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h3 id="dailyListDate" class="text-lg font-black text-slate-900">2026/02/05 紀錄清單</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">點擊項目查看詳情或編輯</p>
+                </div>
+                <button onclick="closeDailyList()" class="p-2 bg-slate-50 rounded-full text-slate-400">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="dailyItemsContainer" class="space-y-3 max-h-[50vh] overflow-y-auto no-scrollbar pb-2">
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <button onclick="openModalForSelected(); closeDailyList();" class="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                    新增排班紀錄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <div class="add-btn-container">
+        <button onclick="openModalForSelected()" class="add-btn">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+        </button>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[120] backdrop-blur-sm p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-7 my-auto transform transition-all">
             <div class="flex justify-between items-start mb-6">
                 <div>
@@ -280,11 +335,23 @@
                 <div class="flex gap-3">
                     <div class="flex-grow">
                         <label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">排班名稱</label>
-                        <input type="text" id="inputTitle" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-500 text-sm shadow-sm">
+                        <input type="text" id="inputTitle" oninput="autoFillConfig(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-500 text-sm shadow-sm">
                     </div>
                     <div class="w-1/3">
                         <label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">時薪</label>
                         <input type="number" id="inputRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-500 text-sm shadow-sm">
+                    </div>
+                </div>
+
+                <!-- 顏色選擇器區塊 -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">標籤顏色</label>
+                    <div class="flex gap-3" id="colorPicker">
+                        <div class="color-dot bg-emerald-200" data-color="emerald" onclick="selectColor('emerald')"></div>
+                        <div class="color-dot bg-amber-200" data-color="amber" onclick="selectColor('amber')"></div>
+                        <div class="color-dot bg-rose-200" data-color="rose" onclick="selectColor('rose')"></div>
+                        <div class="color-dot bg-blue-200" data-color="blue" onclick="selectColor('blue')"></div>
+                        <div class="color-dot bg-purple-200" data-color="purple" onclick="selectColor('purple')"></div>
                     </div>
                 </div>
 
@@ -326,7 +393,7 @@
 
                 <div id="previewCard" class="bg-blue-600 p-5 rounded-3xl text-white shadow-xl flex justify-between items-end">
                     <div>
-                        <p class="text-[10px] font-bold opacity-70 mb-1">今日預計薪資</p>
+                        <p class="text-[10px] font-bold opacity-70 mb-1">本次預計薪資</p>
                         <p id="previewNetSalary" class="text-3xl font-black tracking-tight">$0</p>
                     </div>
                     <div class="text-right">
@@ -336,20 +403,69 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="deleteEntry()" class="py-4 bg-rose-50 text-rose-600 text-sm font-black rounded-2xl active:scale-95 transition-all">刪除此紀錄</button>
-                    <button onclick="saveData()" class="py-4 bg-slate-900 text-white text-sm font-black rounded-2xl active:scale-95 transition-all shadow-lg">儲存修改</button>
+                    <button onclick="clearDayRecords()" class="py-4 bg-rose-50 text-rose-600 text-sm font-black rounded-2xl active:scale-95 transition-all">清空今日紀錄</button>
+                    <button onclick="saveData()" id="modalSubmitBtn" class="py-4 bg-slate-900 text-white text-sm font-black rounded-2xl active:scale-95 transition-all shadow-lg">加入新項目</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細資訊彈窗 -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[130] backdrop-blur-sm p-6">
+        <div class="bg-white w-full max-w-xs rounded-[2rem] shadow-2xl p-6 border border-slate-100">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex flex-col">
+                    <span id="detailDateDisplay" class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">2026/02/05</span>
+                    <h3 id="detailTitle" class="text-xl font-black text-slate-900">排班詳情</h3>
+                </div>
+                <button onclick="closeDetail()" class="text-slate-400 p-2 bg-slate-50 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">時間範圍</label>
+                    <p id="detailTimeRange" class="font-bold text-slate-800">09:00 - 18:00</p>
+                </div>
+                <div class="flex justify-between border-t border-slate-50 pt-3">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">淨工時</label>
+                        <p id="detailHours" class="font-black text-slate-800 text-lg">8.00h</p>
+                    </div>
+                    <div class="text-right">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">小計薪資</label>
+                        <p id="detailSalary" class="font-black text-blue-600 text-lg">$1,520</p>
+                    </div>
+                </div>
+                <div id="detailNoteSection" class="hidden">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">備註</label>
+                    <p id="detailNote" class="text-xs text-slate-500 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="deleteSingleRecord()" class="py-3 bg-rose-50 text-rose-600 text-xs font-black rounded-xl active:scale-95 transition-all">刪除紀錄</button>
+                <button onclick="editSingleRecord()" class="py-3 bg-slate-900 text-white text-xs font-black rounded-xl active:scale-95 transition-all">編輯內容</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const STORAGE_KEY = 'work_hours_v3_optimized';
+    const STORAGE_KEY = 'work_hours_v4_multi';
     let currentDate = new Date();
-    let selectedDateStr = "";
+    let selectedDateStr = new Date().toLocaleDateString('en-CA');
     let isYearView = false;
     let dynamicHolidays = {};
+    
+    // 用於追蹤正在編輯的索引
+    let editingIndex = -1;
+    let selectedColor = 'emerald';
+
+    const COLOR_THEMES = {
+        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+        amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+        rose: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+        blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+        purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' }
+    };
     
     let touchStartX = 0;
     let touchEndX = 0;
@@ -369,7 +485,8 @@
             showHours: true,
             showSalary: true,
             showNote: false
-        }
+        },
+        titleHistory: {} 
     };
     
     let workData = storageData.records;
@@ -467,6 +584,14 @@
         pickers.eM = new iOSPicker('endMinutePicker', minutes, 0, () => updatePreview());
         renderCalendar();
         setupGestureEvents();
+        selectColor('emerald');
+    }
+
+    function selectColor(color) {
+        selectedColor = color;
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.classList.toggle('selected', dot.dataset.color === color);
+        });
     }
 
     function toggleView(forceView) {
@@ -536,7 +661,6 @@
     function renderMonthView(year, month) {
         const daysInMonth = new Date(year, month + 1, 0).getDate(), firstDay = new Date(year, month, 1).getDay();
         const grid = document.getElementById('calendarDays'); grid.innerHTML = '';
-        const todayStr = new Date().toLocaleDateString('en-CA');
         const s = storageData.settings;
         
         for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
@@ -545,24 +669,151 @@
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isW = [0, 6].includes(new Date(year, month, d).getDay()), isH = !!dynamicHolidays[dateStr], data = workData[dateStr], el = document.createElement('div');
             el.className = `day-cell cursor-pointer ${isH ? 'is-holiday' : (isW ? 'is-weekend' : '')}`;
-            if (dateStr === todayStr) el.classList.add('is-today');
+            if (dateStr === selectedDateStr) el.classList.add('is-today');
             
-            let infoHtml = '';
-            if (data) {
-                const mult = isH ? 2 : 1;
-                const totalPay = Math.round(data.hours * data.rate * mult);
-                infoHtml = `<div class="cell-info-wrapper flex flex-col gap-1 mt-1">`;
-                if (s.showTitle !== false) infoHtml += `<div class="text-[9px] font-black leading-tight truncate">${data.title}</div>`;
-                if (s.showTime === true) infoHtml += `<div class="text-[7px] text-slate-400 font-bold">${data.startTime}-${data.endTime}</div>`;
-                if (s.showHours !== false) infoHtml += `<div class="text-[8px] text-blue-500 font-black">${data.hours.toFixed(1)}h</div>`;
-                if (s.showSalary !== false) infoHtml += `<div class="text-[10px] font-black text-slate-900">$${totalPay.toLocaleString()}</div>`;
-                infoHtml += `</div>`;
+            let infoHtml = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
+            if (data && Array.isArray(data)) {
+                data.forEach((item) => {
+                    const theme = COLOR_THEMES[item.color || 'blue'];
+                    const mult = isH ? 2 : 1;
+                    const pay = Math.round(item.hours * item.rate * mult);
+                    
+                    // 根據設定動態顯示內容
+                    const showTitle = s.showTitle !== false;
+                    const showTime = s.showTime === true;
+                    const showHours = s.showHours !== false;
+                    const showSalary = s.showSalary !== false;
+                    const showNote = s.showNote === true;
+
+                    infoHtml += `
+                        <div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">
+                            ${showTitle ? `<div class="text-[8px] font-black truncate leading-tight">${item.title}</div>` : ''}
+                            ${showTime ? `<div class="text-[7px] font-bold opacity-80 leading-tight">${item.startTime}-${item.endTime}</div>` : ''}
+                            ${showHours ? `<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>` : ''}
+                            ${showSalary ? `<div class="text-[7px] font-bold opacity-70">$${pay}</div>` : ''}
+                            ${showNote && item.note ? `<div class="text-[6px] truncate opacity-60 italic mt-0.5">${item.note}</div>` : ''}
+                        </div>
+                    `;
+                });
             }
+            infoHtml += `</div>`;
             
             el.innerHTML = `<div class="text-[10px] font-black ${isH || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${infoHtml}`;
-            el.onclick = () => openModal(dateStr);
+            el.onclick = () => { 
+                selectedDateStr = dateStr; 
+                if (data && data.length > 0) {
+                    openDailyList(dateStr);
+                } else {
+                    renderCalendar(); 
+                }
+            };
             grid.appendChild(el);
         }
+    }
+
+    function openDailyList(dateStr) {
+        selectedDateStr = dateStr;
+        const records = workData[dateStr] || [];
+        const isH = !!dynamicHolidays[dateStr];
+        const mult = isH ? 2 : 1;
+        
+        document.getElementById('dailyListDate').innerText = dateStr.replace(/-/g, '/') + " 紀錄清單";
+        const container = document.getElementById('dailyItemsContainer');
+        container.innerHTML = '';
+        
+        records.forEach((item, idx) => {
+            const theme = COLOR_THEMES[item.color || 'emerald'];
+            const div = document.createElement('div');
+            div.className = `${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer`;
+            div.onclick = () => {
+                openDetail(dateStr, idx);
+                closeDailyList();
+            };
+            
+            div.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-black uppercase ${theme.text} tracking-wider">${item.startTime} - ${item.endTime}</span>
+                    <span class="text-sm font-black text-slate-900">${item.title}</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-sm font-black text-slate-800">$${Math.round(item.hours * item.rate * mult).toLocaleString()}</span>
+                    <p class="text-[9px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        const modal = document.getElementById('dailyListModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        renderCalendar();
+    }
+
+    function closeDailyList() {
+        document.getElementById('dailyListModal').classList.replace('flex', 'hidden');
+    }
+
+    function openDetail(dateStr, index) {
+        selectedDateStr = dateStr;
+        editingIndex = index;
+        const record = workData[dateStr][index];
+        const isH = !!dynamicHolidays[dateStr];
+        const mult = isH ? 2 : 1;
+
+        document.getElementById('detailDateDisplay').innerText = dateStr.replace(/-/g, '/');
+        document.getElementById('detailTitle').innerText = record.title;
+        document.getElementById('detailTimeRange').innerText = `${record.startTime} - ${record.endTime} (扣除 ${record.breakMinutes || 0}m)`;
+        document.getElementById('detailHours').innerText = `${record.hours.toFixed(2)}h`;
+        document.getElementById('detailSalary').innerText = `$${Math.round(record.hours * record.rate * mult).toLocaleString()}`;
+        
+        const noteEl = document.getElementById('detailNote');
+        const noteSec = document.getElementById('detailNoteSection');
+        if (record.note) {
+            noteEl.innerText = record.note;
+            noteSec.classList.remove('hidden');
+        } else {
+            noteSec.classList.add('hidden');
+        }
+
+        const modal = document.getElementById('detailModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeDetail() {
+        const modal = document.getElementById('detailModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function deleteSingleRecord() {
+        if (editingIndex > -1) {
+            workData[selectedDateStr].splice(editingIndex, 1);
+            if (workData[selectedDateStr].length === 0) delete workData[selectedDateStr];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+            closeDetail();
+            renderCalendar();
+        }
+    }
+
+    function editSingleRecord() {
+        const record = workData[selectedDateStr][editingIndex];
+        openModalForSelected(); 
+        
+        document.getElementById('inputTitle').value = record.title;
+        document.getElementById('inputRate').value = record.rate;
+        document.getElementById('breakMinutes').value = record.breakMinutes || 0;
+        document.getElementById('inputNote').value = record.note || "";
+        toggleBreakInput((record.breakMinutes || 0) > 0);
+        selectColor(record.color || 'emerald');
+
+        const [sh, sm] = record.startTime.split(':').map(Number);
+        const [eh, em] = record.endTime.split(':').map(Number);
+        pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
+        
+        document.getElementById('modalSubmitBtn').innerText = "更新紀錄";
+        closeDetail();
+        updatePreview();
     }
 
     function renderYearView(year) {
@@ -576,7 +827,7 @@
             for (let i = 0; i < fd; i++) h += `<div></div>`;
             for (let d = 1; d <= dim; d++) {
                 const ds = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const hasR = !!workData[ds], isT = ds === todayStr, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(year,m,d).getDay());
+                const hasR = workData[ds] && workData[ds].length > 0, isT = ds === todayStr, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(year,m,d).getDay());
                 let baseCls = 'text-[7px] h-3.5 w-3.5 flex items-center justify-center ';
                 let textCls = isH ? 'text-red-500 font-black' : (isW ? 'text-red-300 font-bold' : (isT ? 'text-white' : (hasR ? 'text-slate-900 font-bold' : 'text-slate-300')));
                 let bgCls = isT ? 'bg-blue-500 rounded-full' : (hasR ? 'bg-slate-200 rounded-sm' : '');
@@ -602,7 +853,12 @@
         }, 150);
     }
     
-    function goToToday() { currentDate = new Date(); if (isYearView) toggleView('month'); renderCalendar(); }
+    function goToToday() { 
+        currentDate = new Date(); 
+        selectedDateStr = currentDate.toLocaleDateString('en-CA');
+        if (isYearView) toggleView('month'); 
+        renderCalendar(); 
+    }
 
     function toggleBreakInput(forceState) {
         const btn = document.getElementById('breakBtn'), wrap = document.getElementById('breakInputWrapper');
@@ -612,28 +868,42 @@
         updatePreview();
     }
 
-    function openModal(dateStr) {
-        selectedDateStr = dateStr;
-        const data = workData[dateStr] || { 
-            title: storageData.settings.defaultTitle, 
-            rate: storageData.settings.defaultRate, 
-            startTime: storageData.settings.defaultStartTime, 
-            endTime: storageData.settings.defaultEndTime, 
-            breakMinutes: storageData.settings.defaultBreak, 
-            note: "" 
-        };
-        document.getElementById('modalDate').innerText = dateStr.replace(/-/g, '/');
-        document.getElementById('inputTitle').value = data.title;
-        document.getElementById('inputRate').value = data.rate;
-        document.getElementById('breakMinutes').value = data.breakMinutes || 0;
-        document.getElementById('inputNote').value = data.note || "";
-        toggleBreakInput((data.breakMinutes || 0) > 0);
-        const hName = dynamicHolidays[dateStr], tag = document.getElementById('holidayTag');
+    function openModalForSelected() {
+        if (editingIndex === -1) {
+            document.getElementById('modalSubmitBtn').innerText = "加入新項目";
+            document.getElementById('inputTitle').value = storageData.settings.defaultTitle;
+            document.getElementById('inputRate').value = storageData.settings.defaultRate;
+            document.getElementById('breakMinutes').value = 0;
+            document.getElementById('inputNote').value = "";
+            toggleBreakInput(false);
+            const [sh, sm] = storageData.settings.defaultStartTime.split(':').map(Number);
+            const [eh, em] = storageData.settings.defaultEndTime.split(':').map(Number);
+            pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
+            autoFillConfig(storageData.settings.defaultTitle);
+        }
+        
+        document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
+        const hName = dynamicHolidays[selectedDateStr], tag = document.getElementById('holidayTag');
         if (hName) { tag.innerText = `${hName} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
-        const [sh, sm] = data.startTime.split(':').map(Number), [eh, em] = data.endTime.split(':').map(Number);
-        pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
+        
         updatePreview(); 
         document.getElementById('editModal').classList.replace('hidden', 'flex');
+    }
+
+    function autoFillConfig(title) {
+        if (!storageData.titleHistory) return;
+        const config = storageData.titleHistory[title];
+        if (config && editingIndex === -1) { 
+            document.getElementById('inputRate').value = config.rate;
+            document.getElementById('breakMinutes').value = config.breakMinutes || 0;
+            toggleBreakInput((config.breakMinutes || 0) > 0);
+            selectColor(config.color || 'emerald');
+            
+            const [sh, sm] = config.startTime.split(':').map(Number);
+            const [eh, em] = config.endTime.split(':').map(Number);
+            pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
+            updatePreview();
+        }
     }
 
     function updatePreview() {
@@ -646,49 +916,80 @@
     }
 
     function saveData() {
-        const title = document.getElementById('inputTitle').value || "上班", rate = parseFloat(document.getElementById('inputRate').value) || 0, breakMins = parseInt(document.getElementById('breakMinutes').value) || 0, note = document.getElementById('inputNote').value;
-        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
+        const title = document.getElementById('inputTitle').value || "打工", 
+              rate = parseFloat(document.getElementById('inputRate').value) || 0, 
+              breakMins = parseInt(document.getElementById('breakMinutes').value) || 0, 
+              note = document.getElementById('inputNote').value;
+        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, 
+              eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
         let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue());
         if (diff < 0) diff += 1440;
-        workData[selectedDateStr] = { title, hours: Math.max(0, diff - breakMins)/60, rate, startTime: sT, endTime: eT, breakMinutes: breakMins, note };
-        storageData.settings.defaultTitle = title; storageData.settings.defaultStartTime = sT; storageData.settings.defaultEndTime = eT; storageData.settings.defaultBreak = breakMins;
+        
+        const newRecord = { title, hours: Math.max(0, diff - breakMins)/60, rate, startTime: sT, endTime: eT, breakMinutes: breakMins, note, color: selectedColor };
+
+        if (!storageData.titleHistory) storageData.titleHistory = {};
+        storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: breakMins, color: selectedColor };
+
+        if (!Array.isArray(workData[selectedDateStr])) {
+            workData[selectedDateStr] = [];
+        }
+
+        if (editingIndex > -1) {
+            workData[selectedDateStr][editingIndex] = newRecord;
+        } else {
+            workData[selectedDateStr].push(newRecord);
+        }
+
+        storageData.settings.defaultTitle = title; 
+        storageData.settings.defaultRate = rate;
+        storageData.settings.defaultStartTime = sT; 
+        storageData.settings.defaultEndTime = eT; 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
         closeModal(); renderCalendar();
     }
 
-    function deleteEntry() { if (workData[selectedDateStr]) { delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); closeModal(); renderCalendar(); } }
-    function closeModal() { document.getElementById('editModal').classList.replace('flex', 'hidden'); }
+    function clearDayRecords() {
+        if (workData[selectedDateStr]) {
+            delete workData[selectedDateStr];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
+            closeModal(); renderCalendar();
+        }
+    }
+
+    function closeModal() { 
+        document.getElementById('editModal').classList.replace('flex', 'hidden'); 
+        editingIndex = -1; 
+    }
 
     function updateStats() {
         let sal = 0, hrs = 0;
         const prefix = isYearView ? `${currentDate.getFullYear()}-` : `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-`;
-        Object.keys(workData).forEach(d => { if (d.startsWith(prefix)) { hrs += workData[d].hours; sal += workData[d].hours * workData[d].rate * (!!dynamicHolidays[d] ? 2 : 1); } });
+        Object.keys(workData).forEach(d => { 
+            if (d.startsWith(prefix)) { 
+                const records = Array.isArray(workData[d]) ? workData[d] : [];
+                records.forEach(item => {
+                    hrs += item.hours; 
+                    sal += item.hours * item.rate * (!!dynamicHolidays[d] ? 2 : 1); 
+                });
+            } 
+        });
         document.getElementById('totalHoursNet').innerHTML = `${hrs.toFixed(1)} <span class="text-[10px] font-normal opacity-40">hr</span>`;
         document.getElementById('totalSalaryNet').innerText = `$${Math.round(sal).toLocaleString()}`;
     }
 
     function openSearch() { 
-        // 核心修正：將 Today 按鈕與設定按鈕設為 hidden，讓搜尋欄能 flex-grow 到最右側
         document.getElementById('centerActions').classList.add('hidden'); 
         document.getElementById('settingsBtn').classList.add('hidden'); 
-        
         const wrapper = document.getElementById('searchWrapper');
         wrapper.classList.add('active'); 
-        
         document.getElementById('clearSearchBtn').classList.remove('hidden');
-        setTimeout(() => {
-            const input = document.getElementById('searchInput');
-            input.focus();
-        }, 50); 
+        setTimeout(() => { document.getElementById('searchInput').focus(); }, 50); 
     }
 
     function closeSearch() { 
         document.getElementById('searchWrapper').classList.remove('active'); 
-        
-        // 恢復按鈕顯示
         document.getElementById('centerActions').classList.remove('hidden'); 
         document.getElementById('settingsBtn').classList.remove('hidden'); 
-        
         document.getElementById('clearSearchBtn').classList.add('hidden');
         document.getElementById('searchInput').value = ''; 
         document.getElementById('searchResultsOverlay').classList.add('hidden'); 
@@ -698,15 +999,21 @@
         const q = document.getElementById('searchInput').value.trim().toLowerCase(), overlay = document.getElementById('searchResultsOverlay');
         if (!q) { overlay.classList.add('hidden'); return; }
         overlay.innerHTML = '';
-        const matched = Object.keys(workData).filter(d => workData[d].title.toLowerCase().includes(q) || (workData[d].note && workData[d].note.toLowerCase().includes(q))).sort((a,b) => b.localeCompare(a));
+        const matched = Object.keys(workData).filter(d => {
+            const records = workData[d];
+            return records.some(r => r.title.toLowerCase().includes(q) || (r.note && r.note.toLowerCase().includes(q)));
+        }).sort((a,b) => b.localeCompare(a));
+
         if (matched.length) {
             overlay.classList.remove('hidden');
             matched.forEach(d => {
-                const item = workData[d], div = document.createElement('div');
-                div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center active:bg-slate-100 mb-2 border border-slate-100 transition-colors";
-                div.onclick = () => { openModal(d); closeSearch(); };
-                div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${d.replace(/-/g, '/')}</p><p class="font-bold text-slate-900">${item.title}</p></div><div class="text-right"><p class="font-black text-slate-800">$${Math.round(item.hours * item.rate).toLocaleString()}</p><p class="text-[9px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
-                overlay.appendChild(div);
+                workData[d].forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center active:bg-slate-100 mb-2 border border-slate-100 transition-colors";
+                    div.onclick = () => { openDetail(d, idx); closeSearch(); };
+                    div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${d.replace(/-/g, '/')}</p><p class="font-bold text-slate-900">${item.title}</p></div><div class="text-right"><p class="font-black text-slate-800">$${Math.round(item.hours * item.rate).toLocaleString()}</p><p class="text-[9px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
+                    overlay.appendChild(div);
+                });
             });
         } else {
             overlay.classList.remove('hidden');
@@ -715,42 +1022,27 @@
     }
     
     function handleSearchBlur() { 
-        setTimeout(() => { 
-            if (document.getElementById('searchInput').value.trim() === "") closeSearch(); 
-        }, 200); 
+        setTimeout(() => { if (document.getElementById('searchInput').value.trim() === "") closeSearch(); }, 200); 
     }
 
     function getPinchDist(e) {
-        return Math.hypot(
-            e.touches[0].pageX - e.touches[1].pageX,
-            e.touches[0].pageY - e.touches[1].pageY
-        );
+        return Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
     }
 
     function setupGestureEvents() {
         const area = document.getElementById('app');
-        
         area.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                touchStartX = e.touches[0].pageX;
-            } else if (e.touches.length === 2) {
-                pinchStartDist = getPinchDist(e);
-            }
+            if (e.touches.length === 1) touchStartX = e.touches[0].pageX;
+            else if (e.touches.length === 2) pinchStartDist = getPinchDist(e);
         }, { passive: true });
-
         area.addEventListener('touchmove', (e) => {
             if (e.touches.length === 2 && pinchStartDist > 0) {
                 e.preventDefault();
                 const currentDist = getPinchDist(e);
                 const ratio = currentDist / pinchStartDist;
-                
-                if (!isYearView && ratio < 0.75) {
-                    toggleView('year');
-                    pinchStartDist = 0; 
-                }
+                if (!isYearView && ratio < 0.75) { toggleView('year'); pinchStartDist = 0; }
             }
         }, { passive: false });
-
         area.addEventListener('touchend', (e) => {
             if (e.changedTouches.length === 1 && e.touches.length === 0) {
                 touchEndX = e.changedTouches[0].pageX;
@@ -758,7 +1050,6 @@
             }
             pinchStartDist = 0;
         }, { passive: true });
-
         let isDrag = false;
         area.addEventListener('mousedown', (e) => { isDrag = true; touchStartX = e.pageX; });
         window.addEventListener('mouseup', (e) => { if (!isDrag) return; isDrag = false; touchEndX = e.pageX; handleSwipeAction(); });
