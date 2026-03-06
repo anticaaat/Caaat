@@ -177,6 +177,26 @@
             margin-bottom: auto; /* 在手機上稍微上移，避免貼底 */
             margin-top: auto;
         }
+
+        /* ---------------- 新增修正代碼 ---------------- */
+        
+        /* 1. 將底下的加號再上移一點 */
+        .add-btn-container {
+            bottom: 80px !important; /* 覆蓋原有 60px */
+        }
+
+        /* 2. 修復設定按鈕圖示跑掉的問題 */
+        #settingsBtn {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+
+        #settingsBtn svg {
+            margin: 0 !important; /* 移除可能導致偏移的 margin */
+            flex-shrink: 0 !important;
+        }
     </style>
 </head>
 <body class="text-slate-800 font-sans">
@@ -383,7 +403,7 @@
                 
                 <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-black text-slate-700">中場休息時間</span>
+                        <span class="text-xs font-black text-slate-700">休息時間</span>
                         <button id="breakBtn" onclick="toggleBreakInput()" class="px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider">無休息</button>
                     </div>
                     <div id="breakInputWrapper" class="hidden mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
@@ -966,7 +986,7 @@
     }
 
     function closeModal() { 
-        document.getElementById('editModal').classList.replace('flex', 'hidden'); 
+        document.getElementById('editModal').classList.replace('hidden', 'flex'); 
         editingIndex = -1; 
     }
 
