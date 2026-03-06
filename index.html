@@ -106,12 +106,14 @@
             border: 1px solid #e2e8f0;
             transition: all 0.2s;
             flex-shrink: 0;
+            padding: 0; /* 修正：清除預設內距確保置中 */
         }
         
         .icon-btn svg {
-            width: 20px;
-            height: 20px;
+            width: 22px; /* 微調大小 */
+            height: 22px;
             color: #64748b;
+            display: block; /* 修正：避免 inline 元素偏移 */
         }
 
         .ios-switch { position: relative; display: inline-block; width: 44px; height: 26px; }
@@ -140,7 +142,7 @@
         /* Floating Add Button */
         .add-btn-container {
             position: absolute;
-            bottom: 30px;
+            bottom: 60px; /* 修正：將加號按鈕上移 */
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
@@ -168,6 +170,13 @@
         
         /* 新增：隱藏預設時薪欄位 */
         #defaultRateSection { display: none; }
+
+        /* 優化：每日紀錄彈窗四角圓弧化 */
+        .daily-list-panel {
+            border-radius: 2.5rem !important; /* 強制設定全圓角 */
+            margin-bottom: auto; /* 在手機上稍微上移，避免貼底 */
+            margin-top: auto;
+        }
     </style>
 </head>
 <body class="text-slate-800 font-sans">
@@ -248,7 +257,7 @@
             </div>
 
             <button id="settingsBtn" onclick="toggleSettings()" class="icon-btn">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
@@ -290,8 +299,8 @@
     </div>
 
     <!-- 每日紀錄快速檢視視窗 -->
-    <div id="dailyListModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[115] backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl p-6 transform transition-all">
+    <div id="dailyListModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[115] backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-sm daily-list-panel shadow-2xl p-6 transform transition-all">
             <div class="flex justify-between items-center mb-5">
                 <div>
                     <h3 id="dailyListDate" class="text-lg font-black text-slate-900">2026/02/05 紀錄清單</h3>
