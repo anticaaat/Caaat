@@ -9,21 +9,27 @@
     <style>
         body { 
             overflow: hidden; 
-            touch-action: none; 
+            /* 修改：移除原有的 touch-action: none 以允許特定方向滾動，改由 JS 控制 */
             background-color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 新增：鎖定背景滾動的關鍵樣式 (條件 3) */
+        /* 新增：條件 1 & 2 的強化 CSS 鎖定 */
         .lock-bg {
-            position: fixed;
+            position: fixed !important;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            touch-action: none;
+            overflow: hidden !important;
+            touch-action: none !important;
+            -ms-touch-action: none !important;
         }
 
-        /* 新增：防止彈窗滑動影響背景 (條件 2) */
+        /* 新增：確保彈窗內部可以滾動，但不會傳遞給背景 */
+        .scrollable-content {
+            overscroll-behavior: contain;
+        }
+
+        /* 原有樣式保持不變 */
         #editModal, #dailyListModal, #detailModal, #settingsOverlay, #searchResultsOverlay {
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
@@ -228,9 +234,9 @@
 <div id="app" class="max-w-md mx-auto h-screen flex flex-col bg-white shadow-xl relative">
     
     <div id="settingsOverlay" class="fixed inset-0 bg-slate-900/60 z-[110] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
-        <div id="settingsPanel" class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col items-center max-h-[85vh] overflow-y-auto no-scrollbar">
+        <div id="settingsPanel" class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col items-center max-h-[85vh] overflow-y-auto no-scrollbar scrollable-content">
             <div class="w-full flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-slate-900 tracking-tight">顯示設定</h3>
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">設定</h3>
                 <button onclick="toggleSettings()" class="text-slate-400 p-2 bg-slate-50 rounded-full">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -249,11 +255,11 @@
                         <label class="ios-switch"><input type="checkbox" id="checkShowTitle" onchange="updateSetting('showTitle', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示具體時間</span>
+                        <span class="font-bold text-slate-700">顯示時間</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowTime" onchange="updateSetting('showTime', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示小時計數</span>
+                        <span class="font-bold text-slate-700">顯示時數</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowHours" onchange="updateSetting('showHours', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
@@ -261,7 +267,7 @@
                         <label class="ios-switch"><input type="checkbox" id="checkShowSalary" onchange="updateSetting('showSalary', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示紀錄備註</span>
+                        <span class="font-bold text-slate-700">顯示備註</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowNote" onchange="updateSetting('showNote', this.checked)"><span class="slider"></span></label>
                     </div>
                 </div>
@@ -330,8 +336,8 @@
     </header>
 
     <div class="relative flex-grow overflow-hidden" id="mainViewArea">
-        <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-3 rounded-b-[2rem] border-b border-slate-100"></div>
-        <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar pb-32">
+        <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-3 rounded-b-[2rem] border-b border-slate-100 scrollable-content"></div>
+        <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar pb-32 scrollable-content">
             <main id="monthView" class="p-4">
                 <div class="calendar-grid text-center mb-3">
                     <div class="text-[10px] font-black text-red-400 uppercase">S</div>
@@ -352,7 +358,7 @@
     </div>
 
     <div id="dailyListModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[115] backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-sm daily-list-panel shadow-2xl p-6 transform transition-all">
+        <div class="bg-white w-full max-w-sm daily-list-panel shadow-2xl p-6 transform transition-all scrollable-content">
             <div class="flex justify-between items-center mb-5 shrink-0">
                 <div>
                     <h3 id="dailyListDate" class="text-lg font-black text-slate-900">2026/02/05 紀錄清單</h3>
@@ -362,7 +368,7 @@
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div id="dailyItemsContainer" class="space-y-3 overflow-y-auto no-scrollbar flex-grow pb-2">
+            <div id="dailyItemsContainer" class="space-y-3 overflow-y-auto no-scrollbar flex-grow pb-2 scrollable-content">
             </div>
             <div class="mt-4 pt-4 border-t border-slate-100 shrink-0">
                 <button onclick="openModalForSelected(); closeDailyList();" class="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2">
@@ -374,13 +380,13 @@
     </div>
 
     <div class="add-btn-container">
-        <button onclick="openModalForSelected()" class="add-btn">
+        <button id="mainAddBtn" onclick="openModalForSelected()" class="add-btn">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
         </button>
     </div>
 
     <div id="editModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[120] backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-7 my-auto transform transition-all">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-7 my-auto transform transition-all scrollable-content">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 id="modalDate" class="text-2xl font-black text-slate-900">2026/02/05</h2>
@@ -470,7 +476,7 @@
     </div>
 
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[130] backdrop-blur-sm p-6">
-        <div class="bg-white w-full max-w-xs rounded-[2rem] shadow-2xl p-6 border border-slate-100">
+        <div class="bg-white w-full max-w-xs rounded-[2rem] shadow-2xl p-6 border border-slate-100 scrollable-content">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex flex-col">
                     <span id="detailDateDisplay" class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">2026/02/05</span>
@@ -525,7 +531,9 @@
     };
     
     let touchStartX = 0;
+    let touchStartY = 0; // 新增：座標 Y
     let touchEndX = 0;
+    let touchEndY = 0; // 新增：座標 Y
     let pinchStartDist = 0;
     const swipeThreshold = 50;
 
@@ -642,6 +650,16 @@
         renderCalendar();
         setupGestureEvents();
         selectColor('emerald');
+
+        // 新增：全域防止多向滾動邏輯 (條件 1)
+        window.addEventListener('touchmove', function(e) {
+            if (document.body.classList.contains('lock-bg')) {
+                // 如果背景被鎖定，且觸摸點不在可滾動區域內，則完全阻止
+                if (!e.target.closest('.scrollable-content')) {
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
     }
 
     function selectColor(color) {
@@ -677,7 +695,7 @@
         const overlay = document.getElementById('settingsOverlay');
         if (overlay.classList.contains('hidden')) {
             overlay.classList.remove('hidden');
-            // 條件 3: 跳出設定視窗時背景不動
+            // 條件 2: 彈窗開啟鎖定背景
             document.body.classList.add('lock-bg');
             document.getElementById('settingDefaultRate').value = storageData.settings.defaultRate;
             document.getElementById('checkShowTitle').checked = storageData.settings.showTitle !== false;
@@ -707,7 +725,6 @@
         toggleSettings(); updateStats(); renderCalendar();
     }
 
-    // 新增：匯出資料功能
     function exportData() {
         const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(storageData))));
         const tempInput = document.createElement("textarea");
@@ -716,10 +733,14 @@
         tempInput.select();
         document.execCommand("copy");
         document.body.removeChild(tempInput);
-        alert("資料代碼已複製到剪貼簿！\n請貼到 Line 或記事本保存。");
+        // 不使用 alert，改用簡單 UI
+        const msg = document.createElement('div');
+        msg.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-white px-6 py-4 rounded-3xl z-[200] font-bold shadow-2xl";
+        msg.innerText = "代碼已複製到剪貼簿！";
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 2000);
     }
 
-    // 新增：匯入資料功能
     function importData() {
         const code = prompt("請貼上之前匯出的資料代碼：");
         if (code) {
@@ -729,11 +750,10 @@
                     storageData = decodedData;
                     workData = storageData.records;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-                    alert("資料匯入成功！");
-                    location.reload(); // 重新整理頁面以套用資料
+                    location.reload();
                 }
             } catch (e) {
-                alert("代碼錯誤，請確保貼上的是正確的資料串。");
+                alert("代碼錯誤");
             }
         }
     }
@@ -766,6 +786,7 @@
             
             let infoHtml = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
             if (data && Array.isArray(data)) {
+                data.sort((a, b) => a.startTime.localeCompare(b.startTime));
                 data.forEach((item) => {
                     const theme = COLOR_THEMES[item.color || 'blue'];
                     const mult = isH ? 2 : 1;
@@ -802,20 +823,21 @@
     function openDailyList(dateStr) {
         selectedDateStr = dateStr;
         const records = workData[dateStr] || [];
-        const isH = !!dynamicHolidays[dateStr];
-        const mult = isH ? 2 : 1;
         
-        // 條件 3: 跳出清單視窗背景不動
+        // 條件 2: 開啟列表鎖定背景
         document.body.classList.add('lock-bg');
 
         document.getElementById('dailyListDate').innerText = dateStr.replace(/-/g, '/') + " 紀錄清單";
         const container = document.getElementById('dailyItemsContainer');
         container.innerHTML = '';
         
+        records.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        
         records.forEach((item, idx) => {
             const theme = COLOR_THEMES[item.color || 'emerald'];
             const swipeContainer = document.createElement('div');
             swipeContainer.className = "swipe-item-container mb-3";
+            const mult = !!dynamicHolidays[dateStr] ? 2 : 1;
             
             swipeContainer.innerHTML = `
                 <div class="swipe-actions" onclick="quickDelete(${idx}, event)">
@@ -899,7 +921,7 @@
         selectedDateStr = dateStr; editingIndex = index;
         const record = workData[dateStr][index], isH = !!dynamicHolidays[dateStr], mult = isH ? 2 : 1;
         
-        // 條件 3: 跳出詳情視窗背景不動
+        // 條件 2: 詳情開啟鎖定背景
         document.body.classList.add('lock-bg');
 
         document.getElementById('detailDateDisplay').innerText = dateStr.replace(/-/g, '/');
@@ -1011,7 +1033,7 @@
             autoFillConfig(storageData.settings.defaultTitle);
         }
 
-        // 條件 3: 跳出編輯視窗背景不動
+        // 條件 2: 彈窗開啟鎖定背景
         document.body.classList.add('lock-bg');
 
         document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
@@ -1063,6 +1085,8 @@
         if (editingIndex > -1) workData[selectedDateStr][editingIndex] = newRecord;
         else workData[selectedDateStr].push(newRecord);
 
+        workData[selectedDateStr].sort((a, b) => a.startTime.localeCompare(b.startTime));
+
         storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate;
         storageData.settings.defaultStartTime = sT; storageData.settings.defaultEndTime = eT; 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
@@ -1085,7 +1109,6 @@
     }
 
     function updateStats() {
-        // 新增：如果當前正在搜尋，不要覆蓋搜尋統計結果 (條件 2)
         if (document.getElementById('searchWrapper').classList.contains('active') && document.getElementById('searchInput').value.trim() !== "") return;
 
         let sal = 0, hrs = 0;
@@ -1109,7 +1132,7 @@
         wrapper.classList.add('active'); 
         document.getElementById('clearSearchBtn').classList.remove('hidden');
         
-        // 條件 3: 進入搜尋狀態鎖定背景
+        // 條件 2: 搜尋時鎖定背景
         document.body.classList.add('lock-bg');
 
         setTimeout(() => { document.getElementById('searchInput').focus(); }, 50); 
@@ -1123,33 +1146,33 @@
         document.getElementById('searchInput').value = ''; 
         document.getElementById('searchResultsOverlay').classList.add('hidden'); 
         
-        // 恢復正常統計與解除背景鎖定
         document.body.classList.remove('lock-bg');
 
-        // 條件 1：還原名字
         document.getElementById('labelSalary').innerText = isYearView ? "年度預估總薪資" : "預估本月薪資";
         document.getElementById('labelHours').innerText = isYearView ? "年度累計總工時" : "本月累計工時";
+        document.getElementById('mainAddBtn').classList.remove('hidden');
 
         updateStats();
     }
     
     function execSearch() {
         const q = document.getElementById('searchInput').value.trim().toLowerCase(), overlay = document.getElementById('searchResultsOverlay');
+        const mainAddBtn = document.getElementById('mainAddBtn');
+
         if (!q) { 
             overlay.classList.add('hidden'); 
-            // 條件 1：若清空則還原名字
             document.getElementById('labelSalary').innerText = isYearView ? "年度預估總薪資" : "預估本月薪資";
             document.getElementById('labelHours').innerText = isYearView ? "年度累計總工時" : "本月累計工時";
+            mainAddBtn.classList.remove('hidden');
             updateStats(); 
             return; 
         }
         
-        // 條件 1：搜尋時更改名字
         document.getElementById('labelSalary').innerText = "薪資";
         document.getElementById('labelHours').innerText = "工時";
 
         overlay.innerHTML = '';
-        let searchTotalSal = 0, searchTotalHrs = 0; // 條件 2: 搜尋統計
+        let searchTotalSal = 0, searchTotalHrs = 0;
 
         const matched = Object.keys(workData).filter(d => {
             const records = workData[d];
@@ -1157,39 +1180,37 @@
         }).sort((a,b) => b.localeCompare(a));
 
         if (matched.length) {
+            mainAddBtn.classList.add('hidden');
             overlay.classList.remove('hidden');
             matched.forEach(d => {
                 workData[d].forEach((item, idx) => {
                     const isMatched = item.title.toLowerCase().includes(q) || (item.note && item.note.toLowerCase().includes(q));
                     if (!isMatched) return;
 
-                    // 計算符合條件的總和
                     const mult = !!dynamicHolidays[d] ? 2 : 1;
                     searchTotalSal += item.hours * item.rate * mult;
                     searchTotalHrs += item.hours;
 
                     const div = document.createElement('div');
-                    div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center active:bg-slate-100 mb-2 border border-slate-100 transition-colors";
-                    div.onclick = () => { openDetail(d, idx); }; // 搜尋時不直接 closeSearch 以免消失 (條件 1)
+                    div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center active:bg-slate-100 mb-2 border border-slate-100 transition-colors scrollable-content";
+                    div.onclick = () => { openDetail(d, idx); };
                     div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${d.replace(/-/g, '/')}</p><p class="font-bold text-slate-900">${item.title}</p></div><div class="text-right"><p class="font-black text-slate-800">$${Math.round(item.hours * item.rate * mult).toLocaleString()}</p><p class="text-[9px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
                     overlay.appendChild(div);
                 });
             });
 
-            // 條件 2: 更新畫面統計數據
             document.getElementById('totalHoursNet').innerHTML = `${searchTotalHrs.toFixed(1)} <span class="text-[10px] font-normal opacity-40">hr</span>`;
             document.getElementById('totalSalaryNet').innerText = `$${Math.round(searchTotalSal).toLocaleString()}`;
         } else {
             overlay.classList.remove('hidden');
             overlay.innerHTML = '<p class="text-center py-8 text-slate-400 font-bold text-sm">找不到相關紀錄...</p>';
-            // 查無結果則統計歸零
+            mainAddBtn.classList.remove('hidden');
             document.getElementById('totalHoursNet').innerHTML = `0.0 <span class="text-[10px] font-normal opacity-40">hr</span>`;
             document.getElementById('totalSalaryNet').innerText = `$0`;
         }
     }
     
     function handleSearchBlur() { 
-        // 條件 1: 修改 handleSearchBlur，如果搜尋框有文字，不收起搜尋結果
         const q = document.getElementById('searchInput').value.trim();
         if (q === "") {
             setTimeout(() => { if (document.getElementById('searchInput').value.trim() === "") closeSearch(); }, 200); 
@@ -1201,17 +1222,45 @@
     function setupGestureEvents() {
         const area = document.getElementById('app');
         area.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) touchStartX = e.touches[0].pageX;
-            else if (e.touches.length === 2) pinchStartDist = getPinchDist(e);
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].pageX;
+                touchStartY = e.touches[0].pageY; // 新增
+            } else if (e.touches.length === 2) pinchStartDist = getPinchDist(e);
         }, { passive: true });
+
         area.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2 && pinchStartDist > 0) {
+            if (e.touches.length === 1) {
+                // 條件 1：鎖定單向滾動
+                const moveX = e.touches[0].pageX;
+                const moveY = e.touches[0].pageY;
+                const diffX = Math.abs(moveX - touchStartX);
+                const diffY = Math.abs(moveY - touchStartY);
+
+                // 如果正在進行主要的水平滑動，則阻止垂直滾動
+                if (diffX > diffY && diffX > 10) {
+                    // 如果不是在滑動刪除項目，則阻止預設行為
+                    if (!e.target.closest('.swipe-item-container')) {
+                        if (e.cancelable) e.preventDefault();
+                    }
+                }
+            } else if (e.touches.length === 2 && pinchStartDist > 0) {
                 const currentDist = getPinchDist(e); const ratio = currentDist / pinchStartDist;
                 if (!isYearView && ratio < 0.75) { toggleView('year'); pinchStartDist = 0; }
             }
-        }, { passive: true });
+        }, { passive: false });
+
         area.addEventListener('touchend', (e) => {
-            if (e.changedTouches.length === 1 && e.touches.length === 0) { touchEndX = e.changedTouches[0].pageX; handleSwipeAction(); }
+            if (e.changedTouches.length === 1 && e.touches.length === 0) { 
+                touchEndX = e.changedTouches[0].pageX; 
+                touchEndY = e.changedTouches[0].pageY;
+                
+                // 條件 1：只有在水平位移顯著大於垂直位移時才觸發切換月份
+                const dx = touchEndX - touchStartX;
+                const dy = touchEndY - touchStartY;
+                if (Math.abs(dx) > Math.abs(dy) * 2) {
+                    handleSwipeAction(); 
+                }
+            }
             pinchStartDist = 0;
         }, { passive: true });
     }
@@ -1228,3 +1277,4 @@
 </script>
 </body>
 </html>
+
