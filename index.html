@@ -417,6 +417,9 @@
                         <div class="color-dot bg-rose-200" data-color="rose" onclick="selectColor('rose')"></div>
                         <div class="color-dot bg-blue-200" data-color="blue" onclick="selectColor('blue')"></div>
                         <div class="color-dot bg-purple-200" data-color="purple" onclick="selectColor('purple')"></div>
+                        <!-- 新增顏色點：橙色與粉色 -->
+                        <div class="color-dot bg-orange-200" data-color="orange" onclick="selectColor('orange')"></div>
+                        <div class="color-dot bg-pink-200" data-color="pink" onclick="selectColor('pink')"></div>
                     </div>
                 </div>
 
@@ -522,12 +525,15 @@
     let editingIndex = -1;
     let selectedColor = 'emerald';
 
+    // 新增：擴展 COLOR_THEMES 物件，加入 orange 與 pink 的樣式定義
     const COLOR_THEMES = {
         emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
         amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
         rose: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
         blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-        purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' }
+        purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+        pink: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' }
     };
     
     let touchStartX = 0;
