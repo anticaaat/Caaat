@@ -571,7 +571,9 @@
     
     let editingIndex = -1;
     let selectedColor = 'emerald';
-    let lastQueryResult = []; // 暫存區間統計結果
+    let lastQueryResult = []; 
+    let lastTotalSalary = 0;
+    let lastTotalHours = 0;
 
     const COLOR_THEMES = {
         emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -732,7 +734,10 @@
 
         list.innerHTML = '';
         lastQueryResult = [];
-        let tSal = 0, tHrs = 0, found = false;
+        lastTotalSalary = 0;
+        lastTotalHours = 0;
+        
+        let found = false;
         const sDates = Object.keys(workData).sort();
         const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -743,7 +748,7 @@
                         found = true;
                         const mult = !!dynamicHolidays[dStr] ? 2 : 1;
                         const pay = Math.round(item.hours * item.rate * mult);
-                        tSal += pay; tHrs += item.hours;
+                        lastTotalSalary += pay; lastTotalHours += item.hours;
 
                         const dateObj = new Date(dStr);
                         const weekDay = weekDays[dateObj.getDay()];
@@ -752,6 +757,7 @@
                         lastQueryResult.push({
                             dateText: `${shortDate}（${weekDay}）`,
                             timeText: `${item.startTime}-${item.endTime}`,
+                            hoursText: `${item.hours.toFixed(1)}h`,
                             payText: `$${pay}`
                         });
 
@@ -779,8 +785,8 @@
         if (found) {
             summary.classList.remove('hidden');
             copyBtn.classList.remove('hidden');
-            document.getElementById('rangeTotalSalary').innerText = `$${Math.round(tSal).toLocaleString()}`;
-            document.getElementById('rangeTotalHours').innerText = `${tHrs.toFixed(1)}h`;
+            document.getElementById('rangeTotalSalary').innerText = `$${Math.round(lastTotalSalary).toLocaleString()}`;
+            document.getElementById('rangeTotalHours').innerText = `${lastTotalHours.toFixed(1)}h`;
         } else {
             summary.classList.add('hidden');
             copyBtn.classList.add('hidden');
@@ -790,7 +796,13 @@
 
     function copyRangeToClipboard() {
         if (lastQueryResult.length === 0) return;
-        const copyText = lastQueryResult.map(item => `${item.dateText} ${item.timeText} ｜${item.payText}`).join('\n');
+        
+        let copyText = lastQueryResult.map(item => `${item.dateText} ${item.timeText} ｜ ${item.hoursText} ｜ ${item.payText}`).join('\n');
+        
+        copyText += `\n----------------------\n`;
+        copyText += `總計工時：${lastTotalHours.toFixed(1)}h\n`;
+        copyText += `總計薪資：$${Math.round(lastTotalSalary).toLocaleString()}`;
+
         const tempTextArea = document.createElement("textarea");
         tempTextArea.value = copyText;
         document.body.appendChild(tempTextArea);
