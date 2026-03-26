@@ -9,12 +9,10 @@
     <style>
         body { 
             overflow: hidden; 
-            /* 修改：移除原有的 touch-action: none 以允許特定方向滾動，改由 JS 控制 */
             background-color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 新增：條件 1 & 2 的強化 CSS 鎖定 */
         .lock-bg {
             position: fixed !important;
             width: 100%;
@@ -24,13 +22,11 @@
             -ms-touch-action: none !important;
         }
 
-        /* 新增：確保彈窗內部可以滾動，但不會傳遞給背景 */
         .scrollable-content {
             overscroll-behavior: contain;
         }
 
-        /* 原有樣式保持不變 */
-        #editModal, #dailyListModal, #detailModal, #settingsOverlay, #searchResultsOverlay {
+        #editModal, #dailyListModal, #detailModal, #settingsOverlay, #searchResultsOverlay, #rangeStatsOverlay {
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
         }
@@ -194,7 +190,6 @@
             border-radius: 2.5rem !important;
             margin-bottom: auto;
             margin-top: auto;
-            /* 讓清單面板內容過多時可捲動 */
             max-height: 85vh;
             display: flex;
             flex-direction: column;
@@ -278,11 +273,58 @@
                         <button onclick="exportData()" class="py-3 bg-white border border-blue-200 text-blue-600 text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯出資料代碼</button>
                         <button onclick="importData()" class="py-3 bg-blue-600 text-white text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯入資料代碼</button>
                     </div>
-                    <p class="text-[9px] text-blue-400 font-bold text-center">※ 更換 App 圖示前請先匯出代碼並存於記事本</p>
                 </div>
 
                 <button onclick="saveSettings()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-lg">完成設定</button>
             </div>
+        </div>
+    </div>
+
+    <div id="rangeStatsOverlay" class="fixed inset-0 bg-slate-900/60 z-[150] backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 flex flex-col max-h-[90vh] scrollable-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">區間薪資查詢</h3>
+                <button onclick="toggleRangeStats()" class="text-slate-400 p-2 bg-slate-50 rounded-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        <label class="text-[9px] font-black text-blue-500 uppercase ml-1 block mb-1">開始日期</label>
+                        <input type="date" id="statsStartDate" class="w-full bg-transparent font-bold text-sm outline-none cursor-pointer">
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        <label class="text-[9px] font-black text-blue-500 uppercase ml-1 block mb-1">結束日期</label>
+                        <input type="date" id="statsEndDate" class="w-full bg-transparent font-bold text-sm outline-none cursor-pointer">
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-1 block mb-1">過濾工作標題</label>
+                    <input type="text" id="statsFilterTitle" placeholder="留空則統計全部" class="w-full bg-transparent font-bold text-sm outline-none">
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="execRangeStats()" class="flex-grow bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-sm">執行查詢</button>
+                    <button id="copyRangeBtn" onclick="copyRangeToClipboard()" class="hidden w-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center active:scale-95 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="rangeResultSummary" class="hidden grid grid-cols-2 gap-3 bg-blue-50 p-4 rounded-2xl mb-4 border border-blue-100">
+                <div>
+                    <p class="text-[9px] font-black text-blue-400 uppercase">區間總薪資</p>
+                    <p id="rangeTotalSalary" class="text-xl font-black text-blue-600">$0</p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-black text-blue-400 uppercase">區間總工時</p>
+                    <p id="rangeTotalHours" class="text-xl font-black text-slate-800">0.0h</p>
+                </div>
+            </div>
+
+            <div id="rangeDetailsList" class="flex-grow overflow-y-auto space-y-3 no-scrollbar scrollable-content pb-4"></div>
         </div>
     </div>
 
@@ -314,6 +356,12 @@
             <div id="centerActions" class="flex-grow flex justify-center items-center">
                 <button id="todayBtn" onclick="goToToday()" class="px-8 py-2.5 bg-[#0f172a] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Today</button>
             </div>
+
+            <button id="statsRangeBtn" onclick="toggleRangeStats()" class="icon-btn mr-2">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </button>
 
             <button id="settingsBtn" onclick="toggleSettings()" class="icon-btn">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -417,7 +465,6 @@
                         <div class="color-dot bg-rose-200" data-color="rose" onclick="selectColor('rose')"></div>
                         <div class="color-dot bg-blue-200" data-color="blue" onclick="selectColor('blue')"></div>
                         <div class="color-dot bg-purple-200" data-color="purple" onclick="selectColor('purple')"></div>
-                        <!-- 新增顏色點：橙色與粉色 -->
                         <div class="color-dot bg-orange-200" data-color="orange" onclick="selectColor('orange')"></div>
                         <div class="color-dot bg-pink-200" data-color="pink" onclick="selectColor('pink')"></div>
                     </div>
@@ -524,8 +571,8 @@
     
     let editingIndex = -1;
     let selectedColor = 'emerald';
+    let lastQueryResult = []; // 暫存區間統計結果
 
-    // 新增：擴展 COLOR_THEMES 物件，加入 orange 與 pink 的樣式定義
     const COLOR_THEMES = {
         emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
         amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
@@ -536,26 +583,15 @@
         pink: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' }
     };
     
-    let touchStartX = 0;
-    let touchStartY = 0; // 新增：座標 Y
-    let touchEndX = 0;
-    let touchEndY = 0; // 新增：座標 Y
+    let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
     let pinchStartDist = 0;
     const swipeThreshold = 50;
 
     let storageData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { 
         records: {}, 
         settings: { 
-            defaultRate: 190, 
-            defaultTitle: "上班", 
-            defaultStartTime: "09:00", 
-            defaultEndTime: "18:00", 
-            defaultBreak: 0,
-            showTitle: true,
-            showTime: false,
-            showHours: true,
-            showSalary: true,
-            showNote: false
+            defaultRate: 190, defaultTitle: "上班", defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreak: 0,
+            showTitle: true, showTime: false, showHours: true, showSalary: true, showNote: false
         },
         titleHistory: {} 
     };
@@ -647,25 +683,126 @@
     let pickers = {};
     function init() {
         calculateHolidays();
-        const hours = Array.from({length: 24}, (_, i) => i);
-        const minutes = Array.from({length: 12}, (_, i) => i * 5);
-        pickers.sH = new iOSPicker('startHourPicker', hours, 9, () => updatePreview());
-        pickers.sM = new iOSPicker('startMinutePicker', minutes, 0, () => updatePreview());
-        pickers.eH = new iOSPicker('endHourPicker', hours, 18, () => updatePreview());
-        pickers.eM = new iOSPicker('endMinutePicker', minutes, 0, () => updatePreview());
+        const hrs = Array.from({length: 24}, (_, i) => i);
+        const mins = Array.from({length: 12}, (_, i) => i * 5);
+        pickers.sH = new iOSPicker('startHourPicker', hrs, 9, () => updatePreview());
+        pickers.sM = new iOSPicker('startMinutePicker', mins, 0, () => updatePreview());
+        pickers.eH = new iOSPicker('endHourPicker', hrs, 18, () => updatePreview());
+        pickers.eM = new iOSPicker('endMinutePicker', mins, 0, () => updatePreview());
         renderCalendar();
         setupGestureEvents();
         selectColor('emerald');
 
-        // 新增：全域防止多向滾動邏輯 (條件 1)
         window.addEventListener('touchmove', function(e) {
             if (document.body.classList.contains('lock-bg')) {
-                // 如果背景被鎖定，且觸摸點不在可滾動區域內，則完全阻止
-                if (!e.target.closest('.scrollable-content')) {
-                    e.preventDefault();
-                }
+                if (!e.target.closest('.scrollable-content')) e.preventDefault();
             }
         }, { passive: false });
+    }
+
+    function toggleRangeStats() {
+        const overlay = document.getElementById('rangeStatsOverlay');
+        if (overlay.classList.contains('hidden')) {
+            overlay.classList.remove('hidden');
+            document.body.classList.add('lock-bg');
+            const now = new Date();
+            const first = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('en-CA');
+            const today = now.toLocaleDateString('en-CA');
+            document.getElementById('statsStartDate').value = first;
+            document.getElementById('statsEndDate').value = today;
+            setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        } else {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                document.body.classList.remove('lock-bg');
+            }, 300);
+        }
+    }
+
+    function execRangeStats() {
+        const start = document.getElementById('statsStartDate').value;
+        const end = document.getElementById('statsEndDate').value;
+        const filterTitle = document.getElementById('statsFilterTitle').value.trim().toLowerCase();
+        const list = document.getElementById('rangeDetailsList');
+        const summary = document.getElementById('rangeResultSummary');
+        const copyBtn = document.getElementById('copyRangeBtn');
+        
+        if (!start || !end) return;
+
+        list.innerHTML = '';
+        lastQueryResult = [];
+        let tSal = 0, tHrs = 0, found = false;
+        const sDates = Object.keys(workData).sort();
+        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        sDates.forEach(dStr => {
+            if (dStr >= start && dStr <= end) {
+                workData[dStr].forEach(item => {
+                    if (filterTitle === "" || item.title.toLowerCase().includes(filterTitle)) {
+                        found = true;
+                        const mult = !!dynamicHolidays[dStr] ? 2 : 1;
+                        const pay = Math.round(item.hours * item.rate * mult);
+                        tSal += pay; tHrs += item.hours;
+
+                        const dateObj = new Date(dStr);
+                        const weekDay = weekDays[dateObj.getDay()];
+                        const shortDate = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
+
+                        lastQueryResult.push({
+                            dateText: `${shortDate}（${weekDay}）`,
+                            timeText: `${item.startTime}-${item.endTime}`,
+                            payText: `$${pay}`
+                        });
+
+                        const div = document.createElement('div');
+                        div.className = "p-4 bg-white border border-slate-100 rounded-2xl flex justify-between items-center shadow-sm";
+                        div.innerHTML = `
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${shortDate}（${weekDay}）</span>
+                                    <span class="text-[10px] font-bold text-slate-400">${item.startTime}-${item.endTime}</span>
+                                </div>
+                                <p class="text-sm font-black text-slate-800">${item.title}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-black text-blue-600">$${pay.toLocaleString()}</p>
+                                <p class="text-[10px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                    }
+                });
+            }
+        });
+
+        if (found) {
+            summary.classList.remove('hidden');
+            copyBtn.classList.remove('hidden');
+            document.getElementById('rangeTotalSalary').innerText = `$${Math.round(tSal).toLocaleString()}`;
+            document.getElementById('rangeTotalHours').innerText = `${tHrs.toFixed(1)}h`;
+        } else {
+            summary.classList.add('hidden');
+            copyBtn.classList.add('hidden');
+            list.innerHTML = '<p class="text-center py-10 text-slate-400 font-bold text-sm">此範圍內無相關紀錄</p>';
+        }
+    }
+
+    function copyRangeToClipboard() {
+        if (lastQueryResult.length === 0) return;
+        const copyText = lastQueryResult.map(item => `${item.dateText} ${item.timeText} ｜${item.payText}`).join('\n');
+        const tempTextArea = document.createElement("textarea");
+        tempTextArea.value = copyText;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        try {
+            document.execCommand('copy');
+            const btn = document.getElementById('copyRangeBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+            setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+        } catch (err) { alert('無法複製'); }
+        document.body.removeChild(tempTextArea);
     }
 
     function selectColor(color) {
@@ -679,21 +816,12 @@
         if (forceView === 'year') isYearView = true;
         else if (forceView === 'month') isYearView = false;
         else isYearView = !isYearView;
-
         document.getElementById('monthView').classList.toggle('hidden', isYearView);
         document.getElementById('yearView').classList.toggle('hidden', !isYearView);
         document.getElementById('navHeader').classList.toggle('hidden', isYearView);
-        
-        const labelSalary = document.getElementById('labelSalary');
-        const labelHours = document.getElementById('labelHours');
-        if (isYearView) {
-            labelSalary.innerText = "年度預估總薪資";
-            labelHours.innerText = "年度累計總工時";
-        } else {
-            labelSalary.innerText = "預估本月薪資";
-            labelHours.innerText = "本月累計工時";
-        }
-        
+        const ls = document.getElementById('labelSalary'), lh = document.getElementById('labelHours');
+        if (isYearView) { ls.innerText = "年度預估總薪資"; lh.innerText = "年度累計總工時"; } 
+        else { ls.innerText = "預估本月薪資"; lh.innerText = "本月累計工時"; }
         renderCalendar();
     }
 
@@ -701,7 +829,6 @@
         const overlay = document.getElementById('settingsOverlay');
         if (overlay.classList.contains('hidden')) {
             overlay.classList.remove('hidden');
-            // 條件 2: 彈窗開啟鎖定背景
             document.body.classList.add('lock-bg');
             document.getElementById('settingDefaultRate').value = storageData.settings.defaultRate;
             document.getElementById('checkShowTitle').checked = storageData.settings.showTitle !== false;
@@ -712,10 +839,7 @@
             setTimeout(() => overlay.classList.add('opacity-100'), 10);
         } else {
             overlay.classList.remove('opacity-100');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                document.body.classList.remove('lock-bg');
-            }, 300);
+            setTimeout(() => { overlay.classList.add('hidden'); document.body.classList.remove('lock-bg'); }, 300);
         }
     }
 
@@ -733,554 +857,251 @@
 
     function exportData() {
         const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(storageData))));
-        const tempInput = document.createElement("textarea");
-        tempInput.value = dataStr;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        // 不使用 alert，改用簡單 UI
-        const msg = document.createElement('div');
-        msg.className = "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-white px-6 py-4 rounded-3xl z-[200] font-bold shadow-2xl";
-        msg.innerText = "代碼已複製到剪貼簿！";
-        document.body.appendChild(msg);
-        setTimeout(() => msg.remove(), 2000);
+        const temp = document.createElement("textarea"); temp.value = dataStr;
+        document.body.appendChild(temp); temp.select(); document.execCommand("copy");
+        document.body.removeChild(temp);
     }
 
     function importData() {
-        const code = prompt("請貼上之前匯出的資料代碼：");
+        const code = prompt("請貼上資料代碼：");
         if (code) {
             try {
-                const decodedData = JSON.parse(decodeURIComponent(escape(atob(code))));
-                if (confirm("確定要匯入嗎？這將會蓋掉現有的所有紀錄！")) {
-                    storageData = decodedData;
-                    workData = storageData.records;
+                const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
+                if (confirm("確定要匯入嗎？現有紀錄將被蓋掉")) {
+                    storageData = decoded; workData = storageData.records;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
                     location.reload();
                 }
-            } catch (e) {
-                alert("代碼錯誤");
-            }
+            } catch (e) { alert("代碼錯誤"); }
         }
     }
 
     function renderCalendar() {
         const y = currentDate.getFullYear(), m = currentDate.getMonth();
         document.getElementById('yearDisplay').innerText = `${y}年`;
-        if (isYearView) {
-            document.getElementById('yearHeaderIos').innerText = y;
-            renderYearView(y);
-        } else { 
-            document.getElementById('monthDisplay').innerText = `${m + 1}月`; 
-            renderMonthView(y, m); 
-        }
+        if (isYearView) { document.getElementById('yearHeaderIos').innerText = y; renderYearView(y); } 
+        else { document.getElementById('monthDisplay').innerText = `${m + 1}月`; renderMonthView(y, m); }
         updateStats();
     }
 
     function renderMonthView(year, month) {
-        const daysInMonth = new Date(year, month + 1, 0).getDate(), firstDay = new Date(year, month, 1).getDay();
+        const dim = new Date(year, month + 1, 0).getDate(), fd = new Date(year, month, 1).getDay();
         const grid = document.getElementById('calendarDays'); grid.innerHTML = '';
         const s = storageData.settings;
-        
-        for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-        
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const isW = [0, 6].includes(new Date(year, month, d).getDay()), isH = !!dynamicHolidays[dateStr], data = workData[dateStr], el = document.createElement('div');
+        for (let i = 0; i < fd; i++) grid.appendChild(document.createElement('div'));
+        for (let d = 1; d <= dim; d++) {
+            const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const isW = [0, 6].includes(new Date(year, month, d).getDay()), isH = !!dynamicHolidays[dStr], data = workData[dStr], el = document.createElement('div');
             el.className = `day-cell cursor-pointer ${isH ? 'is-holiday' : (isW ? 'is-weekend' : '')}`;
-            if (dateStr === selectedDateStr) el.classList.add('is-today');
-            
-            let infoHtml = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
+            if (dStr === selectedDateStr) el.classList.add('is-today');
+            let info = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
             if (data && Array.isArray(data)) {
-                data.sort((a, b) => a.startTime.localeCompare(b.startTime));
-                data.forEach((item) => {
-                    const theme = COLOR_THEMES[item.color || 'blue'];
-                    const mult = isH ? 2 : 1;
-                    const pay = Math.round(item.hours * item.rate * mult);
-                    const showTitle = s.showTitle !== false;
-                    const showTime = s.showTime === true;
-                    const showHours = s.showHours !== false;
-                    const showSalary = s.showSalary !== false;
-                    const showNote = s.showNote === true;
-
-                    infoHtml += `
-                        <div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">
-                            ${showTitle ? `<div class="text-[8px] font-black truncate leading-tight">${item.title}</div>` : ''}
-                            ${showTime ? `<div class="text-[7px] font-bold opacity-80 leading-tight">${item.startTime}-${item.endTime}</div>` : ''}
-                            ${showHours ? `<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>` : ''}
-                            ${showSalary ? `<div class="text-[7px] font-bold opacity-70">$${pay}</div>` : ''}
-                            ${showNote && item.note ? `<div class="text-[6px] truncate opacity-60 italic mt-0.5">${item.note}</div>` : ''}
-                        </div>
-                    `;
+                data.sort((a, b) => a.startTime.localeCompare(b.startTime)).forEach(item => {
+                    const theme = COLOR_THEMES[item.color || 'blue'], pay = Math.round(item.hours * item.rate * (isH ? 2 : 1));
+                    info += `<div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">${s.showTitle?`<div class="text-[8px] font-black truncate">${item.title}</div>`:''}${s.showTime?`<div class="text-[7px] font-bold opacity-80">${item.startTime}-${item.endTime}</div>`:''}${s.showHours?`<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>`:''}${s.showSalary?`<div class="text-[7px] font-bold opacity-70">$${pay}</div>`:''}</div>`;
                 });
             }
-            infoHtml += `</div>`;
-            
-            el.innerHTML = `<div class="text-[10px] font-black ${isH || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${infoHtml}`;
-            el.onclick = () => { 
-                selectedDateStr = dateStr; 
-                if (data && data.length > 0) openDailyList(dateStr);
-                else renderCalendar(); 
-            };
+            el.innerHTML = `<div class="text-[10px] font-black ${isH || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
+            el.onclick = () => { selectedDateStr = dStr; if (data && data.length > 0) openDailyList(dStr); else renderCalendar(); };
             grid.appendChild(el);
         }
     }
 
-    function openDailyList(dateStr) {
-        selectedDateStr = dateStr;
-        const records = workData[dateStr] || [];
-        
-        // 條件 2: 開啟列表鎖定背景
-        document.body.classList.add('lock-bg');
-
-        document.getElementById('dailyListDate').innerText = dateStr.replace(/-/g, '/') + " 紀錄清單";
-        const container = document.getElementById('dailyItemsContainer');
-        container.innerHTML = '';
-        
-        records.sort((a, b) => a.startTime.localeCompare(b.startTime));
-        
-        records.forEach((item, idx) => {
-            const theme = COLOR_THEMES[item.color || 'emerald'];
-            const swipeContainer = document.createElement('div');
-            swipeContainer.className = "swipe-item-container mb-3";
-            const mult = !!dynamicHolidays[dateStr] ? 2 : 1;
-            
-            swipeContainer.innerHTML = `
-                <div class="swipe-actions" onclick="quickDelete(${idx}, event)">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                </div>
-                <div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" 
-                     data-index="${idx}"
-                     ontouchstart="handleItemTouchStart(event)" 
-                     ontouchmove="handleItemTouchMove(event)" 
-                     ontouchend="handleItemTouchEnd(event)"
-                     onclick="handleItemClick(${idx}, event)">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-black uppercase ${theme.text} tracking-wider">${item.startTime} - ${item.endTime}</span>
-                        <span class="text-sm font-black text-slate-900">${item.title}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-sm font-black text-slate-800">$${Math.round(item.hours * item.rate * mult).toLocaleString()}</span>
-                        <p class="text-sm font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
-                    </div>
-                </div>
-            `;
-            container.appendChild(swipeContainer);
+    function openDailyList(dStr) {
+        selectedDateStr = dStr; document.body.classList.add('lock-bg');
+        document.getElementById('dailyListDate').innerText = dStr.replace(/-/g, '/') + " 紀錄清單";
+        const container = document.getElementById('dailyItemsContainer'); container.innerHTML = '';
+        const recs = workData[dStr] || []; recs.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        recs.forEach((item, idx) => {
+            const theme = COLOR_THEMES[item.color || 'emerald'], pay = Math.round(item.hours * item.rate * (!!dynamicHolidays[dStr] ? 2 : 1));
+            const div = document.createElement('div'); div.className = "swipe-item-container mb-3";
+            div.innerHTML = `<div class="swipe-actions" onclick="quickDelete(${idx}, event)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" data-index="${idx}" ontouchstart="handleItemTouchStart(event)" ontouchmove="handleItemTouchMove(event)" onclick="handleItemClick(${idx}, event)"><div class="flex flex-col"><span class="text-[10px] font-black ${theme.text}">${item.startTime}-${item.endTime}</span><span class="text-sm font-black text-slate-900">${item.title}</span></div><div class="text-right"><span class="text-sm font-black text-slate-800">$${pay.toLocaleString()}</span><p class="text-sm font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
+            container.appendChild(div);
         });
-        
-        const modal = document.getElementById('dailyListModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        renderCalendar();
+        const modal = document.getElementById('dailyListModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
-    let itemStartX = 0;
-    let currentSwipedEl = null;
-
-    function handleItemTouchStart(e) {
-        itemStartX = e.touches[0].pageX;
-        if (currentSwipedEl && currentSwipedEl !== e.currentTarget) currentSwipedEl.classList.remove('swiped');
-    }
-
-    function handleItemTouchMove(e) {
-        const x = e.touches[0].pageX;
-        const diff = itemStartX - x;
-        const el = e.currentTarget;
-        if (diff > 30) { el.classList.add('swiped'); currentSwipedEl = el; } 
-        else if (diff < -30) { el.classList.remove('swiped'); if (currentSwipedEl === el) currentSwipedEl = null; }
-    }
-
-    function handleItemTouchEnd(e) {}
-
-    function handleItemClick(idx, e) {
-        if (e.currentTarget.classList.contains('swiped')) {
-            e.currentTarget.classList.remove('swiped');
-            currentSwipedEl = null;
-            return;
-        }
-        openDetail(selectedDateStr, idx);
-        closeDailyList();
-    }
+    let itemStartX = 0, currentSwipedEl = null;
+    function handleItemTouchStart(e) { itemStartX = e.touches[0].pageX; if (currentSwipedEl && currentSwipedEl !== e.currentTarget) currentSwipedEl.classList.remove('swiped'); }
+    function handleItemTouchMove(e) { const diff = itemStartX - e.touches[0].pageX; if (diff > 30) { e.currentTarget.classList.add('swiped'); currentSwipedEl = e.currentTarget; } else if (diff < -30) { e.currentTarget.classList.remove('swiped'); } }
+    function handleItemClick(idx, e) { if (e.currentTarget.classList.contains('swiped')) { e.currentTarget.classList.remove('swiped'); return; } openDetail(selectedDateStr, idx); closeDailyList(); }
 
     function quickDelete(idx, e) {
-        e.stopPropagation();
-        const records = workData[selectedDateStr];
-        if (records && records[idx]) {
-            records.splice(idx, 1);
-            if (records.length === 0) delete workData[selectedDateStr];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-            if (workData[selectedDateStr]) openDailyList(selectedDateStr);
-            else closeDailyList();
-            renderCalendar();
-            updateStats();
-        }
+        e.stopPropagation(); const recs = workData[selectedDateStr];
+        if (recs && recs[idx]) { recs.splice(idx, 1); if (recs.length === 0) delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); if (workData[selectedDateStr]) openDailyList(selectedDateStr); else closeDailyList(); renderCalendar(); updateStats(); }
     }
 
-    function closeDailyList() {
-        document.getElementById('dailyListModal').classList.remove('flex');
-        document.getElementById('dailyListModal').classList.add('hidden');
-        document.body.classList.remove('lock-bg');
-        currentSwipedEl = null;
+    function closeDailyList() { document.getElementById('dailyListModal').classList.remove('flex'); document.getElementById('dailyListModal').classList.add('hidden'); document.body.classList.remove('lock-bg'); }
+
+    function openDetail(dStr, idx) {
+        selectedDateStr = dStr; editingIndex = idx; document.body.classList.add('lock-bg');
+        const rec = workData[dStr][idx], mult = !!dynamicHolidays[dStr] ? 2 : 1;
+        document.getElementById('detailDateDisplay').innerText = dStr.replace(/-/g, '/');
+        document.getElementById('detailTitle').innerText = rec.title;
+        document.getElementById('detailTimeRange').innerText = `${rec.startTime} - ${rec.endTime} (扣除 ${rec.breakMinutes || 0}m)`;
+        document.getElementById('detailHours').innerText = `${rec.hours.toFixed(2)}h`;
+        document.getElementById('detailSalary').innerText = `$${Math.round(rec.hours * rec.rate * mult).toLocaleString()}`;
+        const ns = document.getElementById('detailNoteSection'); if (rec.note) { document.getElementById('detailNote').innerText = rec.note; ns.classList.remove('hidden'); } else ns.classList.add('hidden');
+        const modal = document.getElementById('detailModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
-    function openDetail(dateStr, index) {
-        selectedDateStr = dateStr; editingIndex = index;
-        const record = workData[dateStr][index], isH = !!dynamicHolidays[dateStr], mult = isH ? 2 : 1;
-        
-        // 條件 2: 詳情開啟鎖定背景
-        document.body.classList.add('lock-bg');
+    function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); document.body.classList.remove('lock-bg'); }
 
-        document.getElementById('detailDateDisplay').innerText = dateStr.replace(/-/g, '/');
-        document.getElementById('detailTitle').innerText = record.title;
-        document.getElementById('detailTimeRange').innerText = `${record.startTime} - ${record.endTime} (扣除 ${record.breakMinutes || 0}m)`;
-        document.getElementById('detailHours').innerText = `${record.hours.toFixed(2)}h`;
-        document.getElementById('detailSalary').innerText = `$${Math.round(record.hours * record.rate * mult).toLocaleString()}`;
-        
-        const noteEl = document.getElementById('detailNote'), noteSec = document.getElementById('detailNoteSection');
-        if (record.note) { noteEl.innerText = record.note; noteSec.classList.remove('hidden'); } 
-        else noteSec.classList.add('hidden');
-
-        const modal = document.getElementById('detailModal');
-        modal.classList.remove('hidden'); modal.classList.add('flex');
-    }
-
-    function closeDetail() {
-        const modal = document.getElementById('detailModal');
-        modal.classList.add('hidden'); modal.classList.remove('flex');
-        document.body.classList.remove('lock-bg');
-    }
-
-    function deleteSingleRecord() {
-        if (editingIndex > -1) {
-            workData[selectedDateStr].splice(editingIndex, 1);
-            if (workData[selectedDateStr].length === 0) delete workData[selectedDateStr];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-            closeDetail(); renderCalendar();
-        }
-    }
+    function deleteSingleRecord() { if (editingIndex > -1) { workData[selectedDateStr].splice(editingIndex, 1); if (workData[selectedDateStr].length === 0) delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); closeDetail(); renderCalendar(); } }
 
     function editSingleRecord() {
-        const record = workData[selectedDateStr][editingIndex];
-        openModalForSelected(); 
-        document.getElementById('inputTitle').value = record.title;
-        document.getElementById('inputRate').value = record.rate;
-        document.getElementById('breakMinutes').value = record.breakMinutes || 0;
-        document.getElementById('inputNote').value = record.note || "";
-        toggleBreakInput((record.breakMinutes || 0) > 0);
-        selectColor(record.color || 'emerald');
-        const [sh, sm] = record.startTime.split(':').map(Number);
-        const [eh, em] = record.endTime.split(':').map(Number);
+        const rec = workData[selectedDateStr][editingIndex]; openModalForSelected();
+        document.getElementById('inputTitle').value = rec.title; document.getElementById('inputRate').value = rec.rate;
+        document.getElementById('breakMinutes').value = rec.breakMinutes || 0; document.getElementById('inputNote').value = rec.note || "";
+        toggleBreakInput((rec.breakMinutes || 0) > 0); selectColor(rec.color || 'emerald');
+        const [sh, sm] = rec.startTime.split(':').map(Number), [eh, em] = rec.endTime.split(':').map(Number);
         pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
-        document.getElementById('modalSubmitBtn').innerText = "更新紀錄";
-        closeDetail(); updatePreview();
+        document.getElementById('modalSubmitBtn').innerText = "更新紀錄"; closeDetail(); updatePreview();
     }
 
-    function renderYearView(year) {
+    function renderYearView(y) {
         const container = document.getElementById('yearMonthsIos'); container.innerHTML = '';
-        const months = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-        const todayStr = new Date().toLocaleDateString('en-CA');
+        const months = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"], today = new Date().toLocaleDateString('en-CA');
         for (let m = 0; m < 12; m++) {
             const mDiv = document.createElement('div'); mDiv.className = 'text-left active:opacity-50 transition-opacity';
             let h = `<div class="text-[12px] font-black mb-1">${months[m]}</div><div class="grid grid-cols-7 gap-px">`;
-            const dim = new Date(year, m + 1, 0).getDate(), fd = new Date(year, m, 1).getDay();
+            const dim = new Date(y, m+1, 0).getDate(), fd = new Date(y, m, 1).getDay();
             for (let i = 0; i < fd; i++) h += `<div></div>`;
             for (let d = 1; d <= dim; d++) {
-                const ds = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const hasR = workData[ds] && workData[ds].length > 0, isT = ds === todayStr, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(year,m,d).getDay());
-                let baseCls = 'text-[7px] h-3.5 w-3.5 flex items-center justify-center ';
-                let textCls = isH ? 'text-red-500 font-black' : (isW ? 'text-red-300 font-bold' : (isT ? 'text-white' : (hasR ? 'text-slate-900 font-bold' : 'text-slate-300')));
-                let bgCls = isT ? 'bg-blue-500 rounded-full' : (hasR ? 'bg-slate-200 rounded-sm' : '');
-                h += `<div class="${baseCls} ${bgCls} ${textCls}">${d}</div>`;
+                const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const has = workData[ds] && workData[ds].length, isT = ds === today, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(y,m,d).getDay());
+                h += `<div class="text-[7px] h-3.5 w-3.5 flex items-center justify-center ${isT?'bg-blue-500 rounded-full text-white':(has?'bg-slate-200 rounded-sm text-slate-900 font-bold':(isH||isW?'text-red-300':'text-slate-300'))}">${d}</div>`;
             }
-            mDiv.innerHTML = h + `</div>`; 
-            mDiv.onclick = () => { currentDate.setMonth(m); toggleView('month'); };
+            mDiv.innerHTML = h + `</div>`; mDiv.onclick = () => { currentDate.setMonth(m); toggleView('month'); };
             container.appendChild(mDiv);
         }
     }
 
-    function changeDate(v) { 
-        const viewId = isYearView ? 'yearView' : 'monthView';
-        const view = document.getElementById(viewId);
-        view.style.transform = `translateX(${v * -20}px)`; view.style.opacity = '0';
+    function changeDate(v) {
+        const view = document.getElementById(isYearView ? 'yearView' : 'monthView');
+        view.style.transform = `translateX(${v*-20}px)`; view.style.opacity = '0';
         setTimeout(() => {
-            if (isYearView) currentDate.setFullYear(currentDate.getFullYear() + v);
-            else currentDate.setMonth(currentDate.getMonth() + v);
-            renderCalendar();
-            view.style.transform = `translateX(${v * 20}px)`;
+            if (isYearView) currentDate.setFullYear(currentDate.getFullYear() + v); else currentDate.setMonth(currentDate.getMonth() + v);
+            renderCalendar(); view.style.transform = `translateX(${v*20}px)`;
             setTimeout(() => { view.style.transform = 'translateX(0)'; view.style.opacity = '1'; }, 10);
         }, 150);
     }
     
-    function goToToday() { 
-        currentDate = new Date(); selectedDateStr = currentDate.toLocaleDateString('en-CA');
-        if (isYearView) toggleView('month'); 
-        renderCalendar(); 
-    }
+    function goToToday() { currentDate = new Date(); selectedDateStr = currentDate.toLocaleDateString('en-CA'); if (isYearView) toggleView('month'); renderCalendar(); }
 
-    function toggleBreakInput(forceState) {
+    function toggleBreakInput(f) {
         const btn = document.getElementById('breakBtn'), wrap = document.getElementById('breakInputWrapper');
-        let isActive = forceState !== undefined ? forceState : !btn.classList.contains('bg-blue-600');
-        if (isActive) { btn.innerText = "有休息"; btn.classList.replace('bg-slate-200', 'bg-blue-600'); btn.classList.replace('text-slate-500', 'text-white'); wrap.classList.remove('hidden'); } 
-        else { btn.innerText = "無休息"; btn.classList.replace('bg-blue-600', 'bg-slate-200'); btn.classList.replace('text-white', 'text-slate-500'); wrap.classList.add('hidden'); document.getElementById('breakMinutes').value = 0; }
+        let act = f !== undefined ? f : !btn.classList.contains('bg-blue-600');
+        if (act) { btn.innerText = "有休息"; btn.className = "px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black transition-all"; wrap.classList.remove('hidden'); } 
+        else { btn.innerText = "無休息"; btn.className = "px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all"; wrap.classList.add('hidden'); document.getElementById('breakMinutes').value = 0; }
         updatePreview();
     }
 
     function openModalForSelected() {
         if (editingIndex === -1) {
-            document.getElementById('modalSubmitBtn').innerText = "加入新項目";
-            document.getElementById('inputTitle').value = storageData.settings.defaultTitle;
-            document.getElementById('inputRate').value = storageData.settings.defaultRate;
-            document.getElementById('breakMinutes').value = 0;
-            document.getElementById('inputNote').value = "";
-            toggleBreakInput(false);
-            const [sh, sm] = storageData.settings.defaultStartTime.split(':').map(Number);
-            const [eh, em] = storageData.settings.defaultEndTime.split(':').map(Number);
+            const s = storageData.settings;
+            document.getElementById('modalSubmitBtn').innerText = "加入新項目"; document.getElementById('inputTitle').value = s.defaultTitle;
+            document.getElementById('inputRate').value = s.defaultRate; document.getElementById('breakMinutes').value = 0; toggleBreakInput(false);
+            const [sh, sm] = s.defaultStartTime.split(':').map(Number), [eh, em] = s.defaultEndTime.split(':').map(Number);
             pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
-            autoFillConfig(storageData.settings.defaultTitle);
         }
-
-        // 條件 2: 彈窗開啟鎖定背景
-        document.body.classList.add('lock-bg');
-
-        document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
-        const hName = dynamicHolidays[selectedDateStr], tag = document.getElementById('holidayTag');
-        if (hName) { tag.innerText = `${hName} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
-        updatePreview(); 
-        const modal = document.getElementById('editModal');
-        modal.classList.remove('hidden'); modal.classList.add('flex');
+        document.body.classList.add('lock-bg'); document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
+        const h = dynamicHolidays[selectedDateStr], tag = document.getElementById('holidayTag');
+        if (h) { tag.innerText = `${h} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
+        updatePreview(); const modal = document.getElementById('editModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
-    function autoFillConfig(title) {
-        if (!storageData.titleHistory) return;
-        const config = storageData.titleHistory[title];
-        if (config && editingIndex === -1) { 
-            document.getElementById('inputRate').value = config.rate;
-            document.getElementById('breakMinutes').value = config.breakMinutes || 0;
-            toggleBreakInput((config.breakMinutes || 0) > 0);
-            selectColor(config.color || 'emerald');
-            const [sh, sm] = config.startTime.split(':').map(Number);
-            const [eh, em] = config.endTime.split(':').map(Number);
-            pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
-            updatePreview();
+    function autoFillConfig(t) {
+        const c = storageData.titleHistory[t]; if (c && editingIndex === -1) { 
+            document.getElementById('inputRate').value = c.rate; document.getElementById('breakMinutes').value = c.breakMinutes || 0;
+            toggleBreakInput((c.breakMinutes || 0) > 0); selectColor(c.color || 'emerald');
+            const [sh, sm] = c.startTime.split(':').map(Number), [eh, em] = c.endTime.split(':').map(Number);
+            pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em); updatePreview();
         }
     }
 
     function updatePreview() {
-        const sh = pickers.sH.getValue(), sm = pickers.sM.getValue(), eh = pickers.eH.getValue(), em = pickers.eM.getValue();
-        const rate = parseFloat(document.getElementById('inputRate').value) || 0, breakMins = parseInt(document.getElementById('breakMinutes').value) || 0;
-        let diff = (eh * 60 + em) - (sh * 60 + sm); if (diff < 0) diff += 1440;
-        const netHrs = Math.max(0, diff - breakMins) / 60, mult = !!dynamicHolidays[selectedDateStr] ? 2 : 1;
-        document.getElementById('previewGrossHours').innerText = `${netHrs.toFixed(2)}h`;
-        document.getElementById('previewNetSalary').innerText = `$${Math.round(netHrs * rate * mult).toLocaleString()}`;
+        const rate = parseFloat(document.getElementById('inputRate').value) || 0, bm = parseInt(document.getElementById('breakMinutes').value) || 0;
+        let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
+        const hrs = Math.max(0, diff - bm) / 60, pay = Math.round(hrs * rate * (!!dynamicHolidays[selectedDateStr] ? 2 : 1));
+        document.getElementById('previewGrossHours').innerText = `${hrs.toFixed(2)}h`;
+        document.getElementById('previewNetSalary').innerText = `$${pay.toLocaleString()}`;
     }
 
     function saveData() {
-        const title = document.getElementById('inputTitle').value || "打工", 
-              rate = parseFloat(document.getElementById('inputRate').value) || 0, 
-              breakMins = parseInt(document.getElementById('breakMinutes').value) || 0, 
-              note = document.getElementById('inputNote').value;
-        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, 
-              eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
-        let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue());
-        if (diff < 0) diff += 1440;
-        
-        const newRecord = { title, hours: Math.max(0, diff - breakMins)/60, rate, startTime: sT, endTime: eT, breakMinutes: breakMins, note, color: selectedColor };
-        if (!storageData.titleHistory) storageData.titleHistory = {};
-        storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: breakMins, color: selectedColor };
+        const title = document.getElementById('inputTitle').value || "打工", rate = parseFloat(document.getElementById('inputRate').value) || 0, bm = parseInt(document.getElementById('breakMinutes').value) || 0;
+        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
+        let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
+        const rec = { title, hours: Math.max(0, diff - bm)/60, rate, startTime: sT, endTime: eT, breakMinutes: bm, note: document.getElementById('inputNote').value, color: selectedColor };
+        if (!storageData.titleHistory) storageData.titleHistory = {}; storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: bm, color: selectedColor };
         if (!Array.isArray(workData[selectedDateStr])) workData[selectedDateStr] = [];
-        if (editingIndex > -1) workData[selectedDateStr][editingIndex] = newRecord;
-        else workData[selectedDateStr].push(newRecord);
-
-        workData[selectedDateStr].sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate;
-        storageData.settings.defaultStartTime = sT; storageData.settings.defaultEndTime = eT; 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
+        if (editingIndex > -1) workData[selectedDateStr][editingIndex] = rec; else workData[selectedDateStr].push(rec);
+        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
         closeModal(); renderCalendar();
     }
 
-    function clearDayRecords() {
-        if (workData[selectedDateStr]) {
-            delete workData[selectedDateStr];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
-            closeModal(); renderCalendar();
-        }
-    }
-
-    function closeModal() { 
-        const modal = document.getElementById('editModal');
-        modal.classList.add('hidden'); modal.classList.remove('flex');
-        document.body.classList.remove('lock-bg');
-        editingIndex = -1; 
-    }
+    function clearDayRecords() { if (workData[selectedDateStr]) { delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); closeModal(); renderCalendar(); } }
+    function closeModal() { document.getElementById('editModal').classList.add('hidden'); document.body.classList.remove('lock-bg'); editingIndex = -1; }
 
     function updateStats() {
-        if (document.getElementById('searchWrapper').classList.contains('active') && document.getElementById('searchInput').value.trim() !== "") return;
-
-        let sal = 0, hrs = 0;
-        const prefix = isYearView ? `${currentDate.getFullYear()}-` : `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-`;
-        Object.keys(workData).forEach(d => { 
-            if (d.startsWith(prefix)) { 
-                const records = Array.isArray(workData[d]) ? workData[d] : [];
-                records.forEach(item => {
-                    hrs += item.hours; sal += item.hours * item.rate * (!!dynamicHolidays[d] ? 2 : 1); 
-                });
-            } 
-        });
-        document.getElementById('totalHoursNet').innerHTML = `${hrs.toFixed(1)} <span class="text-[10px] font-normal opacity-40">hr</span>`;
+        if (document.getElementById('searchWrapper').classList.contains('active')) return;
+        let sal = 0, hrs = 0, pref = isYearView ? `${currentDate.getFullYear()}-` : `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-`;
+        Object.keys(workData).forEach(d => { if (d.startsWith(pref)) { workData[d].forEach(item => { hrs += item.hours; sal += item.hours * item.rate * (!!dynamicHolidays[d]?2:1); }); } });
+        document.getElementById('totalHoursNet').innerHTML = `${hrs.toFixed(1)} <span class="opacity-40 text-[10px]">hr</span>`;
         document.getElementById('totalSalaryNet').innerText = `$${Math.round(sal).toLocaleString()}`;
     }
 
-    function openSearch() { 
-        document.getElementById('centerActions').classList.add('hidden'); 
-        document.getElementById('settingsBtn').classList.add('hidden'); 
-        const wrapper = document.getElementById('searchWrapper');
-        wrapper.classList.add('active'); 
-        document.getElementById('clearSearchBtn').classList.remove('hidden');
-        
-        // 條件 2: 搜尋時鎖定背景
-        document.body.classList.add('lock-bg');
-
-        setTimeout(() => { document.getElementById('searchInput').focus(); }, 50); 
-    }
-
-    function closeSearch() { 
-        document.getElementById('searchWrapper').classList.remove('active'); 
-        document.getElementById('centerActions').classList.remove('hidden'); 
-        document.getElementById('settingsBtn').classList.remove('hidden'); 
-        document.getElementById('clearSearchBtn').classList.add('hidden');
-        document.getElementById('searchInput').value = ''; 
-        document.getElementById('searchResultsOverlay').classList.add('hidden'); 
-        
-        document.body.classList.remove('lock-bg');
-
-        document.getElementById('labelSalary').innerText = isYearView ? "年度預估總薪資" : "預估本月薪資";
-        document.getElementById('labelHours').innerText = isYearView ? "年度累計總工時" : "本月累計工時";
-        document.getElementById('mainAddBtn').classList.remove('hidden');
-
-        updateStats();
-    }
+    function openSearch() { document.getElementById('centerActions').classList.add('hidden'); document.getElementById('settingsBtn').classList.add('hidden'); document.getElementById('searchWrapper').classList.add('active'); document.getElementById('clearSearchBtn').classList.remove('hidden'); document.body.classList.add('lock-bg'); setTimeout(() => document.getElementById('searchInput').focus(), 50); }
+    function closeSearch() { document.getElementById('searchWrapper').classList.remove('active'); document.getElementById('centerActions').classList.remove('hidden'); document.getElementById('settingsBtn').classList.remove('hidden'); document.getElementById('clearSearchBtn').classList.add('hidden'); document.getElementById('searchInput').value = ''; document.getElementById('searchResultsOverlay').classList.add('hidden'); document.body.classList.remove('lock-bg'); updateStats(); }
     
     function execSearch() {
         const q = document.getElementById('searchInput').value.trim().toLowerCase(), overlay = document.getElementById('searchResultsOverlay');
-        const mainAddBtn = document.getElementById('mainAddBtn');
-
-        if (!q) { 
-            overlay.classList.add('hidden'); 
-            document.getElementById('labelSalary').innerText = isYearView ? "年度預估總薪資" : "預估本月薪資";
-            document.getElementById('labelHours').innerText = isYearView ? "年度累計總工時" : "本月累計工時";
-            mainAddBtn.classList.remove('hidden');
-            updateStats(); 
-            return; 
-        }
-        
-        document.getElementById('labelSalary').innerText = "薪資";
-        document.getElementById('labelHours').innerText = "工時";
-
-        overlay.innerHTML = '';
-        let searchTotalSal = 0, searchTotalHrs = 0;
-
-        const matched = Object.keys(workData).filter(d => {
-            const records = workData[d];
-            return records.some(r => r.title.toLowerCase().includes(q) || (r.note && r.note.toLowerCase().includes(q)));
-        }).sort((a,b) => b.localeCompare(a));
-
+        if (!q) { overlay.classList.add('hidden'); updateStats(); return; }
+        overlay.innerHTML = ''; let tS = 0, tH = 0;
+        const matched = Object.keys(workData).filter(d => workData[d].some(r => r.title.toLowerCase().includes(q) || (r.note && r.note.toLowerCase().includes(q)))).sort((a,b)=>b.localeCompare(a));
         if (matched.length) {
-            mainAddBtn.classList.add('hidden');
             overlay.classList.remove('hidden');
-            matched.forEach(d => {
-                workData[d].forEach((item, idx) => {
-                    const isMatched = item.title.toLowerCase().includes(q) || (item.note && item.note.toLowerCase().includes(q));
-                    if (!isMatched) return;
-
-                    const mult = !!dynamicHolidays[d] ? 2 : 1;
-                    searchTotalSal += item.hours * item.rate * mult;
-                    searchTotalHrs += item.hours;
-
-                    const div = document.createElement('div');
-                    div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center active:bg-slate-100 mb-2 border border-slate-100 transition-colors scrollable-content";
-                    div.onclick = () => { openDetail(d, idx); };
-                    div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${d.replace(/-/g, '/')}</p><p class="font-bold text-slate-900">${item.title}</p></div><div class="text-right"><p class="font-black text-slate-800">$${Math.round(item.hours * item.rate * mult).toLocaleString()}</p><p class="text-[9px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
-                    overlay.appendChild(div);
-                });
-            });
-
-            document.getElementById('totalHoursNet').innerHTML = `${searchTotalHrs.toFixed(1)} <span class="text-[10px] font-normal opacity-40">hr</span>`;
-            document.getElementById('totalSalaryNet').innerText = `$${Math.round(searchTotalSal).toLocaleString()}`;
-        } else {
-            overlay.classList.remove('hidden');
-            overlay.innerHTML = '<p class="text-center py-8 text-slate-400 font-bold text-sm">找不到相關紀錄...</p>';
-            mainAddBtn.classList.remove('hidden');
-            document.getElementById('totalHoursNet').innerHTML = `0.0 <span class="text-[10px] font-normal opacity-40">hr</span>`;
-            document.getElementById('totalSalaryNet').innerText = `$0`;
+            matched.forEach(d => { workData[d].forEach((item, idx) => {
+                if (!item.title.toLowerCase().includes(q) && !(item.note && item.note.toLowerCase().includes(q))) return;
+                const pay = item.hours * item.rate * (!!dynamicHolidays[d]?2:1); tS += pay; tH += item.hours;
+                const div = document.createElement('div'); div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center mb-2 border border-slate-100";
+                div.onclick = () => openDetail(d, idx);
+                div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500">${d.replace(/-/g,'/')}</p><p class="font-bold">${item.title}</p></div><div class="text-right"><p class="font-black">$${Math.round(pay).toLocaleString()}</p><p class="text-[9px] text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
+                overlay.appendChild(div);
+            }); });
+            document.getElementById('totalHoursNet').innerHTML = `${tH.toFixed(1)} <span class="opacity-40 text-[10px]">hr</span>`;
+            document.getElementById('totalSalaryNet').innerText = `$${Math.round(tS).toLocaleString()}`;
         }
     }
     
-    function handleSearchBlur() { 
-        const q = document.getElementById('searchInput').value.trim();
-        if (q === "") {
-            setTimeout(() => { if (document.getElementById('searchInput').value.trim() === "") closeSearch(); }, 200); 
-        }
-    }
-
-    function getPinchDist(e) { return Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); }
+    function handleSearchBlur() { if (!document.getElementById('searchInput').value) setTimeout(closeSearch, 200); }
 
     function setupGestureEvents() {
-        const area = document.getElementById('app');
-        area.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                touchStartX = e.touches[0].pageX;
-                touchStartY = e.touches[0].pageY; // 新增
-            } else if (e.touches.length === 2) pinchStartDist = getPinchDist(e);
+        const app = document.getElementById('app');
+        app.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) { touchStartX = e.touches[0].pageX; touchStartY = e.touches[0].pageY; } 
+            else if (e.touches.length === 2) pinchStartDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
         }, { passive: true });
-
-        area.addEventListener('touchmove', (e) => {
+        app.addEventListener('touchmove', (e) => {
             if (e.touches.length === 1) {
-                // 條件 1：鎖定單向滾動
-                const moveX = e.touches[0].pageX;
-                const moveY = e.touches[0].pageY;
-                const diffX = Math.abs(moveX - touchStartX);
-                const diffY = Math.abs(moveY - touchStartY);
-
-                // 如果正在進行主要的水平滑動，則阻止垂直滾動
-                if (diffX > diffY && diffX > 10) {
-                    // 如果不是在滑動刪除項目，則阻止預設行為
-                    if (!e.target.closest('.swipe-item-container')) {
-                        if (e.cancelable) e.preventDefault();
-                    }
-                }
+                const dx = Math.abs(e.touches[0].pageX - touchStartX), dy = Math.abs(e.touches[0].pageY - touchStartY);
+                if (dx > dy && dx > 10 && !e.target.closest('.swipe-item-container') && e.cancelable) e.preventDefault();
             } else if (e.touches.length === 2 && pinchStartDist > 0) {
-                const currentDist = getPinchDist(e); const ratio = currentDist / pinchStartDist;
-                if (!isYearView && ratio < 0.75) { toggleView('year'); pinchStartDist = 0; }
+                const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                if (!isYearView && d/pinchStartDist < 0.75) { toggleView('year'); pinchStartDist = 0; }
             }
         }, { passive: false });
-
-        area.addEventListener('touchend', (e) => {
-            if (e.changedTouches.length === 1 && e.touches.length === 0) { 
-                touchEndX = e.changedTouches[0].pageX; 
-                touchEndY = e.changedTouches[0].pageY;
-                
-                // 條件 1：只有在水平位移顯著大於垂直位移時才觸發切換月份
-                const dx = touchEndX - touchStartX;
-                const dy = touchEndY - touchStartY;
-                if (Math.abs(dx) > Math.abs(dy) * 2) {
-                    handleSwipeAction(); 
-                }
+        app.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1 && e.touches.length === 0) {
+                touchEndX = e.changedTouches[0].pageX; touchEndY = e.changedTouches[0].pageY;
+                const dx = touchEndX - touchStartX, dy = touchEndY - touchStartY;
+                if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > swipeThreshold) changeDate(dx > 0 ? -1 : 1);
             }
             pinchStartDist = 0;
         }, { passive: true });
-    }
-
-    function handleSwipeAction() {
-        const deltaX = touchEndX - touchStartX;
-        if (Math.abs(deltaX) > swipeThreshold) {
-            if (deltaX > 0) changeDate(-1);
-            else changeDate(1);
-        }
     }
 
     window.onload = init;
 </script>
 </body>
 </html>
-
