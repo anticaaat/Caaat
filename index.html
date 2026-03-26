@@ -600,22 +600,48 @@
     
     let workData = storageData.records;
 
+    // 2026 國定假日原始清單
     const RAW_HOLIDAYS_2026 = {
-        "2026-01-01": "元旦", "2026-02-16": "除夕", "2026-02-17": "初一", "2026-02-18": "初二", "2026-02-19": "初三", "2026-02-28": "二二八", "2026-04-02": "兒童節", "2026-04-03": "清明節", "2026-05-01": "勞動節", "2026-06-19": "端午節", "2026-09-25": "中秋節", "2026-10-10": "國慶日"
+        "2026-01-01": "元旦", 
+        "2026-02-16": "除夕", 
+        "2026-02-17": "初一", 
+        "2026-02-18": "初二", 
+        "2026-02-19": "初三", 
+        "2026-02-28": "二二八", 
+        "2026-04-04": "兒童節", 
+        "2026-04-05": "清明節", 
+        "2026-05-01": "勞動節", 
+        "2026-06-19": "端午節", 
+        "2026-09-25": "中秋節", 
+        "2026-10-10": "國慶日"
     };
 
     function calculateHolidays() {
         dynamicHolidays = {};
         Object.entries(RAW_HOLIDAYS_2026).forEach(([dateStr, name]) => {
-            dynamicHolidays[dateStr] = name;
             const date = new Date(dateStr);
-            const dow = date.getDay();
-            if (dow === 6) { 
-                const prev = new Date(date); prev.setDate(date.getDate() - 1);
-                dynamicHolidays[prev.toISOString().split('T')[0]] = `${name} 補假`;
-            } else if (dow === 0) {
-                const next = new Date(date); next.setDate(date.getDate() + 1);
-                dynamicHolidays[next.toISOString().split('T')[0]] = `${name} 補假`;
+            const dow = date.getDay(); // 0:日, 6:六
+
+            // 針對 2026 年 4 月份特別邏輯
+            if (dateStr === "2026-04-04" || dateStr === "2026-04-05") {
+                // 兒童節 4/4(六) 補假於 4/3(五)
+                // 清明節 4/5(日) 補假於 4/6(一)
+                if (dateStr === "2026-04-04") {
+                    dynamicHolidays["2026-04-03"] = "兒童節 補假";
+                } else {
+                    dynamicHolidays["2026-04-06"] = "清明節 補假";
+                }
+                // 原本的 4/4, 4/5 僅作為一般假日，不列入國定假日雙倍範圍
+            } else {
+                // 其他節日的補假邏輯
+                dynamicHolidays[dateStr] = name;
+                if (dow === 6) { 
+                    const prev = new Date(date); prev.setDate(date.getDate() - 1);
+                    dynamicHolidays[prev.toISOString().split('T')[0]] = `${name} 補假`;
+                } else if (dow === 0) {
+                    const next = new Date(date); next.setDate(date.getDate() + 1);
+                    dynamicHolidays[next.toISOString().split('T')[0]] = `${name} 補假`;
+                }
             }
         });
     }
@@ -1117,3 +1143,4 @@
 </script>
 </body>
 </html>
+
