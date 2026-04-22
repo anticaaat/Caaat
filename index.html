@@ -569,6 +569,7 @@
     let selectedDateStr = new Date().toLocaleDateString('en-CA');
     let isYearView = false;
     let dynamicHolidays = {};
+    let weekendHolidays = {}; // 新增：用於標記紅底但不雙倍的假日
     
     let editingIndex = -1;
     let selectedColor = 'emerald';
@@ -619,15 +620,28 @@
 
     function calculateHolidays() {
         dynamicHolidays = {};
+        weekendHolidays = {};
+        
         Object.entries(RAW_HOLIDAYS_2026).forEach(([dateStr, name]) => {
             const date = new Date(dateStr);
             const dow = date.getDay(); // 0:日, 6:六
 
-            // 針對 2026 年 4 月份特別邏輯：僅限當天為國定假日
+            // 針對 2026 年 4 月份特別邏輯
             if (dateStr === "2026-04-04" || dateStr === "2026-04-05") {
+                // 4/4 兒童節當天，4/5 清明節當天：列入國定假日雙倍範圍 (紅底+紅點)
                 dynamicHolidays[dateStr] = name;
+                
+                // 補假邏輯：
+                // 兒童節 4/4(六) 補假於 4/3(五)
+                // 清明節 4/5(日) 補假於 4/6(一)
+                // 4/3, 4/6 標記為假日紅底，但不列入雙倍薪水 (不加紅點)
+                if (dateStr === "2026-04-04") {
+                    weekendHolidays["2026-04-03"] = "兒童節 補假";
+                } else {
+                    weekendHolidays["2026-04-06"] = "清明節 補假";
+                }
             } else {
-                // 其他節日的補假邏輯
+                // 其他節日的正常邏輯
                 dynamicHolidays[dateStr] = name;
                 if (dow === 6) { 
                     const prev = new Date(date); prev.setDate(date.getDate() - 1);
@@ -929,8 +943,14 @@
         for (let i = 0; i < fd; i++) grid.appendChild(document.createElement('div'));
         for (let d = 1; d <= dim; d++) {
             const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const isW = [0, 6].includes(new Date(year, month, d).getDay()), isH = !!dynamicHolidays[dStr], data = workData[dStr], el = document.createElement('div');
-            el.className = `day-cell cursor-pointer ${isH ? 'is-holiday' : (isW ? 'is-weekend' : '')}`;
+            const isW = [0, 6].includes(new Date(year, month, d).getDay());
+            // 判定是否紅底：是國定假日 OR 是週末假日 OR 屬於補假(4/3, 4/6)
+            const isH = !!dynamicHolidays[dStr];
+            const isWkHoliday = !!weekendHolidays[dStr];
+            
+            const data = workData[dStr], el = document.createElement('div');
+            el.className = `day-cell cursor-pointer ${isH || isWkHoliday ? 'is-holiday' : (isW ? 'is-weekend' : '')}`;
+            
             if (dStr === selectedDateStr) el.classList.add('is-today');
             let info = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
             if (data && Array.isArray(data)) {
@@ -939,7 +959,8 @@
                     info += `<div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">${s.showTitle?`<div class="text-[8px] font-black truncate">${item.title}</div>`:''}${s.showTime?`<div class="text-[7px] font-bold opacity-80">${item.startTime}-${item.endTime}</div>`:''}${s.showHours?`<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>`:''}${s.showSalary?`<div class="text-[7px] font-bold opacity-70">$${pay}</div>`:''}</div>`;
                 });
             }
-            el.innerHTML = `<div class="text-[10px] font-black ${isH || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
+            // 只有國定假日 (dynamicHolidays) 才有紅點
+            el.innerHTML = `<div class="text-[10px] font-black ${isH || isWkHoliday || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
             el.onclick = () => { selectedDateStr = dStr; if (data && data.length > 0) openDailyList(dStr); else renderCalendar(); };
             grid.appendChild(el);
         }
@@ -1008,8 +1029,11 @@
             for (let i = 0; i < fd; i++) h += `<div></div>`;
             for (let d = 1; d <= dim; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const has = workData[ds] && workData[ds].length, isT = ds === today, isH = !!dynamicHolidays[ds], isW = [0,6].includes(new Date(y,m,d).getDay());
-                h += `<div class="text-[7px] h-3.5 w-3.5 flex items-center justify-center ${isT?'bg-blue-500 rounded-full text-white':(has?'bg-slate-200 rounded-sm text-slate-900 font-bold':(isH||isW?'text-red-300':'text-slate-300'))}">${d}</div>`;
+                const has = workData[ds] && workData[ds].length, isT = ds === today;
+                const isH = !!dynamicHolidays[ds];
+                const isWkH = !!weekendHolidays[ds];
+                const isW = [0,6].includes(new Date(y,m,d).getDay());
+                h += `<div class="text-[7px] h-3.5 w-3.5 flex items-center justify-center ${isT?'bg-blue-500 rounded-full text-white':(has?'bg-slate-200 rounded-sm text-slate-900 font-bold':(isH||isWkH||isW?'text-red-300':'text-slate-300'))}">${d}</div>`;
             }
             mDiv.innerHTML = h + `</div>`; mDiv.onclick = () => { currentDate.setMonth(m); toggleView('month'); };
             container.appendChild(mDiv);
