@@ -7,16 +7,9 @@
   "theme_color": "#4A90E2",
   "icons": [
     {
-      "src": "IMG_2876.jpeg",
+      "src": "IMG_2878.jpeg",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "IMG_2876.jpeg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any"
+      "type": "image/jpeg"
     }
   ]
 }
