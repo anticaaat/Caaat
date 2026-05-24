@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -326,6 +325,38 @@
             </div>
 
             <div id="rangeDetailsList" class="flex-grow overflow-y-auto space-y-3 no-scrollbar scrollable-content pb-4"></div>
+        </div>
+    </div>
+
+    <div id="exportConfigOverlay" class="fixed inset-0 bg-slate-900/60 z-[200] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
+        <div class="bg-white w-full max-w-xs rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col">
+            <div class="w-full flex justify-between items-center mb-4">
+                <h3 class="text-lg font-black text-slate-900 tracking-tight">選擇輸出內容</h3>
+                <button onclick="toggleExportConfigModal(false)" class="text-slate-400 p-2 bg-slate-50 rounded-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="font-bold text-sm text-slate-700">輸出標題</span>
+                    <label class="ios-switch"><input type="checkbox" id="exportTitle" checked><span class="slider"></span></label>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="font-bold text-sm text-slate-700">輸出時數</span>
+                    <label class="ios-switch"><input type="checkbox" id="exportHours" checked><span class="slider"></span></label>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="font-bold text-sm text-slate-700">輸出薪資</span>
+                    <label class="ios-switch"><input type="checkbox" id="exportPay" checked><span class="slider"></span></label>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="font-bold text-sm text-slate-700">輸出備註</span>
+                    <label class="ios-switch"><input type="checkbox" id="exportNote" checked><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <button onclick="confirmAndCopyRange()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-sm">確認複製</button>
         </div>
     </div>
 
@@ -792,22 +823,27 @@
                             dateText: `${shortDate}（${weekDay}）`,
                             timeText: `${item.startTime}-${item.endTime}`,
                             hoursText: `${item.hours.toFixed(1)}h`,
-                            payText: `$${pay}`
+                            payText: `$${pay}`,
+                            noteText: item.note || '',
+                            titleText: item.title
                         });
 
                         const div = document.createElement('div');
-                        div.className = "p-4 bg-white border border-slate-100 rounded-2xl flex justify-between items-center shadow-sm";
+                        div.className = "p-4 bg-white border border-slate-100 rounded-2xl flex flex-col gap-2 shadow-sm";
+                        const noteInlineHtml = item.note ? `<span class="text-xs text-slate-400 font-normal ml-2">${item.note}</span>` : '';
                         div.innerHTML = `
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${shortDate}（${weekDay}）</span>
-                                    <span class="text-[10px] font-bold text-slate-400">${item.startTime}-${item.endTime}</span>
+                            <div class="flex justify-between items-center w-full">
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${shortDate}（${weekDay}）</span>
+                                        <span class="text-[10px] font-bold text-slate-400">${item.startTime}-${item.endTime}</span>
+                                    </div>
+                                    <p class="text-sm font-black text-slate-800 flex items-baseline">${item.title}${noteInlineHtml}</p>
                                 </div>
-                                <p class="text-sm font-black text-slate-800">${item.title}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-lg font-black text-blue-600">$${pay.toLocaleString()}</p>
-                                <p class="text-[10px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
+                                <div class="text-right">
+                                    <p class="text-lg font-black text-blue-600">$${pay.toLocaleString()}</p>
+                                    <p class="text-[10px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
+                                </div>
                             </div>
                         `;
                         list.appendChild(div);
@@ -836,12 +872,45 @@
 
     function copyRangeToClipboard() {
         if (lastQueryResult.length === 0) return;
-        
-        let copyText = lastQueryResult.map(item => `${item.dateText} ${item.timeText} ｜ ${item.hoursText} ｜ ${item.payText}`).join('\n');
-        
+        toggleExportConfigModal(true);
+    }
+
+    function toggleExportConfigModal(show) {
+        const overlay = document.getElementById('exportConfigOverlay');
+        if (show) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        } else {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    function confirmAndCopyRange() {
+        if (lastQueryResult.length === 0) return;
+
+        const showTitle = document.getElementById('exportTitle').checked;
+        const showHours = document.getElementById('exportHours').checked;
+        const showPay = document.getElementById('exportPay').checked;
+        const showNote = document.getElementById('exportNote').checked;
+
+        let copyText = lastQueryResult.map(item => {
+            let label = showTitle ? ` ${item.titleText}` : '';
+            // 修正：這裡移除了 ${item.timeText} 原本左右的括弧
+            let parts = [`${item.dateText}${label} ${item.timeText}`];
+            if (showHours) parts.push(`${item.hoursText}`);
+            if (showPay) parts.push(`${item.payText}`);
+            if (showNote && item.noteText) parts.push(`${item.noteText}`);
+            return parts.join(' ｜ ');
+        }).join('\n');
+
         copyText += `\n----------------------\n`;
-        copyText += `總計工時：${lastTotalHours.toFixed(1)}h\n`;
-        copyText += `總計薪資：$${Math.round(lastTotalSalary).toLocaleString()}`;
+        if (showHours) copyText += `總計工時：${lastTotalHours.toFixed(1)}h\n`;
+        if (showPay) copyText += `總計薪資：$${Math.round(lastTotalSalary).toLocaleString()}`;
 
         const tempTextArea = document.createElement("textarea");
         tempTextArea.value = copyText;
@@ -855,6 +924,7 @@
             setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
         } catch (err) { alert('無法複製'); }
         document.body.removeChild(tempTextArea);
+        toggleExportConfigModal(false);
     }
 
     function selectColor(color) {
@@ -975,7 +1045,7 @@
             const theme = COLOR_THEMES[item.color || 'emerald'], pay = Math.round(item.hours * item.rate * (!!dynamicHolidays[dStr] ? 2 : 1));
             const div = document.createElement('div'); div.className = "swipe-item-container mb-3";
             const noteHtml = item.note ? `<p class="text-[10px] font-medium text-slate-500 mt-1 line-clamp-1 border-t border-black/5 pt-1">${item.note}</p>` : '';
-            div.innerHTML = `<div class="swipe-actions" onclick="quickDelete(${idx}, event)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" data-index="${idx}" ontouchstart="handleItemTouchStart(event)" ontouchmove="handleItemTouchMove(event)" onclick="handleItemClick(${idx}, event)"><div class="flex flex-col"><span class="text-[10px] font-black ${theme.text}">${item.startTime}-${item.endTime}</span><span class="text-sm font-black text-slate-900">${item.title}</span>${noteHtml}</div><div class="text-right"><span class="text-sm font-black text-slate-800">$${pay.toLocaleString()}</span><p class="text-sm font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
+            div.innerHTML = `<div class="swipe-actions" onclick="quickDelete(${idx}, event)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cubic-bezier(0.4, 0, 0.2, 1) cursor-pointer" data-index="${idx}" ontouchstart="handleItemTouchStart(event)" ontouchmove="handleItemTouchMove(event)" onclick="handleItemClick(${idx}, event)"><div class="flex flex-col"><span class="text-[10px] font-black ${theme.text}">${item.startTime}-${item.endTime}</span><span class="text-sm font-black text-slate-900">${item.title}</span>${noteHtml}</div><div class="text-right"><span class="text-sm font-black text-slate-800">$${pay.toLocaleString()}</span><p class="text-sm font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
             container.appendChild(div);
         });
         const modal = document.getElementById('dailyListModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
@@ -1179,5 +1249,3 @@
 </script>
 </body>
 </html>
-
-```
