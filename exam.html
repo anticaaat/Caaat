@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>估價7 比較法 考題練習</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background: #f8fafc; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeUp 0.25s ease forwards; }
+
+        .option-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+        .option-btn:active:not(:disabled) { transform: scale(0.97); }
+
+        .opt-correct  { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; }
+        .opt-wrong    { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+        .opt-selected { background: #dbeafe !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; }
+
+        .progress-bar { transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans">
+
+<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
+
+    <!-- ══════════════════ START SCREEN ══════════════════ -->
+    <div id="startView" class="flex flex-col items-center justify-center flex-grow gap-6 p-6 text-center">
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-4xl">📋</div>
+        <div>
+            <p class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">不動產估價</p>
+            <h1 class="text-2xl font-black text-slate-900 leading-snug">第六章 比較法</h1>
+            <p class="text-slate-400 mt-2 text-sm font-medium">共 <span class="text-slate-700 font-black">7</span> 題單選題</p>
+        </div>
+
+        <div class="w-full bg-white rounded-3xl border border-slate-100 shadow-sm p-5 text-left space-y-3">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">練習模式</p>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="radio" name="mode" value="practice" checked class="accent-blue-500 w-4 h-4">
+                <div>
+                    <p class="font-black text-slate-800 text-sm">練習模式</p>
+                    <p class="text-xs text-slate-400">選完立即顯示對錯與正確答案</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="radio" name="mode" value="exam" class="accent-blue-500 w-4 h-4">
+                <div>
+                    <p class="font-black text-slate-800 text-sm">測驗模式</p>
+                    <p class="text-xs text-slate-400">全部作答完畢後才顯示結果</p>
+                </div>
+            </label>
+        </div>
+
+        <button onclick="startQuiz()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base">
+            開始作答
+        </button>
+    </div>
+
+
+    <!-- ══════════════════ QUIZ SCREEN ══════════════════ -->
+    <div id="quizView" class="hidden flex-col min-h-screen">
+
+        <!-- Header -->
+        <div class="bg-white px-5 pt-8 pb-4 border-b border-slate-100 sticky top-0 z-10">
+            <div class="flex justify-between items-center mb-3">
+                <button onclick="confirmExit()" class="p-2 bg-slate-50 rounded-full text-slate-400 active:bg-slate-100 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <span id="qCounter" class="text-sm font-black text-slate-500">1 / 7</span>
+                <span id="scoreChip" class="text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">0 分</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5">
+                <div id="qProgress" class="bg-blue-500 h-1.5 rounded-full progress-bar" style="width:14.3%"></div>
+            </div>
+        </div>
+
+        <!-- Question body -->
+        <div id="qBody" class="flex-grow p-5 pb-12 overflow-y-auto no-scrollbar"></div>
+    </div>
+
+
+    <!-- ══════════════════ RESULT SCREEN ══════════════════ -->
+    <div id="resultView" class="hidden flex-col gap-5 p-5 pt-10 pb-12">
+
+        <div class="text-center">
+            <div id="resultEmoji" class="text-5xl mb-3">🎉</div>
+            <h2 class="text-3xl font-black text-slate-900">測驗完成！</h2>
+        </div>
+
+        <div class="bg-blue-600 rounded-3xl p-6 text-white text-center shadow-xl">
+            <p class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">得分</p>
+            <p id="finalScore" class="text-5xl font-black">0 / 7</p>
+            <p id="finalPct" class="text-sm font-bold opacity-80 mt-2">0%</p>
+        </div>
+
+        <h3 class="font-black text-slate-500 text-[10px] uppercase tracking-widest">逐題回顧</h3>
+        <div id="reviewList" class="flex flex-col gap-3"></div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="retryQuiz()" class="py-4 bg-slate-100 text-slate-700 font-black rounded-2xl active:scale-95 transition-all text-sm">
+                再試一次
+            </button>
+            <button onclick="showStart()" class="py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-sm">
+                回首頁
+            </button>
+        </div>
+    </div>
+
+</div><!-- #app -->
+
+<script>
+// ─── 題庫 ─────────────────────────────────────────────────────────────────────
+const QUESTIONS = [
+    {
+        no: "01",
+        q: "運用迴歸分析法，截距項以外其他各主要影響價格因素之迴歸係數估計值同時為零之顯著機率不得大於下列何者？",
+        opts: ["百分之五", "百分之七", "百分之十五", "百分之三十"],
+        ans: 0
+    },
+    {
+        no: "04",
+        q: "使用迴歸分析法估價時，比較標的至少需要幾件以上？",
+        opts: ["三十件", "二十五件", "三十五件", "二十件"],
+        ans: 0
+    },
+    {
+        no: "08",
+        q: "依不動產估價技術規則之規定，比較、分析勘估標的與比較標的之區域因素及個別因素差異，並就其中差異進行價格調整時，其調整以下列何者為原則？",
+        opts: ["百分率法", "差額法", "定性分析法", "計量模型分析法"],
+        ans: 0
+    },
+    {
+        no: "11",
+        q: "依不動產估價技術規則規定，進行比較標的與勘估標的差異比較時，無須進行下列那一項調整？",
+        opts: ["情況調整", "一般因素調整", "區域因素調整", "個別因素調整"],
+        ans: 1
+    },
+    {
+        no: "16",
+        q: "以過去的案例價格資料推估現在之價格時，如果近來市場行情有明顯變化，應進行之調整為：",
+        opts: ["情況調整", "價格日期調整", "區域因素調整", "一般因素調整"],
+        ans: 1
+    },
+    {
+        no: "21",
+        q: "倘若相較於一般成交時間，比較標的之成交時間太長，則在評估勘估標的之正常價格時，應進行下列何種調整？",
+        opts: ["情況調整", "價格日期調整", "區域因素調整", "個別因素調整"],
+        ans: 0
+    },
+    {
+        no: "25",
+        q: "根據不動產估價技術規則之規定，採取比較法進行區域因素及個別因素差異分析調整時，可以採那種方法為其調整方法呢？",
+        opts: ["百分率法", "定率法", "定額法", "差額法"],
+        ans: 0
+    }
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let mode    = 'practice';
+let answers = [];
+let current = 0;
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+function startQuiz() {
+    mode    = document.querySelector('input[name="mode"]:checked').value;
+    answers = new Array(QUESTIONS.length).fill(null);
+    current = 0;
+    showView('quizView');
+    render();
+}
+
+function showStart() { showView('startView'); }
+
+// ─── Render question ──────────────────────────────────────────────────────────
+function render() {
+    const q     = QUESTIONS[current];
+    const total = QUESTIONS.length;
+    const pct   = ((current + 1) / total * 100).toFixed(1);
+
+    document.getElementById('qCounter').innerText  = `${current + 1} / ${total}`;
+    document.getElementById('qProgress').style.width = pct + '%';
+    updateScoreChip();
+
+    const userAns  = answers[current];
+    const answered = userAns !== null;
+    const isPractice = mode === 'practice';
+
+    // Build option buttons
+    const optsHtml = q.opts.map((opt, i) => {
+        let cls = 'option-btn w-full text-left p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm shadow-sm flex items-center gap-3';
+
+        if (answered && isPractice) {
+            if (i === q.ans)         cls += ' opt-correct';
+            else if (i === userAns)  cls += ' opt-wrong';
+        } else if (answered && !isPractice) {
+            if (i === userAns) cls += ' opt-selected';
+        }
+
+        const num = ['①','②','③','④'][i];
+        return `
+        <button ${answered ? 'disabled' : ''} onclick="pick(${i})" class="${cls}">
+            <span class="text-base flex-shrink-0">${num}</span>
+            <span>${opt}</span>
+        </button>`;
+    }).join('');
+
+    // Feedback (practice mode only)
+    let feedbackHtml = '';
+    if (answered && isPractice) {
+        const ok = userAns === q.ans;
+        feedbackHtml = `
+        <div class="p-4 rounded-2xl ${ok ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}">
+            <p class="font-black text-sm ${ok ? 'text-emerald-700' : 'text-red-700'}">
+                ${ok ? '✓ 答對了！' : `✗ 答錯了，正確答案是 ${['①','②','③','④'][q.ans]} ${q.opts[q.ans]}`}
+            </p>
+        </div>`;
+    }
+
+    // Nav button
+    const isLast = current === total - 1;
+    const navHtml = answered
+        ? `<button onclick="${isLast ? 'showResults()' : 'next()'}"
+               class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-base">
+               ${isLast ? '查看結果' : '下一題 →'}
+           </button>`
+        : '';
+
+    document.getElementById('qBody').innerHTML = `
+    <div class="animate-in flex flex-col gap-4">
+        <div>
+            <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">第 ${current + 1} 題・題號 ${q.no}</p>
+            <p class="text-base font-black text-slate-900 leading-relaxed">${q.q}</p>
+        </div>
+        <div class="flex flex-col gap-2">${optsHtml}</div>
+        ${feedbackHtml}
+        ${navHtml}
+    </div>`;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function pick(i) {
+    if (answers[current] !== null) return;
+    answers[current] = i;
+    updateScoreChip();
+    render();
+}
+
+function next() {
+    if (current < QUESTIONS.length - 1) { current++; render(); }
+    else showResults();
+}
+
+function confirmExit() {
+    if (confirm('確定要退出？')) showStart();
+}
+
+function retryQuiz() { startQuiz(); }
+
+// ─── Score ────────────────────────────────────────────────────────────────────
+function calcScore() {
+    return answers.reduce((s, a, i) => (a !== null && a === QUESTIONS[i].ans) ? s + 1 : s, 0);
+}
+
+function updateScoreChip() {
+    document.getElementById('scoreChip').innerText = `${calcScore()} 分`;
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function showResults() {
+    const correct = calcScore();
+    const total   = QUESTIONS.length;
+    const pct     = Math.round(correct / total * 100);
+
+    document.getElementById('finalScore').innerText = `${correct} / ${total}`;
+    document.getElementById('finalPct').innerText   = `正確率 ${pct}%`;
+    document.getElementById('resultEmoji').innerText =
+        pct >= 90 ? '🎉' : pct >= 70 ? '👏' : pct >= 50 ? '💪' : '📚';
+
+    const reviewHtml = QUESTIONS.map((q, i) => {
+        const a       = answers[i];
+        const ok      = a === q.ans;
+        const bgCls   = ok ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200';
+        const icon    = ok ? '✓' : '✗';
+        const iconClr = ok ? 'text-emerald-600' : 'text-red-600';
+        const userTxt = a !== null ? `${['①','②','③','④'][a]} ${q.opts[a]}` : '未作答';
+        const ansTxt  = `${['①','②','③','④'][q.ans]} ${q.opts[q.ans]}`;
+        return `
+        <div class="p-4 border rounded-2xl ${bgCls}">
+            <div class="flex items-start gap-3">
+                <span class="font-black text-base ${iconClr} flex-shrink-0 mt-0.5">${icon}</span>
+                <div class="flex-grow">
+                    <p class="font-black text-[10px] text-slate-400 mb-1">題號 ${q.no}</p>
+                    <p class="font-bold text-sm text-slate-800 mb-2 leading-snug">${q.q}</p>
+                    <p class="text-xs text-slate-500">你選：<span class="font-bold text-slate-700">${userTxt}</span></p>
+                    ${!ok ? `<p class="text-xs text-emerald-600 font-bold mt-0.5">正解：${ansTxt}</p>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('reviewList').innerHTML = reviewHtml;
+    showView('resultView');
+    window.scrollTo(0, 0);
+}
+
+// ─── View helpers ─────────────────────────────────────────────────────────────
+const VIEWS = ['startView','quizView','resultView'];
+function showView(id) {
+    VIEWS.forEach(v => {
+        document.getElementById(v).classList.add('hidden');
+        document.getElementById(v).classList.remove('flex');
+    });
+    document.getElementById(id).classList.remove('hidden');
+    document.getElementById(id).classList.add('flex');
+}
+</script>
+</body>
+</html>
