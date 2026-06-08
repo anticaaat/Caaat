@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI 考題產生器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background: #f8fafc; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeUp 0.3s ease forwards; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner { animation: spin 0.8s linear infinite; }
+
+        .option-btn {
+            transition: all 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .option-btn:active:not(:disabled) { transform: scale(0.97); }
+        .option-btn.correct  { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; }
+        .option-btn.wrong    { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+        .option-btn.selected { background: #dbeafe !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; }
+
+        .progress-bar { transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+
+        .file-item { animation: fadeUp 0.2s ease forwards; }
+
+        .drag-over { border-color: #3b82f6 !important; background: #eff6ff !important; }
+
+        input[type="file"] { display: none; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans">
+
+<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
+
+    <!-- ═══════════════════════════════════ SETUP VIEW ═══════════════════════════════════ -->
+    <div id="setupView" class="flex flex-col gap-5 p-5 pt-10 pb-10">
+
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">AI 考題產生器</h1>
+            <p class="text-slate-500 mt-1.5 font-medium text-sm leading-relaxed">上傳考卷截圖或影片，<br>自動提取選擇題讓你立刻練習</p>
+        </div>
+
+        <!-- API Key -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Anthropic API Key</label>
+            <div class="relative">
+                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-…"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 font-mono text-sm outline-none focus:border-blue-400 transition">
+                <button id="toggleKey" onclick="toggleKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1">
+                    <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2 ml-1">Key 只存在您的裝置，不會傳送到任何第三方</p>
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="dropZone"
+            class="bg-white rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer transition-all"
+            onclick="document.getElementById('fileInput').click()"
+            ondragover="onDragOver(event)"
+            ondragleave="onDragLeave(event)"
+            ondrop="onDrop(event)">
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+            <div class="p-8 flex flex-col items-center gap-3">
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <p class="font-black text-slate-700">點擊上傳 或 拖曳到此</p>
+                    <p class="text-xs text-slate-400 mt-1">支援 JPG、PNG、HEIC、MP4、MOV 等</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- File List -->
+        <div id="fileList" class="hidden flex-col gap-2"></div>
+
+        <!-- Error -->
+        <div id="setupError" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4">
+            <p id="setupErrorText" class="text-sm font-bold text-red-700"></p>
+        </div>
+
+        <!-- Generate Button -->
+        <button onclick="startGeneration()"
+            class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base mt-1">
+            開始生成考題
+        </button>
+    </div>
+
+
+    <!-- ═══════════════════════════════ PROCESSING VIEW ══════════════════════════════════ -->
+    <div id="processingView" class="hidden flex-col flex-grow items-center justify-center gap-6 p-8">
+        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+            <div class="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full spinner"></div>
+        </div>
+        <div class="text-center">
+            <h2 class="text-xl font-black text-slate-900">AI 分析中…</h2>
+            <p id="processingStatus" class="text-slate-500 mt-2 font-medium text-sm max-w-xs">正在分析圖片</p>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2 max-w-xs">
+            <div id="processingBar" class="bg-blue-500 h-2 rounded-full progress-bar" style="width:0%"></div>
+        </div>
+        <p id="processingCount" class="text-xs font-bold text-slate-400"></p>
+    </div>
+
+
+    <!-- ═══════════════════════════════════ QUIZ VIEW ════════════════════════════════════ -->
+    <div id="quizView" class="hidden flex-col min-h-screen">
+
+        <!-- Sticky header -->
+        <div class="bg-white px-5 pt-8 pb-4 border-b border-slate-100 sticky top-0 z-10">
+            <div class="flex justify-between items-center mb-3">
+                <button onclick="confirmExit()"
+                    class="p-2 bg-slate-50 rounded-full text-slate-400 active:bg-slate-100 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <span id="questionCounter" class="text-sm font-black text-slate-500">1 / 10</span>
+                <span id="scoreDisplay" class="text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">0 分</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5">
+                <div id="quizProgress" class="bg-blue-500 h-1.5 rounded-full progress-bar" style="width:10%"></div>
+            </div>
+        </div>
+
+        <!-- Question content -->
+        <div id="questionContent" class="flex-grow p-5 pb-10 flex flex-col gap-4 overflow-y-auto no-scrollbar"></div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════ RESULT VIEW ══════════════════════════════════ -->
+    <div id="resultsView" class="hidden flex-col gap-5 p-5 pt-10 pb-10">
+
+        <div class="text-center">
+            <div id="resultEmoji" class="text-5xl mb-3">🎉</div>
+            <h2 class="text-3xl font-black text-slate-900">測驗完成！</h2>
+        </div>
+
+        <div class="bg-blue-600 rounded-3xl p-6 text-white text-center shadow-xl">
+            <p class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">得分</p>
+            <p id="finalScore" class="text-5xl font-black">0 / 0</p>
+            <p id="finalPercent" class="text-sm font-bold opacity-80 mt-2">0%</p>
+        </div>
+
+        <!-- Review list -->
+        <h3 class="font-black text-slate-700 text-sm uppercase tracking-widest">逐題回顧</h3>
+        <div id="reviewList" class="flex flex-col gap-3"></div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="retryQuiz()"
+                class="py-4 bg-slate-100 text-slate-700 font-black rounded-2xl active:scale-95 transition-all text-sm">
+                再試一次
+            </button>
+            <button onclick="backToSetup()"
+                class="py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-sm">
+                上傳新圖片
+            </button>
+        </div>
+    </div>
+
+</div><!-- #app -->
+
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let apiKey       = localStorage.getItem('quiz_api_key') || '';
+let questions    = [];   // { question, options[], answer|null }
+let answers      = [];   // user's chosen letters per question
+let currentQ     = 0;
+let selectedFiles = [];
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+    if (apiKey) document.getElementById('apiKeyInput').value = apiKey;
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+        addFiles(Array.from(e.target.files));
+        e.target.value = '';
+    });
+};
+
+// ─── Key visibility ───────────────────────────────────────────────────────────
+function toggleKeyVisibility() {
+    const inp = document.getElementById('apiKeyInput');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ─── Drag & Drop ──────────────────────────────────────────────────────────────
+function onDragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.add('drag-over');
+}
+function onDragLeave(e) {
+    document.getElementById('dropZone').classList.remove('drag-over');
+}
+function onDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    addFiles(Array.from(e.dataTransfer.files));
+}
+
+// ─── File management ──────────────────────────────────────────────────────────
+function addFiles(files) {
+    const valid = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    if (valid.length < files.length) {
+        showSetupError('部分檔案格式不支援，只接受圖片或影片');
+    }
+    selectedFiles = [...selectedFiles, ...valid];
+    renderFileList();
+}
+
+function removeFile(idx) {
+    selectedFiles.splice(idx, 1);
+    renderFileList();
+}
+
+function renderFileList() {
+    const list = document.getElementById('fileList');
+    hideSetupError();
+    if (!selectedFiles.length) { list.classList.add('hidden'); list.innerHTML = ''; return; }
+    list.classList.remove('hidden');
+    list.innerHTML = selectedFiles.map((f, i) => {
+        const isVid = f.type.startsWith('video/');
+        const icon  = isVid
+            ? `<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`
+            : `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+        return `
+        <div class="file-item bg-white rounded-2xl p-3 border border-slate-100 flex items-center gap-3 shadow-sm">
+            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">${icon}</div>
+            <div class="flex-grow min-w-0">
+                <p class="text-sm font-bold text-slate-700 truncate">${f.name}</p>
+                <p class="text-[10px] text-slate-400">${(f.size/1024/1024).toFixed(1)} MB · ${isVid ? '影片' : '圖片'}</p>
+            </div>
+            <button onclick="removeFile(${i})" class="p-2 text-slate-300 active:text-red-400 transition flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function showSetupError(msg) {
+    document.getElementById('setupErrorText').innerText = msg;
+    document.getElementById('setupError').classList.remove('hidden');
+}
+function hideSetupError() {
+    document.getElementById('setupError').classList.add('hidden');
+}
+
+// ─── Generation ───────────────────────────────────────────────────────────────
+async function startGeneration() {
+    apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) { showSetupError('請先輸入 Anthropic API Key'); return; }
+    if (!apiKey.startsWith('sk-')) { showSetupError('API Key 格式不正確，應以 sk- 開頭'); return; }
+    if (!selectedFiles.length) { showSetupError('請至少上傳一張圖片或一段影片'); return; }
+
+    localStorage.setItem('quiz_api_key', apiKey);
+    showView('processingView');
+    questions = [];
+
+    try {
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const f = selectedFiles[i];
+            setProcessingStatus(
+                `正在分析 (${i + 1}/${selectedFiles.length})：${f.name}`,
+                Math.round(i / selectedFiles.length * 100),
+                `${i + 1} / ${selectedFiles.length} 個檔案`
+            );
+
+            let extracted;
+            if (f.type.startsWith('video/')) {
+                extracted = await processVideo(f);
+            } else {
+                extracted = await processImage(f);
+            }
+            questions = [...questions, ...extracted];
+        }
+
+        setProcessingStatus('處理完成！', 100, '');
+        await delay(300);
+
+        if (!questions.length) {
+            showSetupError('未在上傳的檔案中找到選擇題，請確認圖片內容');
+            showView('setupView');
+            return;
+        }
+
+        startQuiz();
+    } catch (err) {
+        console.error(err);
+        showSetupError('分析失敗：' + (err.message || '未知錯誤'));
+        showView('setupView');
+    }
+}
+
+function setProcessingStatus(text, pct, count) {
+    document.getElementById('processingStatus').innerText = text;
+    document.getElementById('processingBar').style.width = pct + '%';
+    document.getElementById('processingCount').innerText = count;
+}
+
+// ─── Image helpers ────────────────────────────────────────────────────────────
+async function fileToBase64(file) {
+    return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+    });
+}
+
+const SUPPORTED_MIME = ['image/jpeg','image/png','image/gif','image/webp'];
+
+async function normalizeImage(file) {
+    if (SUPPORTED_MIME.includes(file.type)) {
+        return { base64: await fileToBase64(file), mimeType: file.type };
+    }
+    // Convert unsupported (e.g. HEIC) via canvas
+    return new Promise((res, rej) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            res({ base64: c.toDataURL('image/jpeg', 0.9).split(',')[1], mimeType: 'image/jpeg' });
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('圖片載入失敗')); };
+        img.src = url;
+    });
+}
+
+async function processImage(file) {
+    const { base64, mimeType } = await normalizeImage(file);
+    return analyzeWithClaude(base64, mimeType);
+}
+
+// ─── Video helpers ────────────────────────────────────────────────────────────
+async function processVideo(videoFile) {
+    const frames = await extractFrames(videoFile);
+    const all = [];
+    for (let i = 0; i < frames.length; i++) {
+        setProcessingStatus(
+            `分析影片畫面 ${i + 1}/${frames.length}…`,
+            Math.round(i / frames.length * 80),
+            ''
+        );
+        const qs = await analyzeWithClaude(frames[i], 'image/jpeg');
+        all.push(...qs);
+    }
+    return deduplicate(all);
+}
+
+function extractFrames(videoFile) {
+    return new Promise((resolve, reject) => {
+        const video  = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const ctx    = canvas.getContext('2d');
+        const url    = URL.createObjectURL(videoFile);
+
+        video.src    = url;
+        video.muted  = true;
+        video.preload = 'metadata';
+
+        video.addEventListener('loadedmetadata', () => {
+            const MAX_W = 1280;
+            canvas.width  = Math.min(video.videoWidth, MAX_W);
+            canvas.height = Math.round(canvas.width * video.videoHeight / video.videoWidth);
+
+            const dur = video.duration;
+            const MAX_FRAMES = 12;
+            const INTERVAL   = Math.max(3, dur / MAX_FRAMES);
+            const timestamps = [];
+            for (let t = 0; t < dur; t += INTERVAL) {
+                timestamps.push(Math.min(t, dur - 0.1));
+            }
+
+            const frames = [];
+            let idx = 0;
+
+            const capture = () => {
+                if (idx >= timestamps.length) {
+                    URL.revokeObjectURL(url);
+                    resolve(frames);
+                    return;
+                }
+                video.currentTime = timestamps[idx];
+            };
+
+            const onSeeked = () => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                frames.push(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
+                idx++;
+                capture();
+            };
+
+            video.addEventListener('seeked', onSeeked);
+            video.addEventListener('error', () => { URL.revokeObjectURL(url); reject(new Error('影片讀取失敗')); });
+            capture();
+        });
+
+        video.addEventListener('error', () => { URL.revokeObjectURL(url); reject(new Error('影片格式不支援')); });
+    });
+}
+
+function deduplicate(qs) {
+    const seen = new Set();
+    return qs.filter(q => {
+        const key = q.question.trim().replace(/\s+/g, '').substring(0, 20);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+// ─── Claude API ───────────────────────────────────────────────────────────────
+async function analyzeWithClaude(base64, mimeType) {
+    const PROMPT = `請仔細分析這張圖片，找出所有選擇題。請一字不差地提取題目和選項。
+
+以JSON格式回傳，格式如下：
+{
+  "questions": [
+    {
+      "question": "完整題目文字（含題號如有）",
+      "options": ["A. 選項甲", "B. 選項乙", "C. 選項丙", "D. 選項丁"],
+      "answer": null
+    }
+  ]
+}
+
+規則：
+1. 一字不差複製所有題目與選項文字，包含標點、括號、序號
+2. 若圖片明確標示正確答案（打勾、圈選、底色標示、答案欄），在 answer 填入該選項字母（A/B/C/D），否則填 null
+3. 選項序號請保留原文格式（如原為(A)(B) 或 ①②③ 等）
+4. 若圖中無選擇題，回傳 {"questions": []}
+5. 只輸出 JSON，不要加說明文字`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 4096,
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+                    { type: 'text',  text: PROMPT }
+                ]
+            }]
+        })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err?.error?.message || `HTTP ${res.status}`;
+        if (res.status === 401) throw new Error('API Key 無效，請確認後重試');
+        if (res.status === 429) throw new Error('請求過於頻繁，請稍後再試');
+        throw new Error(msg);
+    }
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text?.trim() || '';
+
+    try {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (!m) return [];
+        const parsed = JSON.parse(m[0]);
+        return (parsed.questions || []).filter(q => q.question && Array.isArray(q.options) && q.options.length >= 2);
+    } catch {
+        return [];
+    }
+}
+
+// ─── Quiz logic ───────────────────────────────────────────────────────────────
+function startQuiz() {
+    currentQ = 0;
+    answers  = new Array(questions.length).fill(null);
+    showView('quizView');
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const q     = questions[currentQ];
+    const total = questions.length;
+    const pct   = Math.round((currentQ + 1) / total * 100);
+
+    document.getElementById('questionCounter').innerText = `${currentQ + 1} / ${total}`;
+    document.getElementById('quizProgress').style.width  = pct + '%';
+    refreshScore();
+
+    const userAnswer = answers[currentQ];
+    const isAnswered = userAnswer !== null;
+
+    // Options
+    const optHtml = q.options.map((opt, i) => {
+        const letter = String.fromCharCode(65 + i);
+        let cls = 'option-btn w-full text-left p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm shadow-sm leading-snug';
+
+        if (isAnswered) {
+            const correctLetter = q.answer ? q.answer.toUpperCase() : null;
+            if (correctLetter && letter === correctLetter) cls += ' correct';
+            else if (letter === userAnswer) cls += (q.answer ? ' wrong' : ' selected');
+        }
+
+        return `<button ${isAnswered ? 'disabled' : ''} onclick="selectAnswer('${letter}')" class="${cls}">${escHtml(opt)}</button>`;
+    }).join('');
+
+    // Feedback banner
+    let feedbackHtml = '';
+    if (isAnswered) {
+        if (q.answer) {
+            const ok = userAnswer === q.answer.toUpperCase();
+            feedbackHtml = `
+            <div class="p-4 rounded-2xl ${ok ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}">
+                <p class="font-black text-sm ${ok ? 'text-emerald-700' : 'text-red-700'}">
+                    ${ok ? '✓ 答對了！' : `✗ 答錯了，正確答案是 ${q.answer.toUpperCase()}`}
+                </p>
+            </div>`;
+        } else {
+            feedbackHtml = `
+            <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200">
+                <p class="font-bold text-sm text-blue-700">已選擇 ${userAnswer}</p>
+            </div>`;
+        }
+    }
+
+    // Next / finish button
+    const isLast   = currentQ === total - 1;
+    const nextHtml = isAnswered
+        ? `<button onclick="${isLast ? 'showResults()' : 'nextQuestion()'}"
+               class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-base">
+               ${isLast ? '查看結果' : '下一題 →'}
+           </button>`
+        : '';
+
+    document.getElementById('questionContent').innerHTML = `
+    <div class="animate-in flex flex-col gap-4">
+        <div>
+            <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">第 ${currentQ + 1} 題</p>
+            <p class="text-base font-black text-slate-900 leading-relaxed">${escHtml(q.question)}</p>
+        </div>
+        <div class="flex flex-col gap-2">${optHtml}</div>
+        ${feedbackHtml}
+        ${nextHtml}
+    </div>`;
+}
+
+function selectAnswer(letter) {
+    if (answers[currentQ] !== null) return;
+    answers[currentQ] = letter;
+    refreshScore();
+    renderQuestion();
+}
+
+function refreshScore() {
+    const correct = answers.reduce((sum, a, i) => {
+        if (a !== null && questions[i]?.answer && a === questions[i].answer.toUpperCase()) return sum + 1;
+        return sum;
+    }, 0);
+    const scoreable = questions.filter(q => q.answer).length;
+    document.getElementById('scoreDisplay').innerText = scoreable > 0 ? `${correct} / ${scoreable}` : '練習中';
+}
+
+function nextQuestion() {
+    if (currentQ < questions.length - 1) { currentQ++; renderQuestion(); }
+    else showResults();
+}
+
+function confirmExit() {
+    if (confirm('確定要退出測驗嗎？進度將不會儲存')) backToSetup();
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function showResults() {
+    const total     = questions.length;
+    const scoreable = questions.filter(q => q.answer).length;
+    const correct   = answers.reduce((sum, a, i) => {
+        if (a !== null && questions[i]?.answer && a === questions[i].answer.toUpperCase()) return sum + 1;
+        return sum;
+    }, 0);
+    const pct = scoreable > 0 ? Math.round(correct / scoreable * 100) : null;
+
+    document.getElementById('finalScore').innerText   = scoreable > 0 ? `${correct} / ${scoreable}` : `${total} 題`;
+    document.getElementById('finalPercent').innerText = pct !== null ? `正確率 ${pct}%` : '已完成所有題目';
+    document.getElementById('resultEmoji').innerText  =
+        pct === null ? '✅' : pct >= 90 ? '🎉' : pct >= 70 ? '👏' : pct >= 50 ? '💪' : '📚';
+
+    const reviewHtml = questions.map((q, i) => {
+        const a          = answers[i] || '未作答';
+        const hasAns     = !!q.answer;
+        const isCorrect  = hasAns && a === q.answer.toUpperCase();
+        const bgCls      = !hasAns ? 'bg-slate-50 border-slate-200' : isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200';
+        const iconColor  = !hasAns ? 'text-slate-400' : isCorrect ? 'text-emerald-600' : 'text-red-600';
+        const icon       = !hasAns ? '○' : isCorrect ? '✓' : '✗';
+        const truncatedQ = escHtml(q.question.length > 60 ? q.question.substring(0, 60) + '…' : q.question);
+        return `
+        <div class="p-4 border rounded-2xl ${bgCls}">
+            <div class="flex items-start gap-3">
+                <span class="font-black text-base ${iconColor} flex-shrink-0 mt-0.5">${icon}</span>
+                <div class="flex-grow">
+                    <p class="font-bold text-sm text-slate-800 mb-1 leading-snug">${truncatedQ}</p>
+                    <p class="text-xs text-slate-500">
+                        您選：<span class="font-bold">${escHtml(a)}</span>
+                        ${hasAns ? `&nbsp;·&nbsp; 正確：<span class="font-bold">${escHtml(q.answer.toUpperCase())}</span>` : ''}
+                    </p>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('reviewList').innerHTML = reviewHtml;
+    showView('resultsView');
+    window.scrollTo(0, 0);
+}
+
+function retryQuiz()  { startQuiz(); }
+
+function backToSetup() {
+    questions     = [];
+    selectedFiles = [];
+    document.getElementById('fileList').innerHTML = '';
+    document.getElementById('fileList').classList.add('hidden');
+    document.getElementById('fileInput').value = '';
+    hideSetupError();
+    showView('setupView');
+    window.scrollTo(0, 0);
+}
+
+// ─── View switching ───────────────────────────────────────────────────────────
+const VIEWS = ['setupView','processingView','quizView','resultsView'];
+function showView(id) {
+    VIEWS.forEach(v => {
+        const el = document.getElementById(v);
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+    });
+    const t = document.getElementById(id);
+    t.classList.remove('hidden');
+    t.classList.add('flex');
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
