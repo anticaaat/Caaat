@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>估價 比較法 考題練習</title>
+    <title>不動產估價 考題練習</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; background: #f8fafc; }
-
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(10px); }
             to   { opacity: 1; transform: translateY(0); }
         }
         .animate-in { animation: fadeUp 0.25s ease forwards; }
-
         .option-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
         .option-btn:active:not(:disabled) { transform: scale(0.97); }
-
         .opt-correct  { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; }
         .opt-wrong    { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
         .opt-selected { background: #dbeafe !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; }
-
         .progress-bar { transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -30,43 +26,93 @@
 
 <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
 
-    <!-- ══════════════════ START SCREEN ══════════════════ -->
-    <div id="startView" class="flex flex-col items-center justify-center flex-grow gap-6 p-6 text-center">
-        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-4xl">📋</div>
-        <div>
+    <!-- ══════════════════ HUB SCREEN ══════════════════ -->
+    <div id="hubView" class="flex flex-col flex-grow p-6 gap-6">
+        <div class="pt-10 text-center">
             <p class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">不動產估價</p>
-            <h1 class="text-2xl font-black text-slate-900 leading-snug">第六章 比較法</h1>
-            <p class="text-slate-400 mt-2 text-sm font-medium">共 <span class="text-slate-700 font-black">27</span> 題單選題</p>
+            <h1 class="text-2xl font-black text-slate-900 leading-snug">選擇章節</h1>
+            <p class="text-slate-400 mt-1 text-sm">點選章節開始練習</p>
         </div>
 
-        <div class="w-full bg-white rounded-3xl border border-slate-100 shadow-sm p-5 text-left space-y-3">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">練習模式</p>
-            <label class="flex items-center gap-3 cursor-pointer">
-                <input type="radio" name="mode" value="practice" checked class="accent-blue-500 w-4 h-4">
-                <div>
-                    <p class="font-black text-slate-800 text-sm">練習模式</p>
-                    <p class="text-xs text-slate-400">選完立即顯示對錯與正確答案</p>
+        <div class="flex flex-col gap-4 flex-grow justify-center pb-12">
+            <button onclick="selectChapter(0)"
+                class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🏗️</div>
+                    <div class="flex-grow">
+                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Chapter 5</p>
+                        <h2 class="text-lg font-black text-slate-900">第五章 成本法</h2>
+                        <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">40</span> 題單選題</p>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </div>
-            </label>
-            <label class="flex items-center gap-3 cursor-pointer">
-                <input type="radio" name="mode" value="exam" class="accent-blue-500 w-4 h-4">
-                <div>
-                    <p class="font-black text-slate-800 text-sm">測驗模式</p>
-                    <p class="text-xs text-slate-400">全部作答完畢後才顯示結果</p>
+            </button>
+
+            <button onclick="selectChapter(1)"
+                class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">📊</div>
+                    <div class="flex-grow">
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Chapter 6</p>
+                        <h2 class="text-lg font-black text-slate-900">第六章 比較法</h2>
+                        <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">27</span> 題單選題</p>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </div>
-            </label>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════ START SCREEN ══════════════════ -->
+    <div id="startView" class="hidden flex-col flex-grow p-6 gap-6">
+        <div class="pt-8">
+            <button onclick="showHub()" class="p-2 bg-slate-50 rounded-full text-slate-400 active:bg-slate-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
         </div>
 
-        <button onclick="startQuiz()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base">
-            開始作答
-        </button>
+        <div class="flex flex-col items-center text-center gap-4 flex-grow justify-center">
+            <div id="startIcon" class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-4xl">🏗️</div>
+            <div>
+                <p class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">不動產估價</p>
+                <h1 id="startTitle" class="text-2xl font-black text-slate-900 leading-snug">第五章 成本法</h1>
+                <p class="text-slate-400 mt-2 text-sm font-medium">共 <span id="startCount" class="text-slate-700 font-black">40</span> 題單選題</p>
+            </div>
+
+            <div class="w-full bg-white rounded-3xl border border-slate-100 shadow-sm p-5 text-left space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">選擇模式</p>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="mode" value="practice" checked class="accent-blue-500 w-4 h-4">
+                    <div>
+                        <p class="font-black text-slate-800 text-sm">練習模式</p>
+                        <p class="text-xs text-slate-400">選完立即顯示對錯與正確答案</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="mode" value="exam" class="accent-blue-500 w-4 h-4">
+                    <div>
+                        <p class="font-black text-slate-800 text-sm">測驗模式</p>
+                        <p class="text-xs text-slate-400">全部作答完畢後才顯示結果</p>
+                    </div>
+                </label>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base">
+                開始作答
+            </button>
+        </div>
     </div>
 
 
     <!-- ══════════════════ QUIZ SCREEN ══════════════════ -->
     <div id="quizView" class="hidden flex-col min-h-screen">
-
-        <!-- Header -->
         <div class="bg-white px-5 pt-8 pb-4 border-b border-slate-100 sticky top-0 z-10">
             <div class="flex justify-between items-center mb-3">
                 <button onclick="confirmExit()" class="p-2 bg-slate-50 rounded-full text-slate-400 active:bg-slate-100 transition">
@@ -74,41 +120,35 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
-                <span id="qCounter" class="text-sm font-black text-slate-500">1 / 7</span>
+                <span id="qCounter" class="text-sm font-black text-slate-500">1 / 40</span>
                 <span id="scoreChip" class="text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">0 分</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5">
-                <div id="qProgress" class="bg-blue-500 h-1.5 rounded-full progress-bar" style="width:14.3%"></div>
+                <div id="qProgress" class="bg-blue-500 h-1.5 rounded-full progress-bar" style="width:2.5%"></div>
             </div>
         </div>
-
-        <!-- Question body -->
         <div id="qBody" class="flex-grow p-5 pb-12 overflow-y-auto no-scrollbar"></div>
     </div>
 
 
     <!-- ══════════════════ RESULT SCREEN ══════════════════ -->
     <div id="resultView" class="hidden flex-col gap-5 p-5 pt-10 pb-12">
-
         <div class="text-center">
             <div id="resultEmoji" class="text-5xl mb-3">🎉</div>
             <h2 class="text-3xl font-black text-slate-900">測驗完成！</h2>
         </div>
-
         <div class="bg-blue-600 rounded-3xl p-6 text-white text-center shadow-xl">
             <p class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">得分</p>
-            <p id="finalScore" class="text-5xl font-black">0 / 7</p>
+            <p id="finalScore" class="text-5xl font-black">0 / 40</p>
             <p id="finalPct" class="text-sm font-bold opacity-80 mt-2">0%</p>
         </div>
-
         <h3 class="font-black text-slate-500 text-[10px] uppercase tracking-widest">逐題回顧</h3>
         <div id="reviewList" class="flex flex-col gap-3"></div>
-
         <div class="grid grid-cols-2 gap-3 pt-2">
             <button onclick="retryQuiz()" class="py-4 bg-slate-100 text-slate-700 font-black rounded-2xl active:scale-95 transition-all text-sm">
                 再試一次
             </button>
-            <button onclick="showStart()" class="py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-sm">
+            <button onclick="showHub()" class="py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-sm">
                 回首頁
             </button>
         </div>
@@ -118,98 +158,164 @@
 
 <script>
 // ─── 題庫 ─────────────────────────────────────────────────────────────────────
-const QUESTIONS = [
-    { no:"01", q:"運用迴歸分析法，截距項以外其他各主要影響價格因素之迴歸係數估計值同時為零之顯著機率不得大於下列何者？", opts:["百分之五","百分之七","百分之十五","百分之三十"], ans:0 },
-    { no:"02", q:"運用比較法估價時，下列何者較不宜列入比較項目？", opts:["物理性特徵","區位","交易情況","三年前之擬售價格"], ans:3 },
-    { no:"03", q:"下列何者非屬特殊情況交易？", opts:["期待因素影響之交易","現金交易","受債權債務關係影響之交易","畸零地之交易"], ans:1 },
-    { no:"04", q:"使用迴歸分析法估價時，比較標的至少需要幾件以上？", opts:["三十件","二十五件","三十五件","二十件"], ans:0 },
-    { no:"05", q:"對於沒有買賣及收益實例之地價區段，應於鄰近或適當地區選取兩個以上之基準地價區段，之後進行何種修正以求得目標地價區段之區段地價？", opts:["一般因素修正","個別因素修正","區域因素修正","交易日期修正"], ans:2 },
-    { no:"06", q:"內政部公布之都市地區地價指數，可以用來調整勘估標的與比較標的間之何種差異？", opts:["公共設施水準差異","樓層差異","價格日期差異","建築物結構差異"], ans:2 },
-    { no:"07", q:"依不動產估價技術規則之規定，運用比較法時，不動產估價師應至少採用多少個比較標的？", opts:["二件","三件","五件","十件"], ans:1 },
-    { no:"08", q:"依不動產估價技術規則之規定，比較、分析勘估標的與比較標的之區域因素及個別因素差異，並就其中差異進行價格調整時，其調整以下列何者為原則？", opts:["百分率法","差額法","定性分析法","計量模型分析法"], ans:0 },
-    { no:"09", q:"依不動產估價技術規則之規定，試算價格之調整運算過程中，區域因素調整、個別因素調整或區域因素及個別因素內之任一單獨項目之價格調整率不得大於多少百分比？", opts:["百分之十","百分之十五","百分之二十","百分之三十"], ans:1 },
-    { no:"10", q:"下列調整勘估標的及比較標的的價格差異的方法中，何者不在不動產估價技術規則的規範中？", opts:["百分率法","差額法","定性分析法","計量模型分析法"], ans:2 },
-    { no:"11", q:"依不動產估價技術規則規定，進行比較標的與勘估標的差異比較時，無須進行下列那一項調整？", opts:["情況調整","一般因素調整","區域因素調整","個別因素調整"], ans:1 },
-    { no:"12", q:"利用比較法進行不動產估價時，經檢討後試算價格之間差距多少時，應排除該試算價格之適用？", opts:["百分之十","百分之十五","百分之二十","百分之三十"], ans:2 },
-    { no:"13", q:"計量模型分析法在不動產估價技術規則中屬於何種方法？", opts:["比較法","收益法","成本法","利率法"], ans:0 },
-    { no:"14", q:"比較標的價格因交易人關係特殊而明顯低於一般市場行情時，應進行之調整為：", opts:["情況調整","價格日期調整","區域因素調整","一般因素調整"], ans:0 },
-    { no:"15", q:"依不動產估價技術規則規定，下列何者與推估比較價格最不具直接關係？", opts:["定額法","差額法","百分率法","計量模型分析法"], ans:0 },
-    { no:"16", q:"以過去的案例價格資料推估現在之價格時，如果近來市場行情有明顯變化，應進行之調整為：", opts:["情況調整","價格日期調整","區域因素調整","一般因素調整"], ans:1 },
-    { no:"17", q:"以法拍屋作為比較標的，評估勘估標的之正常價格時，應進行的調整為：", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:0 },
-    { no:"18", q:"在蒐集比較標的時，下列何者屬於應進行個別因素調整的情形？", opts:["社區人文環境有差異","臨接道路情況有差異","親友關係人間之交易","地上物處理有糾紛之交易"], ans:1 },
-    { no:"19", q:"比較分析區域因素及個別因素差異進行價格調整時，以下列何種方法為原則？", opts:["評等法","定額法","差額法","百分率法"], ans:3 },
-    { no:"20", q:"若比較標的與勘估標的在同一近鄰地區內時，則不必進行下列何種調整？", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:2 },
-    { no:"21", q:"倘若相較於一般成交時間，比較標的之成交時間太長，則在評估勘估標的之正常價格時，應進行下列何種調整？", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:0 },
-    { no:"22", q:"以比較標的之價格為基礎，就比較標的與勘估標的因個別因素所產生價格差異，逐項進行之分析及調整，此種調整稱為：", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:3 },
-    { no:"23", q:"蒐集比較實例之價格，下列何者不宜採用？", opts:["實例價格屬正常價格","與勘估標的之使用性質相同","位於同一供需圈之近鄰地區","交易情況無法有效掌握"], ans:3 },
-    { no:"24", q:"就所選用之比較標的與勘估標的不在同一近鄰地區，而產生之價格差異進行調整稱為：", opts:["情況調整","區域因素調整","個別因素調整","價格日期調整"], ans:1 },
-    { no:"25", q:"根據不動產估價技術規則之規定，採取比較法進行區域因素及個別因素差異分析調整時，可以採那種方法為其調整方法呢？", opts:["百分率法","定率法","定額法","差額法"], ans:0 },
-    { no:"26", q:"運用比較法進行估價時，將影響勘估標的及比較標的的價格差異之區域因素及個別因素逐項比較，並依優劣程度或高低等級所評定之差額進行價格調整之方法，係指：", opts:["百分率法","差額法","區域分析法","個別因素法"], ans:1 },
-    { no:"27", q:"勘估標的與比較標的若因樓層之不同，而有100萬元的價格調整。此調整屬於下列何種方法之運用？", opts:["差額法","定額法","定率法","百分率法"], ans:0 }
+const CHAPTERS = [
+  {
+    icon: '🏗️',
+    iconBg: 'bg-blue-100',
+    title: '第五章 成本法',
+    questions: [
+      // ── 成本法 上 (第01–20題) ──
+      { no:"01", q:"以成本法推估不動產價格，下列何者無需納入估價之作業程序？", opts:["估計基地價值","估計建物重置成本","估計增值額","估計各項折舊額"], ans:2 },
+      { no:"02", q:"建物估價，以下列何種方法估價為原則？", opts:["比較法","收益法","成本法","土地開發分析"], ans:2 },
+      { no:"03", q:"附著於土地之工事及水利土壤之改良，以下列何種方法估價為原則？", opts:["成本法","比較法","收益法","計量模型分析法"], ans:0 },
+      { no:"04", q:"建物估價，以何種估價方法估價為原則？", opts:["成本法","比較法","收益法","定額法"], ans:0 },
+      { no:"05", q:"運用成本法進行不動產估價，下列何者不需納入計算？", opts:["土地總成本","建物總成本","建物累積折舊額","土地增值"], ans:3 },
+      { no:"06", q:"與勘估標的相同效用之建物，以現代建材標準、設計及配置，於價格日期建築所需之成本，稱為什麼成本？", opts:["重建成本","再造成本","完工成本","重置成本"], ans:3 },
+      { no:"07", q:"以建築細部工程之各項目單價乘以該工程施工數量之總和，計算勘估標的之營造或施工費用的方法稱為：", opts:["單位工程法","工程造價比率法","單位面積或體積法","淨計法"], ans:0 },
+      { no:"08", q:"以建築細部工程之各項目單價乘以該工程施工數量，藉以估計勘估標的之營造或施工費，此方法稱為：", opts:["淨計法","單位工程法","單位面積法","工程造價比較法"], ans:1 },
+      { no:"09", q:"成本法中重建成本或重置成本，是指求取勘估標的於何時的價格？", opts:["建造完成日期","價格期日","價格日期","勘查日期"], ans:2 },
+      { no:"10", q:"運用標準營造單價表配合勘估標的之個別條件差異進行調整，以求得勘估標的的營造費用之方法，稱之為：", opts:["淨計法","工程造價比較法","單位工程法","單位面積比較法"], ans:3 },
+      { no:"11", q:"依不動產估價技術規則之規定，採成本法評估建物價格時，以求取何種成本為原則？", opts:["重建成本","重置成本","興建成本","營造成本"], ans:0 },
+      { no:"12", q:"下列何種方法求算之重建成本最為詳實？", opts:["淨計法","單位工程法","工程造價比率法","單位面積法"], ans:0 },
+      { no:"13", q:"根據不動產估價技術規則，下列何者非成本法中估算勘估標的之開發或建築適當利潤應考量之因素？", opts:["工程規模","開發年數","經濟景氣","開發機構"], ans:3 },
+      { no:"14", q:"在成本法中，勘估標的之營造或施工費，得按下列何種方法求取？", opts:["百分率法","差額法","淨計法","價格法"], ans:2 },
+      { no:"15", q:"下列何者為建物興建之間接成本？", opts:["營造或施工費","建築利潤","規劃設計費","人工成本"], ans:2 },
+      { no:"16", q:"依據不動產估價技術規則，下列何者是土地建築開發之直接成本？", opts:["規劃設計費","廣告費","營造或施工費","管理費"], ans:2 },
+      { no:"17", q:"重新建造與勘估標的完全相同之新建築物所需之成本稱為：", opts:["直接成本","間接成本","重建成本","重置成本"], ans:2 },
+      { no:"18", q:"建築物因功能或效益衰退至不值得使用所經歷之年數，稱之為何？", opts:["物理耐用年數","化學耐用年數","經濟耐用年數","建築耐用年數"], ans:2 },
+      { no:"19", q:"下列何者非估計勘估標的之營造或施工費時應包括之成本？", opts:["稅捐","間接人工費","資本利息","廣告費"], ans:3 },
+      { no:"20", q:"依建築細部工程之各項目單價，乘以該工程施工數量，並合計之，此方法為何？", opts:["工程造價比較法","單位工程法","淨計法","單位面積比較法"], ans:1 },
+      // ── 成本法 下 (第21–40題) ──
+      { no:"21", q:"建物耐用年數屆滿時之剩餘價格＝（）×殘值率，請問括弧內，應以下列何者為正確？", opts:["建物重建成本","建物折舊額","積算價格","交易價格"], ans:0 },
+      { no:"22", q:"由於建築物與基地之配合不適宜、設計不良致效率降低，所引起之不動產相對減價，可認定為何種因素減價？", opts:["經濟的","功能的","物理的","社會的"], ans:1 },
+      { no:"23", q:"設某建物之耐用年數為N，殘餘價格率為r，依定額法原則，其年折舊率公式為：", opts:["(1-r)/N","N/(1-r)","(1-r)×N","(1+r)×N"], ans:0 },
+      { no:"24", q:"運用折舊提存金加計利息等於投資之資產本金，作為計算折舊額之方法，稱為：", opts:["年數合計法","償還基金法","定額法","定率法"], ans:1 },
+      { no:"25", q:"假設市場上住宅衛浴設備的標準設計為2套，今勘估標的之衛浴設備為1.5套，請問於此條件下需進行何種折舊？", opts:["物理性折舊","功能性折舊","經濟性折舊","外部性折舊"], ans:1 },
+      { no:"26", q:"下列何者屬外部性退化而產生折舊？", opts:["建物外牆剝落","中庭之游泳池荒置","屋頂漏水","位於淹水區"], ans:3 },
+      { no:"27", q:"位於貧民區之高級住宅，其價值將發生相對減損。請問造成該減損的原因來自何種折舊？", opts:["心理性折舊","物理性折舊","功能性折舊","經濟性折舊"], ans:3 },
+      { no:"28", q:"造成不動產減價的原因有好幾種。如果減價是由於不動產設備落伍所造成，則此減價屬於何種折舊？", opts:["物理折舊","經濟折舊","環境折舊","功能折舊"], ans:3 },
+      { no:"29", q:"依不動產估價技術規則之規定，建物之殘餘價格率不得超過下列何者？", opts:["百分之五","百分之十","百分之二十","百分之三十"], ans:1 },
+      { no:"30", q:"一棟樓房因鄰地建築而產生牆壁龜裂情形，請問該棟樓房將產生下列何種折舊？", opts:["物理性折舊","功能性折舊","經濟性折舊","外部性折舊"], ans:0 },
+      { no:"31", q:"當不動產管理對不動產價格的影響無法藉由耐用年數法確切分析時，可運用下列何種方法掌握？", opts:["定額法","定率法","償債基金法","觀察法"], ans:3 },
+      { no:"32", q:"建築物因功能或效益衰退至不值得使用所經歷之年數，稱為：", opts:["經濟耐用年數","物理耐用年數","觀察耐用年數","社會耐用年數"], ans:0 },
+      { no:"33", q:"建物折舊額計算應以下列何種年數為主？", opts:["社會耐用年數","經濟耐用年數","實際經歷年數","物理耐用年數"], ans:1 },
+      { no:"34", q:"根據不動產估價技術規則，建物因自然耗損或外力破壞至結構脆弱而不堪使用所經歷之年數，稱為：", opts:["社會耐用年數","經濟耐用年數","實際經歷年數","物理耐用年數"], ans:3 },
+      { no:"35", q:"成本法中對建築物累積折舊之計算，何種方法於折舊初期所求得的建物現值較高？", opts:["定額法","定率法","償債基金法","殘餘法"], ans:2 },
+      { no:"36", q:"依不動產估價技術規則之規定，成本法中對建築物累積折舊之計算，以何種方法為原則？", opts:["定額法","定率法","償債基金法","殘餘法"], ans:0 },
+      { no:"37", q:"對於大賣場等商用不動產，使用初期營收價值高、建物保養維護較佳者，宜採何種折舊方法？", opts:["定額法","償還基金法","定率法","年數合計法"], ans:1 },
+      { no:"38", q:"下列何者係以殘餘耐用年數為權數而加速折舊的方法？", opts:["償還基金法","定額法","定率法","年數合計法"], ans:3 },
+      { no:"39", q:"用何種方法計算建築物折舊額時，其殘餘價格不得為零？", opts:["償債基金法","定額法","定率法","直線法"], ans:2 },
+      { no:"40", q:"因接近基地台而引起之價值減損，屬於下列何種折舊？", opts:["物理性折舊","功能性折舊","特殊性折舊","經濟性折舊"], ans:3 }
+    ]
+  },
+  {
+    icon: '📊',
+    iconBg: 'bg-emerald-100',
+    title: '第六章 比較法',
+    questions: [
+      { no:"01", q:"運用迴歸分析法，截距項以外其他各主要影響價格因素之迴歸係數估計值同時為零之顯著機率不得大於下列何者？", opts:["百分之五","百分之七","百分之十五","百分之三十"], ans:0 },
+      { no:"02", q:"運用比較法估價時，下列何者較不宜列入比較項目？", opts:["物理性特徵","區位","交易情況","三年前之擬售價格"], ans:3 },
+      { no:"03", q:"下列何者非屬特殊情況交易？", opts:["期待因素影響之交易","現金交易","受債權債務關係影響之交易","畸零地之交易"], ans:1 },
+      { no:"04", q:"使用迴歸分析法估價時，比較標的至少需要幾件以上？", opts:["三十件","二十五件","三十五件","二十件"], ans:0 },
+      { no:"05", q:"對於沒有買賣及收益實例之地價區段，應於鄰近或適當地區選取兩個以上之基準地價區段，之後進行何種修正以求得目標地價區段之區段地價？", opts:["一般因素修正","個別因素修正","區域因素修正","交易日期修正"], ans:2 },
+      { no:"06", q:"內政部公布之都市地區地價指數，可以用來調整勘估標的與比較標的間之何種差異？", opts:["公共設施水準差異","樓層差異","價格日期差異","建築物結構差異"], ans:2 },
+      { no:"07", q:"依不動產估價技術規則之規定，運用比較法時，不動產估價師應至少採用多少個比較標的？", opts:["二件","三件","五件","十件"], ans:1 },
+      { no:"08", q:"依不動產估價技術規則之規定，比較、分析勘估標的與比較標的之區域因素及個別因素差異，並就其中差異進行價格調整時，其調整以下列何者為原則？", opts:["百分率法","差額法","定性分析法","計量模型分析法"], ans:0 },
+      { no:"09", q:"依不動產估價技術規則之規定，試算價格之調整運算過程中，區域因素調整、個別因素調整或區域因素及個別因素內之任一單獨項目之價格調整率不得大於多少百分比？", opts:["百分之十","百分之十五","百分之二十","百分之三十"], ans:1 },
+      { no:"10", q:"下列調整勘估標的及比較標的的價格差異的方法中，何者不在不動產估價技術規則的規範中？", opts:["百分率法","差額法","定性分析法","計量模型分析法"], ans:2 },
+      { no:"11", q:"依不動產估價技術規則規定，進行比較標的與勘估標的差異比較時，無須進行下列那一項調整？", opts:["情況調整","一般因素調整","區域因素調整","個別因素調整"], ans:1 },
+      { no:"12", q:"利用比較法進行不動產估價時，經檢討後試算價格之間差距多少時，應排除該試算價格之適用？", opts:["百分之十","百分之十五","百分之二十","百分之三十"], ans:2 },
+      { no:"13", q:"計量模型分析法在不動產估價技術規則中屬於何種方法？", opts:["比較法","收益法","成本法","利率法"], ans:0 },
+      { no:"14", q:"比較標的價格因交易人關係特殊而明顯低於一般市場行情時，應進行之調整為：", opts:["情況調整","價格日期調整","區域因素調整","一般因素調整"], ans:0 },
+      { no:"15", q:"依不動產估價技術規則規定，下列何者與推估比較價格最不具直接關係？", opts:["定額法","差額法","百分率法","計量模型分析法"], ans:0 },
+      { no:"16", q:"以過去的案例價格資料推估現在之價格時，如果近來市場行情有明顯變化，應進行之調整為：", opts:["情況調整","價格日期調整","區域因素調整","一般因素調整"], ans:1 },
+      { no:"17", q:"以法拍屋作為比較標的，評估勘估標的之正常價格時，應進行的調整為：", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:0 },
+      { no:"18", q:"在蒐集比較標的時，下列何者屬於應進行個別因素調整的情形？", opts:["社區人文環境有差異","臨接道路情況有差異","親友關係人間之交易","地上物處理有糾紛之交易"], ans:1 },
+      { no:"19", q:"比較分析區域因素及個別因素差異進行價格調整時，以下列何種方法為原則？", opts:["評等法","定額法","差額法","百分率法"], ans:3 },
+      { no:"20", q:"若比較標的與勘估標的在同一近鄰地區內時，則不必進行下列何種調整？", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:2 },
+      { no:"21", q:"倘若相較於一般成交時間，比較標的之成交時間太長，則在評估勘估標的之正常價格時，應進行下列何種調整？", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:0 },
+      { no:"22", q:"以比較標的之價格為基礎，就比較標的與勘估標的因個別因素所產生價格差異，逐項進行之分析及調整，此種調整稱為：", opts:["情況調整","價格日期調整","區域因素調整","個別因素調整"], ans:3 },
+      { no:"23", q:"蒐集比較實例之價格，下列何者不宜採用？", opts:["實例價格屬正常價格","與勘估標的之使用性質相同","位於同一供需圈之近鄰地區","交易情況無法有效掌握"], ans:3 },
+      { no:"24", q:"就所選用之比較標的與勘估標的不在同一近鄰地區，而產生之價格差異進行調整稱為：", opts:["情況調整","區域因素調整","個別因素調整","價格日期調整"], ans:1 },
+      { no:"25", q:"根據不動產估價技術規則之規定，採取比較法進行區域因素及個別因素差異分析調整時，可以採那種方法為其調整方法呢？", opts:["百分率法","定率法","定額法","差額法"], ans:0 },
+      { no:"26", q:"運用比較法進行估價時，將影響勘估標的及比較標的的價格差異之區域因素及個別因素逐項比較，並依優劣程度或高低等級所評定之差額進行價格調整之方法，係指：", opts:["百分率法","差額法","區域分析法","個別因素法"], ans:1 },
+      { no:"27", q:"勘估標的與比較標的若因樓層之不同，而有100萬元的價格調整。此調整屬於下列何種方法之運用？", opts:["差額法","定額法","定率法","百分率法"], ans:0 }
+    ]
+  }
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let mode    = 'practice';
-let answers = [];
-let current = 0;
+let chapterIdx = 0;
+let mode       = 'practice';
+let answers    = [];
+let current    = 0;
+
+function currentQuestions() { return CHAPTERS[chapterIdx].questions; }
+
+// ─── Hub ──────────────────────────────────────────────────────────────────────
+function showHub() { showView('hubView'); }
+
+function selectChapter(idx) {
+    chapterIdx = idx;
+    const ch = CHAPTERS[idx];
+    const iconEl = document.getElementById('startIcon');
+    iconEl.textContent = ch.icon;
+    iconEl.className = `w-20 h-20 ${ch.iconBg} rounded-full flex items-center justify-center text-4xl`;
+    document.getElementById('startTitle').textContent = ch.title;
+    document.getElementById('startCount').textContent = ch.questions.length;
+    document.querySelector('input[name="mode"][value="practice"]').checked = true;
+    showView('startView');
+}
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 function startQuiz() {
     mode    = document.querySelector('input[name="mode"]:checked').value;
-    answers = new Array(QUESTIONS.length).fill(null);
+    answers = new Array(currentQuestions().length).fill(null);
     current = 0;
     showView('quizView');
     render();
 }
 
-function showStart() { showView('startView'); }
-
 // ─── Render question ──────────────────────────────────────────────────────────
 function render() {
-    const q     = QUESTIONS[current];
-    const total = QUESTIONS.length;
+    const qs    = currentQuestions();
+    const q     = qs[current];
+    const total = qs.length;
     const pct   = ((current + 1) / total * 100).toFixed(1);
 
-    document.getElementById('qCounter').innerText  = `${current + 1} / ${total}`;
+    document.getElementById('qCounter').innerText    = `${current + 1} / ${total}`;
     document.getElementById('qProgress').style.width = pct + '%';
     updateScoreChip();
 
-    const userAns  = answers[current];
-    const answered = userAns !== null;
+    const userAns    = answers[current];
+    const answered   = userAns !== null;
     const isPractice = mode === 'practice';
 
-    // Build option buttons
     const optsHtml = q.opts.map((opt, i) => {
         let cls = 'option-btn w-full text-left p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm shadow-sm flex items-center gap-3';
-
         if (answered && isPractice) {
-            if (i === q.ans)         cls += ' opt-correct';
-            else if (i === userAns)  cls += ' opt-wrong';
+            if (i === q.ans)        cls += ' opt-correct';
+            else if (i === userAns) cls += ' opt-wrong';
         } else if (answered && !isPractice) {
             if (i === userAns) cls += ' opt-selected';
         }
-
         const num = ['①','②','③','④'][i];
-        return `
-        <button ${answered ? 'disabled' : ''} onclick="pick(${i})" class="${cls}">
+        return `<button ${answered ? 'disabled' : ''} onclick="pick(${i})" class="${cls}">
             <span class="text-base flex-shrink-0">${num}</span>
             <span>${opt}</span>
         </button>`;
     }).join('');
 
-    // Feedback (practice mode only)
     let feedbackHtml = '';
     if (answered && isPractice) {
         const ok = userAns === q.ans;
-        feedbackHtml = `
-        <div class="p-4 rounded-2xl ${ok ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}">
+        feedbackHtml = `<div class="p-4 rounded-2xl ${ok ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}">
             <p class="font-black text-sm ${ok ? 'text-emerald-700' : 'text-red-700'}">
                 ${ok ? '✓ 答對了！' : `✗ 答錯了，正確答案是 ${['①','②','③','④'][q.ans]} ${q.opts[q.ans]}`}
             </p>
         </div>`;
     }
 
-    // Nav button
     const isLast = current === total - 1;
     const navHtml = answered
         ? `<button onclick="${isLast ? 'showResults()' : 'next()'}"
@@ -239,19 +345,19 @@ function pick(i) {
 }
 
 function next() {
-    if (current < QUESTIONS.length - 1) { current++; render(); }
+    if (current < currentQuestions().length - 1) { current++; render(); }
     else showResults();
 }
 
 function confirmExit() {
-    if (confirm('確定要退出？')) showStart();
+    if (confirm('確定要退出？')) showView('startView');
 }
 
 function retryQuiz() { startQuiz(); }
 
 // ─── Score ────────────────────────────────────────────────────────────────────
 function calcScore() {
-    return answers.reduce((s, a, i) => (a !== null && a === QUESTIONS[i].ans) ? s + 1 : s, 0);
+    return answers.reduce((s, a, i) => (a !== null && a === currentQuestions()[i].ans) ? s + 1 : s, 0);
 }
 
 function updateScoreChip() {
@@ -260,8 +366,9 @@ function updateScoreChip() {
 
 // ─── Results ──────────────────────────────────────────────────────────────────
 function showResults() {
+    const qs      = currentQuestions();
     const correct = calcScore();
-    const total   = QUESTIONS.length;
+    const total   = qs.length;
     const pct     = Math.round(correct / total * 100);
 
     document.getElementById('finalScore').innerText = `${correct} / ${total}`;
@@ -269,7 +376,7 @@ function showResults() {
     document.getElementById('resultEmoji').innerText =
         pct >= 90 ? '🎉' : pct >= 70 ? '👏' : pct >= 50 ? '💪' : '📚';
 
-    const reviewHtml = QUESTIONS.map((q, i) => {
+    const reviewHtml = qs.map((q, i) => {
         const a       = answers[i];
         const ok      = a === q.ans;
         const bgCls   = ok ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200';
@@ -277,8 +384,7 @@ function showResults() {
         const iconClr = ok ? 'text-emerald-600' : 'text-red-600';
         const userTxt = a !== null ? `${['①','②','③','④'][a]} ${q.opts[a]}` : '未作答';
         const ansTxt  = `${['①','②','③','④'][q.ans]} ${q.opts[q.ans]}`;
-        return `
-        <div class="p-4 border rounded-2xl ${bgCls}">
+        return `<div class="p-4 border rounded-2xl ${bgCls}">
             <div class="flex items-start gap-3">
                 <span class="font-black text-base ${iconClr} flex-shrink-0 mt-0.5">${icon}</span>
                 <div class="flex-grow">
@@ -297,7 +403,7 @@ function showResults() {
 }
 
 // ─── View helpers ─────────────────────────────────────────────────────────────
-const VIEWS = ['startView','quizView','resultView'];
+const VIEWS = ['hubView','startView','quizView','resultView'];
 function showView(id) {
     VIEWS.forEach(v => {
         document.getElementById(v).classList.add('hidden');
