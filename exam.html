@@ -311,12 +311,18 @@ function render() {
         </div>`;
     }
 
-    const isLast = current === total - 1;
-    const navHtml = answered
+    const isLast  = current === total - 1;
+    const backBtn = current > 0
+        ? `<button onclick="prev()" class="py-4 px-5 bg-slate-100 text-slate-700 font-black rounded-2xl active:scale-95 transition-all text-base flex-shrink-0">← 上一題</button>`
+        : '';
+    const nextBtn = answered
         ? `<button onclick="${isLast ? 'showResults()' : 'next()'}"
-               class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-base">
+               class="py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all text-base flex-grow">
                ${isLast ? '查看結果' : '下一題 →'}
            </button>`
+        : '';
+    const navHtml = (backBtn || nextBtn)
+        ? `<div class="flex gap-3">${backBtn}${nextBtn}</div>`
         : '';
 
     document.getElementById('qBody').innerHTML = `
@@ -342,6 +348,10 @@ function pick(i) {
 function next() {
     if (current < currentQuestions().length - 1) { current++; render(); }
     else showResults();
+}
+
+function prev() {
+    if (current > 0) { current--; render(); }
 }
 
 function confirmExit() {
