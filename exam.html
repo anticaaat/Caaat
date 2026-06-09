@@ -122,6 +122,10 @@
             <button onclick="startQuiz()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base">
                 開始作答
             </button>
+
+            <button onclick="showBrowse()" class="w-full py-3.5 bg-slate-50 text-slate-600 border-2 border-slate-100 font-black rounded-2xl active:scale-95 transition-all text-sm">
+                瀏覽所有題目
+            </button>
         </div>
     </div>
 
@@ -143,6 +147,25 @@
             </div>
         </div>
         <div id="qBody" class="flex-grow p-5 pb-12 overflow-y-auto no-scrollbar"></div>
+    </div>
+
+
+    <!-- ══════════════════ BROWSE SCREEN ══════════════════ -->
+    <div id="browseView" class="hidden flex-col min-h-screen">
+        <div class="bg-white px-5 pt-8 pb-4 border-b border-slate-100 sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <button onclick="showView('startView')" class="p-2 bg-slate-50 rounded-full text-slate-400 active:bg-slate-100 transition flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="flex-grow">
+                    <p id="browseChapterTitle" class="font-black text-slate-900 text-base leading-tight"></p>
+                    <p id="browseChapterCount" class="text-xs text-slate-400 font-medium"></p>
+                </div>
+            </div>
+        </div>
+        <div id="browseBody" class="flex-grow p-5 pb-16 overflow-y-auto no-scrollbar flex flex-col gap-5"></div>
     </div>
 
 
@@ -494,8 +517,41 @@ function showResults() {
     window.scrollTo(0, 0);
 }
 
+// ─── Browse ───────────────────────────────────────────────────────────────────
+function showBrowse() {
+    const ch = CHAPTERS[chapterIdx];
+    document.getElementById('browseChapterTitle').textContent = ch.title;
+    document.getElementById('browseChapterCount').textContent = `共 ${ch.questions.length} 題・顯示正確答案`;
+
+    const labels = ['①','②','③','④'];
+    const html = ch.questions.map((q, idx) => {
+        const optsHtml = q.opts.map((opt, i) => {
+            const isAns = i === q.ans;
+            const cls = isAns
+                ? 'flex items-start gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800'
+                : 'flex items-start gap-2 p-3 bg-white border border-slate-100 rounded-xl text-slate-500';
+            return `<div class="${cls}">
+                <span class="font-black text-sm flex-shrink-0 ${isAns ? 'text-emerald-600' : 'text-slate-400'}">${labels[i]}</span>
+                <span class="text-sm font-${isAns ? 'bold' : 'medium'} leading-snug">${opt}</span>
+                ${isAns ? '<span class="ml-auto flex-shrink-0 text-emerald-500 font-black text-sm">✓</span>' : ''}
+            </div>`;
+        }).join('');
+        return `<div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+            <div>
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Q${String(idx+1).padStart(2,'0')} · 題號 ${q.no}</p>
+                <p class="text-sm font-black text-slate-900 leading-relaxed">${q.q}</p>
+            </div>
+            <div class="flex flex-col gap-1.5">${optsHtml}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('browseBody').innerHTML = html;
+    showView('browseView');
+    window.scrollTo(0, 0);
+}
+
 // ─── View helpers ─────────────────────────────────────────────────────────────
-const VIEWS = ['hubView','startView','quizView','resultView'];
+const VIEWS = ['hubView','startView','quizView','resultView','browseView'];
 function showView(id) {
     VIEWS.forEach(v => {
         document.getElementById(v).classList.add('hidden');
