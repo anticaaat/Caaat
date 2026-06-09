@@ -7,289 +7,280 @@
     <title>打工時數計算器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            overflow: hidden; 
-            background-color: #f8fafc;
+        body {
+            overflow: hidden;
+            background-color: #e8edf4;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
         }
-
         .lock-bg {
             position: fixed !important;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             overflow: hidden !important;
             touch-action: none !important;
-            -ms-touch-action: none !important;
         }
-
-        .scrollable-content {
-            overscroll-behavior: contain;
-        }
-
+        .scrollable-content { overscroll-behavior: contain; }
         #editModal, #dailyListModal, #detailModal, #settingsOverlay, #searchResultsOverlay, #rangeStatsOverlay {
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
         }
 
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 4px; 
-            align-items: stretch; 
+        /* ── Calendar ── */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            align-items: stretch;
         }
-        
-        .day-cell { 
-            padding: 6px 4px; 
-            transition: transform 0.1s ease, background-color 0.2s; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0;
+        .day-cell {
+            padding: 5px 4px;
+            transition: transform 0.15s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.15s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            border: 1px solid #e4eaf2;
             background-color: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            height: 100%;
-            min-height: 85px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            min-height: 78px;
         }
-        
-        .day-cell:active { transform: scale(0.95); background-color: #f1f5f9; }
-        .is-weekend { background-color: #fff1f2 !important; }
-        .is-holiday { background-color: #fef2f2 !important; border-color: #fecaca !important; }
-        .is-today { outline: 2px solid #3b82f6; outline-offset: -1px; z-index: 5; background-color: #eff6ff !important; }
-        
+        .day-cell:active { transform: scale(0.92); opacity: 0.8; }
+        .is-weekend  { background-color: #fff5f5 !important; border-color: #ffe0e0 !important; }
+        .is-holiday  { background-color: #fff0f0 !important; border-color: #ffd0d0 !important; }
+        .is-today    { background-color: #eff6ff !important; border: 2px solid #3b82f6 !important; z-index: 5; }
+
+        /* Today: filled blue circle on the date number */
+        .is-today .day-num {
+            background-color: #3b82f6;
+            color: white !important;
+            border-radius: 50%;
+            width: 20px; height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            line-height: 1;
+        }
         .holiday-dot {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 5px;
-            height: 5px;
+            position: absolute; top: 5px; right: 5px;
+            width: 5px; height: 5px;
             background-color: #ef4444;
             border-radius: 50%;
         }
 
+        /* ── Search ── */
         #searchContainer {
-            position: relative;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            position: relative; height: 44px;
+            display: flex; align-items: center; gap: 8px;
         }
-
-        #searchWrapper { 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            width: 44px; 
-            height: 44px;
-            overflow: hidden; 
-            display: flex; 
-            align-items: center; 
+        #searchWrapper {
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            width: 40px; height: 40px;
+            overflow: hidden; display: flex; align-items: center;
             background-color: #f1f5f9;
             border-radius: 9999px;
-            position: relative;
-            flex-shrink: 0;
+            position: relative; flex-shrink: 0;
             border: 1px solid #e2e8f0;
         }
-        
-        #searchWrapper.active { 
-            flex-grow: 1;
-            width: 100%;
-            background-color: #f1f5f9; 
+        #searchWrapper.active { flex-grow: 1; width: 100%; }
+        #searchInput {
+            opacity: 0; transition: opacity 0.2s;
+            width: 100%; font-size: 14px; border: none;
+            background: transparent; padding: 0 44px;
+            height: 100%; display: none;
         }
+        #searchWrapper.active #searchInput { opacity: 1; display: block; }
 
-        #searchInput { 
-            opacity: 0; 
-            transition: opacity 0.2s; 
-            width: 100%; 
-            font-size: 14px; 
-            border: none; 
-            background: transparent; 
-            padding: 0 44px; 
-            height: 100%;
-            display: none;
-        }
-        
-        #searchWrapper.active #searchInput { 
-            opacity: 1; 
-            display: block;
-        }
-
+        /* ── Icon buttons ── */
         .icon-btn {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
             background-color: #f1f5f9;
             border-radius: 9999px;
             border: 1px solid #e2e8f0;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            padding: 0;
+            transition: all 0.15s; flex-shrink: 0;
         }
-        
-        .icon-btn svg {
-            width: 22px;
-            height: 22px;
-            color: #64748b;
-            display: block;
-        }
+        .icon-btn:active { background-color: #e2e8f0; transform: scale(0.9); }
+        .icon-btn svg { width: 20px; height: 20px; color: #64748b; display: block; }
 
+        /* ── iOS Switch ── */
         .ios-switch { position: relative; display: inline-block; width: 44px; height: 26px; }
         .ios-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9e9ea; transition: .3s; border-radius: 26px; }
-        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #e9e9ea; transition: .3s; border-radius: 26px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 2px; bottom: 2px; background: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
         input:checked + .slider { background-color: #34c759; }
         input:checked + .slider:before { transform: translateX(18px); }
 
+        /* ── Picker ── */
         .picker-container {
-            position: relative; height: 120px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            position: relative; height: 120px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
             background: #f8fafc; border-radius: 0.75rem;
-            mask-image: linear-gradient(to bottom, transparent, black 35%, black 65%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 35%, black 65%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
         }
-        .picker-wheel { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; will-change: transform; cursor: ns-resize; touch-action: none; }
+        .picker-wheel {
+            position: absolute; top: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            will-change: transform; cursor: ns-resize; touch-action: none;
+        }
         .picker-item { height: 32px; line-height: 32px; font-size: 0.9rem; font-weight: 600; color: #94a3b8; user-select: none; }
-        .picker-item.selected { color: #3b82f6; font-size: 1rem; font-weight: 800; }
-        .picker-selection-bar { position: absolute; top: 50%; left: 0; right: 0; height: 32px; transform: translateY(-50%); background: rgba(59, 130, 246, 0.08); pointer-events: none; border-top: 1px solid rgba(59, 130, 246, 0.1); border-bottom: 1px solid rgba(59, 130, 246, 0.1); z-index: 10; }
+        .picker-item.selected { color: #2563eb; font-size: 1rem; font-weight: 800; }
+        .picker-selection-bar {
+            position: absolute; top: 50%; left: 6px; right: 6px; height: 32px;
+            transform: translateY(-50%);
+            background: rgba(37,99,235,0.07);
+            border-top: 1.5px solid rgba(37,99,235,0.18);
+            border-bottom: 1.5px solid rgba(37,99,235,0.18);
+            border-radius: 8px;
+            pointer-events: none; z-index: 10;
+        }
 
+        /* ── Scrollbar hide ── */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        #monthView, #yearView { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; }
+        /* ── View transitions ── */
+        #monthView, #yearView { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease; }
 
+        /* ── FAB ── */
         .add-btn-container {
-            position: absolute;
-            bottom: 80px; 
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
+            position: absolute; bottom: 68px; left: 50%;
+            transform: translateX(-50%); z-index: 100;
         }
         .add-btn {
-            width: 60px;
-            height: 60px;
-            background-color: #0f172a;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-            border: 4px solid white;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 58px; height: 58px;
+            background: linear-gradient(145deg, #1d4ed8, #3b82f6);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 28px -4px rgba(59,130,246,0.6), 0 0 0 4px white;
+            transition: all 0.25s cubic-bezier(0.175,0.885,0.32,1.275);
         }
-        .add-btn:active { transform: scale(0.9) translateY(5px); }
+        .add-btn:active { transform: scale(0.88) translateY(4px); box-shadow: 0 4px 14px -2px rgba(59,130,246,0.4), 0 0 0 4px white; }
 
-        .color-dot {
-            width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s;
+        /* ── Color dots ── */
+        .color-dot { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+        .color-dot.selected { border-color: #1e293b; transform: scale(1.15); }
+
+        /* ── Stats bar gradient ── */
+        #statsBar {
+            background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+            box-shadow: 0 8px 28px -6px rgba(37,99,235,0.5);
         }
-        .color-dot.selected { border-color: #0f172a; transform: scale(1.1); }
-        
-        #defaultRateSection { display: none; }
 
+        /* ── Preview card ── */
+        #previewCard {
+            background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+        }
+
+        /* ── Header glass ── */
+        header {
+            background: rgba(255,255,255,0.94) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        /* ── Daily list panel ── */
         .daily-list-panel {
             border-radius: 2.5rem !important;
-            margin-bottom: auto;
-            margin-top: auto;
+            margin: auto;
             max-height: 85vh;
             display: flex;
             flex-direction: column;
         }
 
-        .swipe-item-container {
-            position: relative;
-            overflow: hidden;
-            border-radius: 1rem;
-        }
+        /* ── Swipe delete ── */
+        .swipe-item-container { position: relative; overflow: hidden; border-radius: 1rem; }
         .swipe-content {
-            position: relative;
-            z-index: 2;
-            transition: transform 0.3s ease;
+            position: relative; z-index: 2;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
             background: white;
         }
         .swipe-actions {
-            position: absolute;
-            top: 4px;
-            bottom: 4px;
-            right: 4px;
-            width: 70px;
-            background-color: #ef4444;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-            border-radius: 1rem;
+            position: absolute; top: 4px; bottom: 4px; right: 4px; width: 70px;
+            background: linear-gradient(135deg, #f87171, #dc2626);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1; border-radius: 0.875rem;
         }
-        .swipe-content.swiped {
-            transform: translateX(-80px);
+        .swipe-content.swiped { transform: translateX(-80px); }
+
+        #defaultRateSection { display: none; }
+
+        /* ── Range result summary ── */
+        #rangeResultSummary {
+            background: linear-gradient(135deg, #eff6ff, #eef2ff);
         }
+
+        /* ── Day of week header ── */
+        .dow-cell { font-size: 9px; font-weight: 800; text-align: center; padding: 5px 0; letter-spacing: 0.06em; text-transform: uppercase; }
     </style>
 </head>
 <body class="text-slate-800 font-sans">
 
-<div id="app" class="max-w-md mx-auto h-screen flex flex-col bg-white shadow-xl relative">
-    
-    <div id="settingsOverlay" class="fixed inset-0 bg-slate-900/60 z-[110] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
+<div id="app" class="max-w-md mx-auto h-screen flex flex-col bg-white shadow-2xl relative overflow-hidden">
+
+    <!-- ═══ SETTINGS OVERLAY ═══ -->
+    <div id="settingsOverlay" class="fixed inset-0 bg-slate-900/65 z-[110] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
         <div id="settingsPanel" class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col items-center max-h-[85vh] overflow-y-auto no-scrollbar scrollable-content">
             <div class="w-full flex justify-between items-center mb-6">
                 <h3 class="text-xl font-black text-slate-900 tracking-tight">設定</h3>
-                <button onclick="toggleSettings()" class="text-slate-400 p-2 bg-slate-50 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="toggleSettings()" class="text-slate-500 p-2.5 bg-slate-100 rounded-full active:scale-90 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            
-            <div class="w-full space-y-5">
+            <div class="w-full space-y-4">
                 <div id="defaultRateSection" class="flex flex-col">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">預設時薪</label>
-                    <input type="number" id="settingDefaultRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-black text-xl text-center outline-none focus:border-blue-500 transition shadow-sm">
+                    <input type="number" id="settingDefaultRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-black text-xl text-center outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition shadow-sm">
                 </div>
-
                 <div class="bg-slate-50 rounded-3xl p-5 border border-slate-100 space-y-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">內容顯示開關</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">內容顯示開關</label>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示標題</span>
+                        <span class="font-bold text-sm text-slate-700">顯示標題</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowTitle" onchange="updateSetting('showTitle', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示時間</span>
+                        <span class="font-bold text-sm text-slate-700">顯示時間</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowTime" onchange="updateSetting('showTime', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示時數</span>
+                        <span class="font-bold text-sm text-slate-700">顯示時數</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowHours" onchange="updateSetting('showHours', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示薪資預估</span>
+                        <span class="font-bold text-sm text-slate-700">顯示薪資預估</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowSalary" onchange="updateSetting('showSalary', this.checked)"><span class="slider"></span></label>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">顯示備註</span>
+                        <span class="font-bold text-sm text-slate-700">顯示備註</span>
                         <label class="ios-switch"><input type="checkbox" id="checkShowNote" onchange="updateSetting('showNote', this.checked)"><span class="slider"></span></label>
                     </div>
                 </div>
-
-                <div class="bg-blue-50 rounded-3xl p-5 border border-blue-100 space-y-4">
-                    <label class="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">資料備份 (更換圖示用)</label>
+                <div class="bg-blue-50 rounded-3xl p-5 border border-blue-100 space-y-3">
+                    <label class="block text-[10px] font-black text-blue-400 uppercase tracking-widest">資料備份</label>
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="exportData()" class="py-3 bg-white border border-blue-200 text-blue-600 text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯出資料代碼</button>
                         <button onclick="importData()" class="py-3 bg-blue-600 text-white text-xs font-black rounded-xl shadow-sm active:scale-95 transition-all">匯入資料代碼</button>
                     </div>
                 </div>
-
-                <button onclick="saveSettings()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-lg">完成設定</button>
+                <button onclick="saveSettings()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-base">完成設定</button>
             </div>
         </div>
     </div>
 
-    <div id="rangeStatsOverlay" class="fixed inset-0 bg-slate-900/60 z-[150] backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity">
+    <!-- ═══ RANGE STATS OVERLAY ═══ -->
+    <div id="rangeStatsOverlay" class="fixed inset-0 bg-slate-900/65 z-[150] backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 flex flex-col max-h-[90vh] scrollable-content">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-slate-900 tracking-tight">區間薪資查詢</h3>
-                <button onclick="toggleRangeStats()" class="text-slate-400 p-2 bg-slate-50 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h3 class="text-xl font-black text-slate-900 tracking-tight">區間薪資查詢</h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">選擇日期範圍統計工時與薪資</p>
+                </div>
+                <button onclick="toggleRangeStats()" class="text-slate-500 p-2.5 bg-slate-100 rounded-full active:scale-90 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-
-            <div class="space-y-4 mb-6">
+            <div class="space-y-3 mb-5">
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                         <label class="text-[9px] font-black text-blue-500 uppercase ml-1 block mb-1">開始日期</label>
@@ -300,20 +291,18 @@
                         <input type="date" id="statsEndDate" class="w-full bg-transparent font-bold text-sm outline-none cursor-pointer">
                     </div>
                 </div>
-                <div class="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                <div class="bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-100">
                     <label class="text-[9px] font-black text-slate-400 uppercase ml-1 block mb-1">過濾工作標題</label>
                     <input type="text" id="statsFilterTitle" placeholder="留空則統計全部" class="w-full bg-transparent font-bold text-sm outline-none">
                 </div>
-                
                 <div class="flex gap-2">
-                    <button onclick="execRangeStats()" class="flex-grow bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-sm">執行查詢</button>
+                    <button onclick="execRangeStats()" class="flex-grow bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition-all text-sm">執行查詢</button>
                     <button id="copyRangeBtn" onclick="copyRangeToClipboard()" class="hidden w-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center active:scale-95 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                     </button>
                 </div>
             </div>
-
-            <div id="rangeResultSummary" class="hidden grid grid-cols-2 gap-3 bg-blue-50 p-4 rounded-2xl mb-4 border border-blue-100">
+            <div id="rangeResultSummary" class="hidden grid grid-cols-2 gap-3 p-4 rounded-2xl mb-4 border border-blue-100">
                 <div id="rangeTotalCol">
                     <p class="text-[9px] font-black text-blue-400 uppercase">區間總薪資</p>
                     <p id="rangeTotalSalary" class="text-xl font-black text-blue-600">$0</p>
@@ -323,135 +312,128 @@
                     <p id="rangeTotalHours" class="text-xl font-black text-slate-800">0.0h</p>
                 </div>
             </div>
-
-            <div id="rangeDetailsList" class="flex-grow overflow-y-auto space-y-3 no-scrollbar scrollable-content pb-4"></div>
+            <div id="rangeDetailsList" class="flex-grow overflow-y-auto space-y-2.5 no-scrollbar scrollable-content pb-4"></div>
         </div>
     </div>
 
-    <div id="exportConfigOverlay" class="fixed inset-0 bg-slate-900/60 z-[200] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
+    <!-- ═══ EXPORT CONFIG OVERLAY ═══ -->
+    <div id="exportConfigOverlay" class="fixed inset-0 bg-slate-900/65 z-[200] backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
         <div class="bg-white w-full max-w-xs rounded-[2.5rem] shadow-2xl p-6 border border-slate-100 flex flex-col">
-            <div class="w-full flex justify-between items-center mb-4">
+            <div class="w-full flex justify-between items-center mb-5">
                 <h3 class="text-lg font-black text-slate-900 tracking-tight">選擇輸出內容</h3>
-                <button onclick="toggleExportConfigModal(false)" class="text-slate-400 p-2 bg-slate-50 rounded-full">
+                <button onclick="toggleExportConfigModal(false)" class="text-slate-500 p-2.5 bg-slate-100 rounded-full active:scale-90 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            
-            <div class="space-y-4 mb-6">
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+            <div class="space-y-3 mb-6">
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     <span class="font-bold text-sm text-slate-700">輸出標題</span>
                     <label class="ios-switch"><input type="checkbox" id="exportTitle" checked><span class="slider"></span></label>
                 </div>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     <span class="font-bold text-sm text-slate-700">輸出時數</span>
                     <label class="ios-switch"><input type="checkbox" id="exportHours" checked><span class="slider"></span></label>
                 </div>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     <span class="font-bold text-sm text-slate-700">輸出薪資</span>
                     <label class="ios-switch"><input type="checkbox" id="exportPay" checked><span class="slider"></span></label>
                 </div>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     <span class="font-bold text-sm text-slate-700">輸出備註</span>
                     <label class="ios-switch"><input type="checkbox" id="exportNote" checked><span class="slider"></span></label>
                 </div>
             </div>
-
-            <button onclick="confirmAndCopyRange()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-sm">確認複製</button>
+            <button onclick="confirmAndCopyRange()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 transition-all text-sm">確認複製</button>
         </div>
     </div>
 
-    <header class="bg-white px-4 pt-6 pb-2 border-b shrink-0 z-50">
-        <div id="navHeader" class="flex justify-between items-center mb-4">
-            <button onclick="changeDate(-1)" class="p-2 text-slate-400 active:bg-slate-50 rounded-full transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+    <!-- ═══ HEADER ═══ -->
+    <header class="px-4 pt-5 pb-3 border-b border-slate-100/60 shrink-0 z-50">
+        <div id="navHeader" class="flex justify-between items-center mb-3">
+            <button onclick="changeDate(-1)" class="w-9 h-9 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full border border-slate-100 active:bg-slate-100 active:scale-90 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <div class="flex flex-col items-center">
-                <h1 id="yearDisplay" onclick="toggleView()" class="text-xl font-black text-slate-900 cursor-pointer hover:text-blue-600 transition-colors">2026年</h1>
-                <h2 id="monthDisplay" class="text-sm font-black text-blue-500">2月</h2>
+            <div class="flex flex-col items-center cursor-pointer" onclick="toggleView()">
+                <h1 id="yearDisplay" class="text-sm font-black text-slate-400 leading-none mb-1">2026年</h1>
+                <h2 id="monthDisplay" class="text-[1.75rem] font-black text-slate-900 leading-none">2月</h2>
             </div>
-            <button onclick="changeDate(1)" class="p-2 text-slate-400 active:bg-slate-50 rounded-full transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+            <button onclick="changeDate(1)" class="w-9 h-9 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full border border-slate-100 active:bg-slate-100 active:scale-90 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             </button>
         </div>
 
-        <div id="searchContainer" class="px-1 mb-2">
+        <div id="searchContainer" class="mb-3">
             <div id="searchWrapper">
-                <button onclick="openSearch()" class="absolute left-0 w-11 h-11 flex items-center justify-center text-slate-500 z-10">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <button onclick="openSearch()" class="absolute left-0 w-10 h-10 flex items-center justify-center text-slate-500 z-10">
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
                 <input type="text" id="searchInput" oninput="execSearch()" onblur="handleSearchBlur()" placeholder="搜尋紀錄標題..." class="font-bold outline-none">
-                <button onclick="closeSearch()" id="clearSearchBtn" class="absolute right-0 w-11 h-11 flex items-center justify-center text-slate-400 z-10 hidden">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="closeSearch()" id="clearSearchBtn" class="absolute right-0 w-10 h-10 flex items-center justify-center text-slate-400 z-10 hidden">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-
             <div id="centerActions" class="flex-grow flex justify-center items-center">
-                <button id="todayBtn" onclick="goToToday()" class="px-8 py-2.5 bg-[#0f172a] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Today</button>
+                <button id="todayBtn" onclick="goToToday()" class="px-6 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Today</button>
             </div>
-
             <button id="statsRangeBtn" onclick="toggleRangeStats()" class="icon-btn mr-2">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             </button>
-
             <button id="settingsBtn" onclick="toggleSettings()" class="icon-btn">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543-.94-3.31.826-2.37 2.37a1.724 1.724 0 00-1.065 2.572c-1.756.426-1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c-.94 1.543.826 3.31 2.37 2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
         </div>
 
-        <div id="statsBar" class="grid grid-cols-2 gap-3 bg-white border border-slate-100 p-4 rounded-[1.5rem] mt-4 shadow-sm">
-            <div class="border-r border-slate-100 pr-2">
-                <p id="labelSalary" class="text-[9px] uppercase text-slate-400 font-black mb-1">預估本月薪資</p>
-                <p id="totalSalaryNet" class="text-2xl font-black text-blue-600 leading-none">$0</p>
+        <!-- Stats bar -->
+        <div id="statsBar" class="grid grid-cols-2 p-4 rounded-[1.4rem] mt-1">
+            <div class="pr-4" style="border-right:1px solid rgba(255,255,255,0.2)">
+                <p id="labelSalary" class="text-[9px] uppercase font-black mb-1.5 tracking-widest" style="color:rgba(255,255,255,0.6)">預估本月薪資</p>
+                <p id="totalSalaryNet" class="text-[1.65rem] font-black leading-none" style="color:white">$0</p>
             </div>
-            <div class="pl-2">
-                <p id="labelHours" class="text-[9px] uppercase text-slate-400 font-black mb-1">本月累計工時</p>
-                <p id="totalHoursNet" class="text-2xl font-black text-slate-800 leading-none">0.0 <span class="text-[10px] font-normal opacity-50">hr</span></p>
+            <div class="pl-4">
+                <p id="labelHours" class="text-[9px] uppercase font-black mb-1.5 tracking-widest" style="color:rgba(255,255,255,0.6)">本月累計工時</p>
+                <p id="totalHoursNet" class="text-[1.65rem] font-black leading-none" style="color:white">0.0 <span class="text-xs font-normal" style="opacity:0.55">hr</span></p>
             </div>
         </div>
     </header>
 
+    <!-- ═══ MAIN VIEW ═══ -->
     <div class="relative flex-grow overflow-hidden" id="mainViewArea">
-        <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-3 rounded-b-[2rem] border-b border-slate-100 scrollable-content"></div>
+        <div id="searchResultsOverlay" class="absolute inset-x-0 top-0 max-h-full z-[70] bg-white shadow-2xl overflow-y-auto hidden p-5 space-y-2.5 rounded-b-[2rem] border-b border-slate-100 scrollable-content"></div>
         <div id="swipeContainer" class="h-full relative overflow-y-auto no-scrollbar pb-32 scrollable-content">
-            <main id="monthView" class="p-4">
-                <div class="calendar-grid text-center mb-3">
-                    <div class="text-[10px] font-black text-red-400 uppercase">S</div>
-                    <div class="text-[10px] font-bold text-slate-300 uppercase">M</div>
-                    <div class="text-[10px] font-bold text-slate-300 uppercase">T</div>
-                    <div class="text-[10px] font-bold text-slate-300 uppercase">W</div>
-                    <div class="text-[10px] font-bold text-slate-300 uppercase">T</div>
-                    <div class="text-[10px] font-bold text-slate-300 uppercase">F</div>
-                    <div class="text-[10px] font-black text-red-400 uppercase">S</div>
+            <main id="monthView" class="p-3">
+                <div class="calendar-grid mb-2">
+                    <div class="dow-cell text-red-400">SUN</div>
+                    <div class="dow-cell text-slate-300">MON</div>
+                    <div class="dow-cell text-slate-300">TUE</div>
+                    <div class="dow-cell text-slate-300">WED</div>
+                    <div class="dow-cell text-slate-300">THU</div>
+                    <div class="dow-cell text-slate-300">FRI</div>
+                    <div class="dow-cell text-red-400">SAT</div>
                 </div>
                 <div id="calendarDays" class="calendar-grid"></div>
             </main>
-            <main id="yearView" class="p-6 pb-12 hidden">
+            <main id="yearView" class="p-5 pb-12 hidden">
                 <div id="yearHeaderIos" class="text-3xl font-black text-slate-900 mb-6 pl-1 border-b-2 border-slate-100 pb-3">2026</div>
-                <div id="yearMonthsIos" class="grid grid-cols-3 gap-x-4 gap-y-8"></div>
+                <div id="yearMonthsIos" class="grid grid-cols-3 gap-x-5 gap-y-7"></div>
             </main>
         </div>
     </div>
 
-    <div id="dailyListModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[115] backdrop-blur-sm p-4">
+    <!-- ═══ DAILY LIST MODAL ═══ -->
+    <div id="dailyListModal" class="fixed inset-0 bg-slate-900/65 hidden items-center justify-center z-[115] backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-sm daily-list-panel shadow-2xl p-6 transform transition-all scrollable-content">
             <div class="flex justify-between items-center mb-5 shrink-0">
                 <div>
-                    <h3 id="dailyListDate" class="text-lg font-black text-slate-900">2026/02/05 紀錄清單</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">點擊項目查看詳情或編輯</p>
+                    <h3 id="dailyListDate" class="text-lg font-black text-slate-900">紀錄清單</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">向左滑 刪除 · 點擊 查看詳情</p>
                 </div>
-                <button onclick="closeDailyList()" class="p-2 bg-slate-50 rounded-full text-slate-400">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="closeDailyList()" class="p-2.5 bg-slate-100 rounded-full text-slate-500 active:scale-90 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div id="dailyItemsContainer" class="space-y-3 overflow-y-auto no-scrollbar flex-grow pb-2 scrollable-content">
-            </div>
+            <div id="dailyItemsContainer" class="space-y-2.5 overflow-y-auto no-scrollbar flex-grow pb-2 scrollable-content"></div>
             <div class="mt-4 pt-4 border-t border-slate-100 shrink-0">
-                <button onclick="openModalForSelected(); closeDailyList();" class="w-full py-3.5 bg-blue-50 text-blue-600 font-black rounded-2xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2">
+                <button onclick="openModalForSelected(); closeDailyList();" class="w-full py-3.5 bg-blue-600 text-white font-black rounded-2xl text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
                     新增排班紀錄
                 </button>
@@ -459,70 +441,72 @@
         </div>
     </div>
 
+    <!-- ═══ FAB ═══ -->
     <div class="add-btn-container">
         <button id="mainAddBtn" onclick="openModalForSelected()" class="add-btn">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
         </button>
     </div>
 
-    <div id="editModal" class="fixed inset-0 bg-slate-900/60 hidden items-end sm:items-center justify-center z-[120] backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-7 my-auto transform transition-all scrollable-content">
-            <div class="flex justify-between items-start mb-6">
+    <!-- ═══ EDIT MODAL ═══ -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900/65 hidden items-end sm:items-center justify-center z-[120] backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-6 my-auto transform transition-all scrollable-content">
+            <div class="flex justify-between items-start mb-5">
                 <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">排班紀錄</p>
                     <h2 id="modalDate" class="text-2xl font-black text-slate-900">2026/02/05</h2>
                     <span id="holidayTag" class="hidden inline-block px-3 py-1 bg-red-100 text-red-600 text-[10px] font-black rounded-full mt-2 uppercase tracking-wide">國定假日 2x</span>
                 </div>
-                <button onclick="closeModal()" class="p-2 bg-slate-100 rounded-full text-slate-400 active:scale-90 transition">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="closeModal()" class="p-2.5 bg-slate-100 rounded-full text-slate-500 active:scale-90 transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            
-            <div class="space-y-5">
+            <div class="space-y-4">
                 <div class="flex gap-3">
                     <div class="flex-grow">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">排班名稱</label>
-                        <input type="text" id="inputTitle" oninput="autoFillConfig(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-500 text-sm shadow-sm">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">排班名稱</label>
+                        <input type="text" id="inputTitle" oninput="autoFillConfig(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-sm transition">
                     </div>
-                    <div class="w-1/3">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">時薪</label>
-                        <input type="number" id="inputRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-500 text-sm shadow-sm">
+                    <div class="w-[30%]">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">時薪</label>
+                        <input type="number" id="inputRate" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-sm transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">標籤顏色</label>
-                    <div class="flex gap-3" id="colorPicker">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">標籤顏色</label>
+                    <div class="flex gap-2.5" id="colorPicker">
                         <div class="color-dot bg-emerald-200" data-color="emerald" onclick="selectColor('emerald')"></div>
-                        <div class="color-dot bg-amber-200" data-color="amber" onclick="selectColor('amber')"></div>
-                        <div class="color-dot bg-rose-200" data-color="rose" onclick="selectColor('rose')"></div>
-                        <div class="color-dot bg-blue-200" data-color="blue" onclick="selectColor('blue')"></div>
-                        <div class="color-dot bg-purple-200" data-color="purple" onclick="selectColor('purple')"></div>
-                        <div class="color-dot bg-orange-200" data-color="orange" onclick="selectColor('orange')"></div>
-                        <div class="color-dot bg-pink-200" data-color="pink" onclick="selectColor('pink')"></div>
+                        <div class="color-dot bg-amber-200"  data-color="amber"   onclick="selectColor('amber')"></div>
+                        <div class="color-dot bg-rose-200"   data-color="rose"    onclick="selectColor('rose')"></div>
+                        <div class="color-dot bg-blue-200"   data-color="blue"    onclick="selectColor('blue')"></div>
+                        <div class="color-dot bg-purple-200" data-color="purple"  onclick="selectColor('purple')"></div>
+                        <div class="color-dot bg-orange-200" data-color="orange"  onclick="selectColor('orange')"></div>
+                        <div class="color-dot bg-pink-200"   data-color="pink"    onclick="selectColor('pink')"></div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1.5 uppercase text-center">上班時間</label>
-                        <div class="flex gap-1 bg-slate-50 rounded-2xl p-1.5 border border-slate-200 shadow-sm">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 text-center">上班時間</label>
+                        <div class="flex gap-1 bg-slate-50 rounded-2xl p-1.5 border border-slate-200">
                             <div id="startHourPicker" class="picker-container flex-1"></div>
                             <div id="startMinutePicker" class="picker-container flex-1"></div>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1.5 uppercase text-center">下班時間</label>
-                        <div class="flex gap-1 bg-slate-50 rounded-2xl p-1.5 border border-slate-200 shadow-sm">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 text-center">下班時間</label>
+                        <div class="flex gap-1 bg-slate-50 rounded-2xl p-1.5 border border-slate-200">
                             <div id="endHourPicker" class="picker-container flex-1"></div>
                             <div id="endMinutePicker" class="picker-container flex-1"></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-black text-slate-700">休息時間</span>
-                        <button id="breakBtn" onclick="toggleBreakInput()" class="px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider">無休息</button>
+                        <button id="breakBtn" onclick="toggleBreakInput()" class="px-4 py-1.5 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider">無休息</button>
                     </div>
                     <div id="breakInputWrapper" class="hidden mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
                         <span class="text-[10px] font-bold text-slate-400 uppercase">扣除分鐘</span>
@@ -534,11 +518,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">備註紀錄</label>
-                    <textarea id="inputNote" rows="2" placeholder="在此輸入排班細節..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-bold outline-none resize-none shadow-sm"></textarea>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">備註紀錄</label>
+                    <textarea id="inputNote" rows="2" placeholder="在此輸入排班細節..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-bold outline-none resize-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"></textarea>
                 </div>
 
-                <div id="previewCard" class="bg-blue-600 p-5 rounded-3xl text-white shadow-xl flex justify-between items-end">
+                <div id="previewCard" class="p-5 rounded-3xl text-white shadow-xl shadow-blue-300/50 flex justify-between items-end">
                     <div>
                         <p class="text-[10px] font-bold opacity-70 mb-1">本次預計薪資</p>
                         <p id="previewNetSalary" class="text-3xl font-black tracking-tight">$0</p>
@@ -549,36 +533,39 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="clearDayRecords()" class="py-4 bg-rose-50 text-rose-600 text-sm font-black rounded-l-full rounded-r-2xl active:scale-95 transition-all">清空今日紀錄</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="clearDayRecords()" class="py-4 bg-rose-50 text-rose-500 text-sm font-black rounded-l-full rounded-r-2xl active:scale-95 transition-all border border-rose-100">清空今日紀錄</button>
                     <button onclick="saveData()" id="modalSubmitBtn" class="py-4 bg-slate-900 text-white text-sm font-black rounded-r-full rounded-l-2xl active:scale-95 transition-all shadow-lg">加入新項目</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[130] backdrop-blur-sm p-6">
+    <!-- ═══ DETAIL MODAL ═══ -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/65 hidden items-center justify-center z-[130] backdrop-blur-sm p-6">
         <div class="bg-white w-full max-w-xs rounded-[2rem] shadow-2xl p-6 border border-slate-100 scrollable-content">
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex justify-between items-start mb-5">
                 <div class="flex flex-col">
                     <span id="detailDateDisplay" class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">2026/02/05</span>
                     <h3 id="detailTitle" class="text-xl font-black text-slate-900">排班詳情</h3>
                 </div>
-                <button onclick="closeDetail()" class="text-slate-400 p-2 bg-slate-50 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                <button onclick="closeDetail()" class="text-slate-500 p-2.5 bg-slate-100 rounded-full active:scale-90 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
-            <div class="space-y-4 mb-6">
-                <div>
+            <div class="space-y-3 mb-5">
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">時間範圍</label>
-                    <p id="detailTimeRange" class="font-bold text-slate-800">09:00 - 18:00</p>
+                    <p id="detailTimeRange" class="font-bold text-slate-800 text-sm">09:00 - 18:00</p>
                 </div>
-                <div class="flex justify-between border-t border-slate-50 pt-3">
-                    <div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">淨工時</label>
-                        <p id="detailHours" class="font-black text-slate-800 text-lg">8.00h</p>
+                        <p id="detailHours" class="font-black text-slate-800 text-xl">8.00h</p>
                     </div>
-                    <div class="text-right">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">小計薪資</label>
-                        <p id="detailSalary" class="font-black text-blue-600 text-lg">$1,520</p>
+                    <div class="bg-blue-50 p-3.5 rounded-2xl border border-blue-100">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">小計薪資</label>
+                        <p id="detailSalary" class="font-black text-blue-600 text-xl">$1,520</p>
                     </div>
                 </div>
                 <div id="detailNoteSection" class="hidden">
@@ -587,8 +574,8 @@
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="deleteSingleRecord()" class="py-3 bg-rose-50 text-rose-600 text-xs font-black rounded-l-full rounded-r-xl active:scale-95 transition-all">刪除紀錄</button>
-                <button onclick="editSingleRecord()" class="py-3 bg-slate-900 text-white text-xs font-black rounded-r-full rounded-l-xl active:scale-95 transition-all">編輯內容</button>
+                <button onclick="deleteSingleRecord()" class="py-3.5 bg-rose-50 text-rose-500 text-xs font-black rounded-l-full rounded-r-xl active:scale-95 transition-all border border-rose-100">刪除紀錄</button>
+                <button onclick="editSingleRecord()" class="py-3.5 bg-slate-900 text-white text-xs font-black rounded-r-full rounded-l-xl active:scale-95 transition-all shadow-lg">編輯內容</button>
             </div>
         </div>
     </div>
@@ -600,81 +587,61 @@
     let selectedDateStr = new Date().toLocaleDateString('en-CA');
     let isYearView = false;
     let dynamicHolidays = {};
-    let weekendHolidays = {}; // 新增：用於標記紅底但不雙倍的假日
-    
+    let weekendHolidays = {};
     let editingIndex = -1;
     let selectedColor = 'emerald';
-    let lastQueryResult = []; 
+    let lastQueryResult = [];
     let lastTotalSalary = 0;
     let lastTotalHours = 0;
 
     const COLOR_THEMES = {
-        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-        amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-        rose: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-        blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-        purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-        orange: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-        pink: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' }
+        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300' },
+        amber:   { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-300' },
+        rose:    { bg: 'bg-rose-50',     text: 'text-rose-700',    border: 'border-rose-300' },
+        blue:    { bg: 'bg-blue-50',     text: 'text-blue-700',    border: 'border-blue-300' },
+        purple:  { bg: 'bg-purple-50',   text: 'text-purple-700',  border: 'border-purple-300' },
+        orange:  { bg: 'bg-orange-50',   text: 'text-orange-700',  border: 'border-orange-300' },
+        pink:    { bg: 'bg-pink-50',     text: 'text-pink-700',    border: 'border-pink-300' }
     };
-    
+
     let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
     let pinchStartDist = 0;
     const swipeThreshold = 50;
 
-    let storageData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { 
-        records: {}, 
-        settings: { 
+    let storageData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        records: {},
+        settings: {
             defaultRate: 190, defaultTitle: "上班", defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreak: 0,
             showTitle: true, showTime: false, showHours: true, showSalary: true, showNote: false
         },
-        titleHistory: {} 
+        titleHistory: {}
     };
-    
     let workData = storageData.records;
 
-    // 2026 國定假日原始清單
     const RAW_HOLIDAYS_2026 = {
-        "2026-01-01": "元旦", 
-        "2026-02-16": "除夕", 
-        "2026-02-17": "初一", 
-        "2026-02-18": "初二", 
-        "2026-02-19": "初三", 
-        "2026-02-28": "二二八", 
-        "2026-04-04": "兒童節", 
-        "2026-04-05": "清明節", 
-        "2026-05-01": "勞動節", 
-        "2026-06-19": "端午節", 
-        "2026-09-25": "中秋節", 
+        "2026-01-01": "元旦",
+        "2026-02-16": "除夕", "2026-02-17": "初一", "2026-02-18": "初二", "2026-02-19": "初三",
+        "2026-02-28": "二二八",
+        "2026-04-04": "兒童節", "2026-04-05": "清明節",
+        "2026-05-01": "勞動節",
+        "2026-06-19": "端午節",
+        "2026-09-25": "中秋節",
         "2026-10-10": "國慶日"
     };
 
     function calculateHolidays() {
         dynamicHolidays = {};
         weekendHolidays = {};
-        
         Object.entries(RAW_HOLIDAYS_2026).forEach(([dateStr, name]) => {
             const date = new Date(dateStr);
-            const dow = date.getDay(); // 0:日, 6:六
-
-            // 針對 2026 年 4 月份特別邏輯
+            const dow = date.getDay();
             if (dateStr === "2026-04-04" || dateStr === "2026-04-05") {
-                // 4/4 兒童節當天，4/5 清明節當天：列入國定假日雙倍範圍 (紅底+紅點)
                 dynamicHolidays[dateStr] = name;
-                
-                // 補假邏輯：
-                // 兒童節 4/4(六) 補假於 4/3(五)
-                // 清明節 4/5(日) 補假於 4/6(一)
-                // 4/3, 4/6 標記為假日紅底，但不列入雙倍薪水 (不加紅點)
-                if (dateStr === "2026-04-04") {
-                    weekendHolidays["2026-04-03"] = "兒童節 補假";
-                } else {
-                    weekendHolidays["2026-04-06"] = "清明節 補假";
-                }
+                if (dateStr === "2026-04-04") weekendHolidays["2026-04-03"] = "兒童節 補假";
+                else weekendHolidays["2026-04-06"] = "清明節 補假";
             } else {
-                // 其他節日的正常邏輯
                 dynamicHolidays[dateStr] = name;
-                if (dow === 6) { 
+                if (dow === 6) {
                     const prev = new Date(date); prev.setDate(date.getDate() - 1);
                     dynamicHolidays[prev.toISOString().split('T')[0]] = `${name} 補假`;
                 } else if (dow === 0) {
@@ -695,21 +662,20 @@
             this.render(); this.initEvents(); this.setValue(initialValue);
         }
         render() {
-            this.container.innerHTML = `<div class="picker-selection-bar"></div><div class="picker-wheel">${this.options.map(opt => `<div class="picker-item">${String(opt).padStart(2, '0')}</div>`).join('')}</div>`;
+            this.container.innerHTML = `<div class="picker-selection-bar"></div><div class="picker-wheel">${this.options.map(opt => `<div class="picker-item">${String(opt).padStart(2,'0')}</div>`).join('')}</div>`;
             this.wheel = this.container.querySelector('.picker-wheel');
             this.items = this.container.querySelectorAll('.picker-item');
         }
         initEvents() {
             let startY = 0, lastMoveY = 0;
             const onStart = (e) => { this.isDragging = true; startY = (e.touches ? e.touches[0].pageY : e.pageY); lastMoveY = startY; this.wheel.style.transition = 'none'; };
-            const onMove = (e) => { 
-                if (!this.isDragging) return; 
-                const currentY = (e.touches ? e.touches[0].pageY : e.pageY); 
-                const deltaY = currentY - lastMoveY;
-                this.currentY += deltaY; 
+            const onMove = (e) => {
+                if (!this.isDragging) return;
+                const currentY = (e.touches ? e.touches[0].pageY : e.pageY);
+                this.currentY += currentY - lastMoveY;
                 const totalH = this.originalOptions.length * this.itemHeight;
-                if (this.currentY > -totalH/2) this.currentY -= totalH;
-                if (this.currentY < -2.5*totalH) this.currentY += totalH;
+                if (this.currentY > -totalH / 2) this.currentY -= totalH;
+                if (this.currentY < -2.5 * totalH) this.currentY += totalH;
                 this.updateTransform(); lastMoveY = currentY;
             };
             const onEnd = () => { if (this.isDragging) { this.isDragging = false; this.snapToNearest(); } };
@@ -723,27 +689,23 @@
         snapToNearest() {
             this.selectedIndex = Math.round(Math.abs(this.currentY) / this.itemHeight);
             this.currentY = -this.selectedIndex * this.itemHeight;
-            this.wheel.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+            this.wheel.style.transition = 'transform 0.4s cubic-bezier(0.23,1,0.32,1)';
             this.updateTransform(); if (this.onChange) this.onChange(this.getValue());
         }
         updateTransform() {
             this.wheel.style.transform = `translateY(${this.currentY + this.offsetY}px)`;
             const approx = Math.round(Math.abs(this.currentY) / this.itemHeight);
             this.items.forEach((item, i) => {
-                const dist = Math.abs(i - (Math.abs(this.currentY) / this.itemHeight));
+                const dist = Math.abs(i - Math.abs(this.currentY) / this.itemHeight);
                 item.classList.toggle('selected', i === approx);
                 item.style.opacity = Math.max(0.2, 1 - dist * 0.4);
                 item.style.transform = `scale(${Math.max(0.8, 1 - dist * 0.05)})`;
             });
         }
         getValue() { return this.originalOptions[this.selectedIndex % this.originalOptions.length]; }
-        setValue(val) { 
-            const idx = this.originalOptions.indexOf(parseInt(val)); 
-            if (idx !== -1) { 
-                this.selectedIndex = idx + this.originalOptions.length; 
-                this.currentY = -this.selectedIndex * this.itemHeight; 
-                this.updateTransform(); 
-            } 
+        setValue(val) {
+            const idx = this.originalOptions.indexOf(parseInt(val));
+            if (idx !== -1) { this.selectedIndex = idx + this.originalOptions.length; this.currentY = -this.selectedIndex * this.itemHeight; this.updateTransform(); }
         }
     }
 
@@ -759,7 +721,6 @@
         renderCalendar();
         setupGestureEvents();
         selectColor('emerald');
-
         window.addEventListener('touchmove', function(e) {
             if (document.body.classList.contains('lock-bg')) {
                 if (!e.target.closest('.scrollable-content')) e.preventDefault();
@@ -773,17 +734,12 @@
             overlay.classList.remove('hidden');
             document.body.classList.add('lock-bg');
             const now = new Date();
-            const first = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('en-CA');
-            const today = now.toLocaleDateString('en-CA');
-            document.getElementById('statsStartDate').value = first;
-            document.getElementById('statsEndDate').value = today;
+            document.getElementById('statsStartDate').value = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('en-CA');
+            document.getElementById('statsEndDate').value = now.toLocaleDateString('en-CA');
             setTimeout(() => overlay.classList.add('opacity-100'), 10);
         } else {
             overlay.classList.remove('opacity-100');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                document.body.classList.remove('lock-bg');
-            }, 300);
+            setTimeout(() => { overlay.classList.add('hidden'); document.body.classList.remove('lock-bg'); }, 300);
         }
     }
 
@@ -794,19 +750,11 @@
         const list = document.getElementById('rangeDetailsList');
         const summary = document.getElementById('rangeResultSummary');
         const copyBtn = document.getElementById('copyRangeBtn');
-        
         if (!start || !end) return;
-
-        list.innerHTML = '';
-        lastQueryResult = [];
-        lastTotalSalary = 0;
-        lastTotalHours = 0;
-        
-        let foundCount = 0; 
-        const sDates = Object.keys(workData).sort();
-        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-
-        sDates.forEach(dStr => {
+        list.innerHTML = ''; lastQueryResult = []; lastTotalSalary = 0; lastTotalHours = 0;
+        let foundCount = 0;
+        const weekDays = ['日','一','二','三','四','五','六'];
+        Object.keys(workData).sort().forEach(dStr => {
             if (dStr >= start && dStr <= end) {
                 workData[dStr].forEach(item => {
                     if (filterTitle === "" || item.title.toLowerCase().includes(filterTitle)) {
@@ -814,124 +762,71 @@
                         const mult = !!dynamicHolidays[dStr] ? 2 : 1;
                         const pay = Math.round(item.hours * item.rate * mult);
                         lastTotalSalary += pay; lastTotalHours += item.hours;
-
                         const dateObj = new Date(dStr);
-                        const weekDay = weekDays[dateObj.getDay()];
                         const shortDate = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
-
-                        lastQueryResult.push({
-                            dateText: `${shortDate}（${weekDay}）`,
-                            timeText: `${item.startTime}-${item.endTime}`,
-                            hoursText: `${item.hours.toFixed(1)}h`,
-                            payText: `$${pay}`,
-                            noteText: item.note || '',
-                            titleText: item.title
-                        });
-
+                        const weekDay = weekDays[dateObj.getDay()];
+                        lastQueryResult.push({ dateText: `${shortDate}（${weekDay}）`, timeText: `${item.startTime}-${item.endTime}`, hoursText: `${item.hours.toFixed(1)}h`, payText: `$${pay}`, noteText: item.note || '', titleText: item.title });
                         const div = document.createElement('div');
-                        div.className = "p-4 bg-white border border-slate-100 rounded-2xl flex flex-col gap-2 shadow-sm";
-                        const noteInlineHtml = item.note ? `<span class="text-xs text-slate-400 font-normal ml-2">${item.note}</span>` : '';
-                        div.innerHTML = `
-                            <div class="flex justify-between items-center w-full">
-                                <div class="flex flex-col">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${shortDate}（${weekDay}）</span>
-                                        <span class="text-[10px] font-bold text-slate-400">${item.startTime}-${item.endTime}</span>
-                                    </div>
-                                    <p class="text-sm font-black text-slate-800 flex items-baseline">${item.title}${noteInlineHtml}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-lg font-black text-blue-600">$${pay.toLocaleString()}</p>
-                                    <p class="text-[10px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p>
-                                </div>
-                            </div>
-                        `;
+                        div.className = "p-4 bg-white border border-slate-100 rounded-2xl shadow-sm";
+                        div.innerHTML = `<div class="flex justify-between items-center"><div><div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${shortDate}（${weekDay}）</span><span class="text-[10px] font-bold text-slate-400">${item.startTime}-${item.endTime}</span></div><p class="text-sm font-black text-slate-800">${item.title}${item.note ? `<span class="text-xs text-slate-400 font-normal ml-2">${item.note}</span>` : ''}</p></div><div class="text-right"><p class="text-lg font-black text-blue-600">$${pay.toLocaleString()}</p><p class="text-[10px] font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
                         list.appendChild(div);
                     }
                 });
             }
         });
-
         if (foundCount > 0) {
-            summary.classList.remove('hidden');
-            copyBtn.classList.remove('hidden');
+            summary.classList.remove('hidden'); copyBtn.classList.remove('hidden');
             document.getElementById('rangeTotalSalary').innerText = `$${Math.round(lastTotalSalary).toLocaleString()}`;
             document.getElementById('rangeTotalHours').innerText = `${lastTotalHours.toFixed(1)}h`;
-            
             document.getElementById('labelSalary').innerText = "預估薪資";
             document.getElementById('labelHours').innerText = "累積工時";
             document.getElementById('totalSalaryNet').innerText = `$${Math.round(lastTotalSalary).toLocaleString()}`;
-            document.getElementById('totalHoursNet').innerHTML = `${lastTotalHours.toFixed(1)} <span class="opacity-40 text-[10px]">hr (${foundCount}筆)</span>`;
-            
+            document.getElementById('totalHoursNet').innerHTML = `${lastTotalHours.toFixed(1)} <span style="opacity:0.5;font-size:10px;font-weight:400">hr (${foundCount}筆)</span>`;
         } else {
-            summary.classList.add('hidden');
-            copyBtn.classList.add('hidden');
+            summary.classList.add('hidden'); copyBtn.classList.add('hidden');
             list.innerHTML = '<p class="text-center py-10 text-slate-400 font-bold text-sm">此範圍內無相關紀錄</p>';
         }
     }
 
-    function copyRangeToClipboard() {
-        if (lastQueryResult.length === 0) return;
-        toggleExportConfigModal(true);
-    }
+    function copyRangeToClipboard() { if (lastQueryResult.length === 0) return; toggleExportConfigModal(true); }
 
     function toggleExportConfigModal(show) {
         const overlay = document.getElementById('exportConfigOverlay');
-        if (show) {
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            setTimeout(() => overlay.classList.add('opacity-100'), 10);
-        } else {
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => {
-                overlay.classList.remove('flex');
-                overlay.classList.add('hidden');
-            }, 300);
-        }
+        if (show) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); setTimeout(() => overlay.classList.add('opacity-100'), 10); }
+        else { overlay.classList.remove('opacity-100'); setTimeout(() => { overlay.classList.remove('flex'); overlay.classList.add('hidden'); }, 300); }
     }
 
     function confirmAndCopyRange() {
         if (lastQueryResult.length === 0) return;
-
         const showTitle = document.getElementById('exportTitle').checked;
         const showHours = document.getElementById('exportHours').checked;
-        const showPay = document.getElementById('exportPay').checked;
-        const showNote = document.getElementById('exportNote').checked;
-
+        const showPay   = document.getElementById('exportPay').checked;
+        const showNote  = document.getElementById('exportNote').checked;
         let copyText = lastQueryResult.map(item => {
-            let label = showTitle ? ` ${item.titleText}` : '';
-            // 修正：這裡移除了 ${item.timeText} 原本左右的括弧
-            let parts = [`${item.dateText}${label} ${item.timeText}`];
-            if (showHours) parts.push(`${item.hoursText}`);
-            if (showPay) parts.push(`${item.payText}`);
-            if (showNote && item.noteText) parts.push(`${item.noteText}`);
+            let parts = [`${item.dateText}${showTitle ? ' ' + item.titleText : ''} ${item.timeText}`];
+            if (showHours) parts.push(item.hoursText);
+            if (showPay)   parts.push(item.payText);
+            if (showNote && item.noteText) parts.push(item.noteText);
             return parts.join(' ｜ ');
         }).join('\n');
-
         copyText += `\n----------------------\n`;
         if (showHours) copyText += `總計工時：${lastTotalHours.toFixed(1)}h\n`;
-        if (showPay) copyText += `總計薪資：$${Math.round(lastTotalSalary).toLocaleString()}`;
-
-        const tempTextArea = document.createElement("textarea");
-        tempTextArea.value = copyText;
-        document.body.appendChild(tempTextArea);
-        tempTextArea.select();
+        if (showPay)   copyText += `總計薪資：$${Math.round(lastTotalSalary).toLocaleString()}`;
+        const t = document.createElement("textarea"); t.value = copyText;
+        document.body.appendChild(t); t.select();
         try {
             document.execCommand('copy');
-            const btn = document.getElementById('copyRangeBtn');
-            const originalHTML = btn.innerHTML;
+            const btn = document.getElementById('copyRangeBtn'), orig = btn.innerHTML;
             btn.innerHTML = '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
-            setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
-        } catch (err) { alert('無法複製'); }
-        document.body.removeChild(tempTextArea);
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        } catch(e) { alert('無法複製'); }
+        document.body.removeChild(t);
         toggleExportConfigModal(false);
     }
 
     function selectColor(color) {
         selectedColor = color;
-        document.querySelectorAll('.color-dot').forEach(dot => {
-            dot.classList.toggle('selected', dot.dataset.color === color);
-        });
+        document.querySelectorAll('.color-dot').forEach(dot => dot.classList.toggle('selected', dot.dataset.color === color));
     }
 
     function toggleView(forceView) {
@@ -942,22 +837,21 @@
         document.getElementById('yearView').classList.toggle('hidden', !isYearView);
         document.getElementById('navHeader').classList.toggle('hidden', isYearView);
         const ls = document.getElementById('labelSalary'), lh = document.getElementById('labelHours');
-        if (isYearView) { ls.innerText = "年度預估總薪資"; lh.innerText = "年度累計總工時"; } 
+        if (isYearView) { ls.innerText = "年度預估總薪資"; lh.innerText = "年度累計總工時"; }
         else { ls.innerText = "預估本月薪資"; lh.innerText = "本月累計工時"; }
         renderCalendar();
     }
 
-    function toggleSettings() { 
+    function toggleSettings() {
         const overlay = document.getElementById('settingsOverlay');
         if (overlay.classList.contains('hidden')) {
-            overlay.classList.remove('hidden');
-            document.body.classList.add('lock-bg');
+            overlay.classList.remove('hidden'); document.body.classList.add('lock-bg');
             document.getElementById('settingDefaultRate').value = storageData.settings.defaultRate;
-            document.getElementById('checkShowTitle').checked = storageData.settings.showTitle !== false;
-            document.getElementById('checkShowTime').checked = storageData.settings.showTime === true;
-            document.getElementById('checkShowHours').checked = storageData.settings.showHours !== false;
+            document.getElementById('checkShowTitle').checked  = storageData.settings.showTitle !== false;
+            document.getElementById('checkShowTime').checked   = storageData.settings.showTime === true;
+            document.getElementById('checkShowHours').checked  = storageData.settings.showHours !== false;
             document.getElementById('checkShowSalary').checked = storageData.settings.showSalary !== false;
-            document.getElementById('checkShowNote').checked = storageData.settings.showNote === true;
+            document.getElementById('checkShowNote').checked   = storageData.settings.showNote === true;
             setTimeout(() => overlay.classList.add('opacity-100'), 10);
         } else {
             overlay.classList.remove('opacity-100');
@@ -971,17 +865,16 @@
         renderCalendar();
     }
 
-    function saveSettings() { 
-        storageData.settings.defaultRate = parseFloat(document.getElementById('settingDefaultRate').value) || 0; 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
+    function saveSettings() {
+        storageData.settings.defaultRate = parseFloat(document.getElementById('settingDefaultRate').value) || 0;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
         toggleSettings(); updateStats(); renderCalendar();
     }
 
     function exportData() {
         const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(storageData))));
-        const temp = document.createElement("textarea"); temp.value = dataStr;
-        document.body.appendChild(temp); temp.select(); document.execCommand("copy");
-        document.body.removeChild(temp);
+        const t = document.createElement("textarea"); t.value = dataStr;
+        document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t);
     }
 
     function importData() {
@@ -991,46 +884,45 @@
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
                 if (confirm("確定要匯入嗎？現有紀錄將被蓋掉")) {
                     storageData = decoded; workData = storageData.records;
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-                    location.reload();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); location.reload();
                 }
-            } catch (e) { alert("代碼錯誤"); }
+            } catch(e) { alert("代碼錯誤"); }
         }
     }
 
     function renderCalendar() {
         const y = currentDate.getFullYear(), m = currentDate.getMonth();
         document.getElementById('yearDisplay').innerText = `${y}年`;
-        if (isYearView) { document.getElementById('yearHeaderIos').innerText = y; renderYearView(y); } 
-        else { document.getElementById('monthDisplay').innerText = `${m + 1}月`; renderMonthView(y, m); }
+        if (isYearView) { document.getElementById('yearHeaderIos').innerText = y; renderYearView(y); }
+        else { document.getElementById('monthDisplay').innerText = `${m+1}月`; renderMonthView(y, m); }
         updateStats();
     }
 
     function renderMonthView(year, month) {
-        const dim = new Date(year, month + 1, 0).getDate(), fd = new Date(year, month, 1).getDay();
+        const dim = new Date(year, month+1, 0).getDate(), fd = new Date(year, month, 1).getDay();
         const grid = document.getElementById('calendarDays'); grid.innerHTML = '';
         const s = storageData.settings;
         for (let i = 0; i < fd; i++) grid.appendChild(document.createElement('div'));
         for (let d = 1; d <= dim; d++) {
-            const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const isW = [0, 6].includes(new Date(year, month, d).getDay());
-            // 判定是否紅底：是國定假日 OR 是週末假日 OR 屬於補假(4/3, 4/6)
+            const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isW = [0,6].includes(new Date(year, month, d).getDay());
             const isH = !!dynamicHolidays[dStr];
             const isWkHoliday = !!weekendHolidays[dStr];
-            
             const data = workData[dStr], el = document.createElement('div');
             el.className = `day-cell cursor-pointer ${isH || isWkHoliday ? 'is-holiday' : (isW ? 'is-weekend' : '')}`;
-            
             if (dStr === selectedDateStr) el.classList.add('is-today');
+
             let info = '<div class="flex flex-col gap-0.5 mt-1 overflow-hidden w-full pointer-events-none">';
             if (data && Array.isArray(data)) {
-                data.sort((a, b) => a.startTime.localeCompare(b.startTime)).forEach(item => {
-                    const theme = COLOR_THEMES[item.color || 'blue'], pay = Math.round(item.hours * item.rate * (isH ? 2 : 1));
-                    info += `<div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">${s.showTitle?`<div class="text-[8px] font-black truncate">${item.title}</div>`:''}${s.showTime?`<div class="text-[7px] font-bold opacity-80">${item.startTime}-${item.endTime}</div>`:''}${s.showHours?`<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>`:''}${s.showSalary?`<div class="text-[7px] font-bold opacity-70">$${pay}</div>`:''}</div>`;
+                data.sort((a,b) => a.startTime.localeCompare(b.startTime)).forEach(item => {
+                    const theme = COLOR_THEMES[item.color || 'blue'];
+                    const pay = Math.round(item.hours * item.rate * (isH ? 2 : 1));
+                    const hoursSalary = (s.showHours || s.showSalary)
+                        ? `<div class="text-[7px] font-bold opacity-70 leading-tight">${s.showHours ? item.hours.toFixed(1)+'h' : ''}${s.showHours && s.showSalary ? '·' : ''}${s.showSalary ? '$'+pay : ''}</div>` : '';
+                    info += `<div class="${theme.bg} ${theme.border} ${theme.text} border-l-[3px] px-1.5 py-0.5 rounded-md overflow-hidden">${s.showTitle ? `<div class="text-[8px] font-black truncate leading-tight">${item.title}</div>` : ''}${s.showTime ? `<div class="text-[7px] font-bold opacity-75 leading-tight">${item.startTime}-${item.endTime}</div>` : ''}${hoursSalary}</div>`;
                 });
             }
-            // 只有國定假日 (dynamicHolidays) 才有紅點
-            el.innerHTML = `<div class="text-[10px] font-black ${isH || isWkHoliday || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
+            el.innerHTML = `<div class="day-num text-[10px] font-black ${isH || isWkHoliday || isW ? 'text-red-500' : 'text-slate-500'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
             el.onclick = () => { selectedDateStr = dStr; if (data && data.length > 0) openDailyList(dStr); else renderCalendar(); };
             grid.appendChild(el);
         }
@@ -1038,14 +930,15 @@
 
     function openDailyList(dStr) {
         selectedDateStr = dStr; document.body.classList.add('lock-bg');
-        document.getElementById('dailyListDate').innerText = dStr.replace(/-/g, '/') + " 紀錄清單";
+        document.getElementById('dailyListDate').innerText = dStr.replace(/-/g,'/') + " 紀錄清單";
         const container = document.getElementById('dailyItemsContainer'); container.innerHTML = '';
-        const recs = workData[dStr] || []; recs.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        const recs = workData[dStr] || []; recs.sort((a,b) => a.startTime.localeCompare(b.startTime));
         recs.forEach((item, idx) => {
-            const theme = COLOR_THEMES[item.color || 'emerald'], pay = Math.round(item.hours * item.rate * (!!dynamicHolidays[dStr] ? 2 : 1));
-            const div = document.createElement('div'); div.className = "swipe-item-container mb-3";
+            const theme = COLOR_THEMES[item.color || 'emerald'];
+            const pay = Math.round(item.hours * item.rate * (!!dynamicHolidays[dStr] ? 2 : 1));
+            const div = document.createElement('div'); div.className = "swipe-item-container mb-2.5";
             const noteHtml = item.note ? `<p class="text-[10px] font-medium text-slate-500 mt-1 line-clamp-1 border-t border-black/5 pt-1">${item.note}</p>` : '';
-            div.innerHTML = `<div class="swipe-actions" onclick="quickDelete(${idx}, event)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cubic-bezier(0.4, 0, 0.2, 1) cursor-pointer" data-index="${idx}" ontouchstart="handleItemTouchStart(event)" ontouchmove="handleItemTouchMove(event)" onclick="handleItemClick(${idx}, event)"><div class="flex flex-col"><span class="text-[10px] font-black ${theme.text}">${item.startTime}-${item.endTime}</span><span class="text-sm font-black text-slate-900">${item.title}</span>${noteHtml}</div><div class="text-right"><span class="text-sm font-black text-slate-800">$${pay.toLocaleString()}</span><p class="text-sm font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
+            div.innerHTML = `<div class="swipe-actions" onclick="quickDelete(${idx}, event)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div><div class="swipe-content ${theme.bg} ${theme.border} border border-l-4 p-3.5 rounded-2xl flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" data-index="${idx}" ontouchstart="handleItemTouchStart(event)" ontouchmove="handleItemTouchMove(event)" onclick="handleItemClick(${idx}, event)"><div class="flex flex-col"><span class="text-[10px] font-black ${theme.text}">${item.startTime}-${item.endTime}</span><span class="text-sm font-black text-slate-900">${item.title}</span>${noteHtml}</div><div class="text-right"><span class="text-base font-black text-slate-800">$${pay.toLocaleString()}</span><p class="text-xs font-bold text-slate-400">${item.hours.toFixed(1)}h</p></div></div>`;
             container.appendChild(div);
         });
         const modal = document.getElementById('dailyListModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
@@ -1053,12 +946,18 @@
 
     let itemStartX = 0, currentSwipedEl = null;
     function handleItemTouchStart(e) { itemStartX = e.touches[0].pageX; if (currentSwipedEl && currentSwipedEl !== e.currentTarget) currentSwipedEl.classList.remove('swiped'); }
-    function handleItemTouchMove(e) { const diff = itemStartX - e.touches[0].pageX; if (diff > 30) { e.currentTarget.classList.add('swiped'); currentSwipedEl = e.currentTarget; } else if (diff < -30) { e.currentTarget.classList.remove('swiped'); } }
+    function handleItemTouchMove(e) { const diff = itemStartX - e.touches[0].pageX; if (diff > 30) { e.currentTarget.classList.add('swiped'); currentSwipedEl = e.currentTarget; } else if (diff < -30) e.currentTarget.classList.remove('swiped'); }
     function handleItemClick(idx, e) { if (e.currentTarget.classList.contains('swiped')) { e.currentTarget.classList.remove('swiped'); return; } openDetail(selectedDateStr, idx); closeDailyList(); }
 
     function quickDelete(idx, e) {
-        e.stopPropagation(); const recs = workData[selectedDateStr];
-        if (recs && recs[idx]) { recs.splice(idx, 1); if (recs.length === 0) delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); if (workData[selectedDateStr]) openDailyList(selectedDateStr); else closeDailyList(); renderCalendar(); updateStats(); }
+        e.stopPropagation();
+        const recs = workData[selectedDateStr];
+        if (recs && recs[idx]) {
+            recs.splice(idx, 1); if (recs.length === 0) delete workData[selectedDateStr];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+            if (workData[selectedDateStr]) openDailyList(selectedDateStr); else closeDailyList();
+            renderCalendar(); updateStats();
+        }
     }
 
     function closeDailyList() { document.getElementById('dailyListModal').classList.remove('flex'); document.getElementById('dailyListModal').classList.add('hidden'); document.body.classList.remove('lock-bg'); }
@@ -1066,44 +965,54 @@
     function openDetail(dStr, idx) {
         selectedDateStr = dStr; editingIndex = idx; document.body.classList.add('lock-bg');
         const rec = workData[dStr][idx], mult = !!dynamicHolidays[dStr] ? 2 : 1;
-        document.getElementById('detailDateDisplay').innerText = dStr.replace(/-/g, '/');
+        document.getElementById('detailDateDisplay').innerText = dStr.replace(/-/g,'/');
         document.getElementById('detailTitle').innerText = rec.title;
-        document.getElementById('detailTimeRange').innerText = `${rec.startTime} - ${rec.endTime} (扣除 ${rec.breakMinutes || 0}m)`;
+        document.getElementById('detailTimeRange').innerText = `${rec.startTime} - ${rec.endTime} (扣除 ${rec.breakMinutes||0}m)`;
         document.getElementById('detailHours').innerText = `${rec.hours.toFixed(2)}h`;
-        document.getElementById('detailSalary').innerText = `$${Math.round(rec.hours * rec.rate * mult).toLocaleString()}`;
-        const ns = document.getElementById('detailNoteSection'); if (rec.note) { document.getElementById('detailNote').innerText = rec.note; ns.classList.remove('hidden'); } else ns.classList.add('hidden');
+        document.getElementById('detailSalary').innerText = `$${Math.round(rec.hours*rec.rate*mult).toLocaleString()}`;
+        const ns = document.getElementById('detailNoteSection');
+        if (rec.note) { document.getElementById('detailNote').innerText = rec.note; ns.classList.remove('hidden'); } else ns.classList.add('hidden');
         const modal = document.getElementById('detailModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
     function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); document.body.classList.remove('lock-bg'); }
 
-    function deleteSingleRecord() { if (editingIndex > -1) { workData[selectedDateStr].splice(editingIndex, 1); if (workData[selectedDateStr].length === 0) delete workData[selectedDateStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); closeDetail(); renderCalendar(); } }
+    function deleteSingleRecord() {
+        if (editingIndex > -1) {
+            workData[selectedDateStr].splice(editingIndex, 1);
+            if (workData[selectedDateStr].length === 0) delete workData[selectedDateStr];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+            closeDetail(); renderCalendar();
+        }
+    }
 
     function editSingleRecord() {
         const rec = workData[selectedDateStr][editingIndex]; openModalForSelected();
-        document.getElementById('inputTitle').value = rec.title; document.getElementById('inputRate').value = rec.rate;
-        document.getElementById('breakMinutes').value = rec.breakMinutes || 0; document.getElementById('inputNote').value = rec.note || "";
-        toggleBreakInput((rec.breakMinutes || 0) > 0); selectColor(rec.color || 'emerald');
-        const [sh, sm] = rec.startTime.split(':').map(Number), [eh, em] = rec.endTime.split(':').map(Number);
+        document.getElementById('inputTitle').value = rec.title;
+        document.getElementById('inputRate').value = rec.rate;
+        document.getElementById('breakMinutes').value = rec.breakMinutes || 0;
+        document.getElementById('inputNote').value = rec.note || "";
+        toggleBreakInput((rec.breakMinutes||0) > 0); selectColor(rec.color||'emerald');
+        const [sh,sm] = rec.startTime.split(':').map(Number), [eh,em] = rec.endTime.split(':').map(Number);
         pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
         document.getElementById('modalSubmitBtn').innerText = "更新紀錄"; closeDetail(); updatePreview();
     }
 
     function renderYearView(y) {
         const container = document.getElementById('yearMonthsIos'); container.innerHTML = '';
-        const months = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"], today = new Date().toLocaleDateString('en-CA');
+        const months = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+        const today = new Date().toLocaleDateString('en-CA');
         for (let m = 0; m < 12; m++) {
             const mDiv = document.createElement('div'); mDiv.className = 'text-left active:opacity-50 transition-opacity';
-            let h = `<div class="text-[12px] font-black mb-1">${months[m]}</div><div class="grid grid-cols-7 gap-px">`;
-            const dim = new Date(y, m+1, 0).getDate(), fd = new Date(y, m, 1).getDay();
+            let h = `<div class="text-[13px] font-black text-slate-800 mb-1.5">${months[m]}</div><div class="grid grid-cols-7 gap-px">`;
+            const dim = new Date(y,m+1,0).getDate(), fd = new Date(y,m,1).getDay();
             for (let i = 0; i < fd; i++) h += `<div></div>`;
             for (let d = 1; d <= dim; d++) {
                 const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const has = workData[ds] && workData[ds].length, isT = ds === today;
-                const isH = !!dynamicHolidays[ds];
-                const isWkH = !!weekendHolidays[ds];
+                const isH = !!dynamicHolidays[ds], isWkH = !!weekendHolidays[ds];
                 const isW = [0,6].includes(new Date(y,m,d).getDay());
-                h += `<div class="text-[7px] h-3.5 w-3.5 flex items-center justify-center ${isT?'bg-blue-500 rounded-full text-white':(has?'bg-slate-200 rounded-sm text-slate-900 font-bold':(isH||isWkH||isW?'text-red-300':'text-slate-300'))}">${d}</div>`;
+                h += `<div class="text-[7px] h-3.5 w-3.5 flex items-center justify-center ${isT ? 'bg-blue-500 rounded-full text-white font-black' : (has ? 'bg-slate-200 rounded-sm text-slate-800 font-bold' : (isH||isWkH||isW ? 'text-red-300' : 'text-slate-300'))}">${d}</div>`;
             }
             mDiv.innerHTML = h + `</div>`; mDiv.onclick = () => { currentDate.setMonth(m); toggleView('month'); };
             container.appendChild(mDiv);
@@ -1114,62 +1023,76 @@
         const view = document.getElementById(isYearView ? 'yearView' : 'monthView');
         view.style.transform = `translateX(${v*-20}px)`; view.style.opacity = '0';
         setTimeout(() => {
-            if (isYearView) currentDate.setFullYear(currentDate.getFullYear() + v); else currentDate.setMonth(currentDate.getMonth() + v);
+            if (isYearView) currentDate.setFullYear(currentDate.getFullYear()+v); else currentDate.setMonth(currentDate.getMonth()+v);
             renderCalendar(); view.style.transform = `translateX(${v*20}px)`;
             setTimeout(() => { view.style.transform = 'translateX(0)'; view.style.opacity = '1'; }, 10);
         }, 150);
     }
-    
+
     function goToToday() { currentDate = new Date(); selectedDateStr = currentDate.toLocaleDateString('en-CA'); if (isYearView) toggleView('month'); renderCalendar(); }
 
     function toggleBreakInput(f) {
         const btn = document.getElementById('breakBtn'), wrap = document.getElementById('breakInputWrapper');
         let act = f !== undefined ? f : !btn.classList.contains('bg-blue-600');
-        if (act) { btn.innerText = "有休息"; btn.className = "px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black transition-all"; wrap.classList.remove('hidden'); } 
-        else { btn.innerText = "無休息"; btn.className = "px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all"; wrap.classList.add('hidden'); document.getElementById('breakMinutes').value = 0; }
+        if (act) { btn.innerText = "有休息"; btn.className = "px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black transition-all uppercase tracking-wider"; wrap.classList.remove('hidden'); }
+        else { btn.innerText = "無休息"; btn.className = "px-4 py-1.5 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider"; wrap.classList.add('hidden'); document.getElementById('breakMinutes').value = 0; }
         updatePreview();
     }
 
     function openModalForSelected() {
         if (editingIndex === -1) {
             const s = storageData.settings;
-            document.getElementById('modalSubmitBtn').innerText = "加入新項目"; document.getElementById('inputTitle').value = s.defaultTitle;
-            document.getElementById('inputRate').value = s.defaultRate; document.getElementById('breakMinutes').value = 0; toggleBreakInput(false);
-            const [sh, sm] = s.defaultStartTime.split(':').map(Number), [eh, em] = s.defaultEndTime.split(':').map(Number);
+            document.getElementById('modalSubmitBtn').innerText = "加入新項目";
+            document.getElementById('inputTitle').value = s.defaultTitle;
+            document.getElementById('inputRate').value = s.defaultRate;
+            document.getElementById('breakMinutes').value = 0; toggleBreakInput(false);
+            const [sh,sm] = s.defaultStartTime.split(':').map(Number), [eh,em] = s.defaultEndTime.split(':').map(Number);
             pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
         }
-        document.body.classList.add('lock-bg'); document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
+        document.body.classList.add('lock-bg');
+        document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g,'/');
         const h = dynamicHolidays[selectedDateStr], tag = document.getElementById('holidayTag');
         if (h) { tag.innerText = `${h} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
-        updatePreview(); const modal = document.getElementById('editModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
+        updatePreview();
+        const modal = document.getElementById('editModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
     function autoFillConfig(t) {
-        const c = storageData.titleHistory[t]; if (c && editingIndex === -1) { 
-            document.getElementById('inputRate').value = c.rate; document.getElementById('breakMinutes').value = c.breakMinutes || 0;
-            toggleBreakInput((c.breakMinutes || 0) > 0); selectColor(c.color || 'emerald');
-            const [sh, sm] = c.startTime.split(':').map(Number), [eh, em] = c.endTime.split(':').map(Number);
+        const c = storageData.titleHistory[t];
+        if (c && editingIndex === -1) {
+            document.getElementById('inputRate').value = c.rate;
+            document.getElementById('breakMinutes').value = c.breakMinutes || 0;
+            toggleBreakInput((c.breakMinutes||0) > 0); selectColor(c.color||'emerald');
+            const [sh,sm] = c.startTime.split(':').map(Number), [eh,em] = c.endTime.split(':').map(Number);
             pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em); updatePreview();
         }
     }
 
     function updatePreview() {
-        const rate = parseFloat(document.getElementById('inputRate').value) || 0, bm = parseInt(document.getElementById('breakMinutes').value) || 0;
-        let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
-        const hrs = Math.max(0, diff - bm) / 60, pay = Math.round(hrs * rate * (!!dynamicHolidays[selectedDateStr] ? 2 : 1));
+        const rate = parseFloat(document.getElementById('inputRate').value)||0;
+        const bm = parseInt(document.getElementById('breakMinutes').value)||0;
+        let diff = (pickers.eH.getValue()*60+pickers.eM.getValue()) - (pickers.sH.getValue()*60+pickers.sM.getValue());
+        if (diff < 0) diff += 1440;
+        const hrs = Math.max(0, diff-bm)/60, pay = Math.round(hrs*rate*(!!dynamicHolidays[selectedDateStr]?2:1));
         document.getElementById('previewGrossHours').innerText = `${hrs.toFixed(2)}h`;
         document.getElementById('previewNetSalary').innerText = `$${pay.toLocaleString()}`;
     }
 
     function saveData() {
-        const title = document.getElementById('inputTitle').value || "打工", rate = parseFloat(document.getElementById('inputRate').value) || 0, bm = parseInt(document.getElementById('breakMinutes').value) || 0;
-        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
-        let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
-        const rec = { title, hours: Math.max(0, diff - bm)/60, rate, startTime: sT, endTime: eT, breakMinutes: bm, note: document.getElementById('inputNote').value, color: selectedColor };
-        if (!storageData.titleHistory) storageData.titleHistory = {}; storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: bm, color: selectedColor };
+        const title = document.getElementById('inputTitle').value||"打工";
+        const rate = parseFloat(document.getElementById('inputRate').value)||0;
+        const bm = parseInt(document.getElementById('breakMinutes').value)||0;
+        const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`;
+        const eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
+        let diff = (pickers.eH.getValue()*60+pickers.eM.getValue()) - (pickers.sH.getValue()*60+pickers.sM.getValue());
+        if (diff < 0) diff += 1440;
+        const rec = { title, hours: Math.max(0,diff-bm)/60, rate, startTime: sT, endTime: eT, breakMinutes: bm, note: document.getElementById('inputNote').value, color: selectedColor };
+        if (!storageData.titleHistory) storageData.titleHistory = {};
+        storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: bm, color: selectedColor };
         if (!Array.isArray(workData[selectedDateStr])) workData[selectedDateStr] = [];
         if (editingIndex > -1) workData[selectedDateStr][editingIndex] = rec; else workData[selectedDateStr].push(rec);
-        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
+        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
         closeModal(); renderCalendar();
     }
 
@@ -1178,68 +1101,87 @@
 
     function updateStats() {
         if (document.getElementById('searchWrapper').classList.contains('active')) return;
-        let sal = 0, hrs = 0, pref = isYearView ? `${currentDate.getFullYear()}-` : `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-`;
-        Object.keys(workData).forEach(d => { if (d.startsWith(pref)) { workData[d].forEach(item => { hrs += item.hours; sal += item.hours * item.rate * (!!dynamicHolidays[d]?2:1); }); } });
-        document.getElementById('totalHoursNet').innerHTML = `${hrs.toFixed(1)} <span class="opacity-40 text-[10px]">hr</span>`;
+        let sal = 0, hrs = 0;
+        const pref = isYearView ? `${currentDate.getFullYear()}-` : `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-`;
+        Object.keys(workData).forEach(d => {
+            if (d.startsWith(pref)) workData[d].forEach(item => { hrs += item.hours; sal += item.hours*item.rate*(!!dynamicHolidays[d]?2:1); });
+        });
+        document.getElementById('totalHoursNet').innerHTML = `${hrs.toFixed(1)} <span style="opacity:0.55;font-size:10px;font-weight:400">hr</span>`;
         document.getElementById('totalSalaryNet').innerText = `$${Math.round(sal).toLocaleString()}`;
-        if (isYearView) {
-            document.getElementById('labelSalary').innerText = "年度預估總薪資";
-            document.getElementById('labelHours').innerText = "年度累計總工時";
-        } else {
-            document.getElementById('labelSalary').innerText = "預估本月薪資";
-            document.getElementById('labelHours').innerText = "本月累計工時";
-        }
+        document.getElementById('labelSalary').innerText = isYearView ? "年度預估總薪資" : "預估本月薪資";
+        document.getElementById('labelHours').innerText  = isYearView ? "年度累計總工時" : "本月累計工時";
     }
 
-    function openSearch() { document.getElementById('centerActions').classList.add('hidden'); document.getElementById('settingsBtn').classList.add('hidden'); document.getElementById('searchWrapper').classList.add('active'); document.getElementById('clearSearchBtn').classList.remove('hidden'); document.body.classList.add('lock-bg'); setTimeout(() => document.getElementById('searchInput').focus(), 50); }
-    function closeSearch() { document.getElementById('searchWrapper').classList.remove('active'); document.getElementById('centerActions').classList.remove('hidden'); document.getElementById('settingsBtn').classList.remove('hidden'); document.getElementById('clearSearchBtn').classList.add('hidden'); document.getElementById('searchInput').value = ''; document.getElementById('searchResultsOverlay').classList.add('hidden'); document.body.classList.remove('lock-bg'); updateStats(); }
-    
+    function openSearch() {
+        document.getElementById('centerActions').classList.add('hidden');
+        document.getElementById('settingsBtn').classList.add('hidden');
+        document.getElementById('statsRangeBtn').classList.add('hidden');
+        document.getElementById('searchWrapper').classList.add('active');
+        document.getElementById('clearSearchBtn').classList.remove('hidden');
+        document.body.classList.add('lock-bg');
+        setTimeout(() => document.getElementById('searchInput').focus(), 50);
+    }
+    function closeSearch() {
+        document.getElementById('searchWrapper').classList.remove('active');
+        document.getElementById('centerActions').classList.remove('hidden');
+        document.getElementById('settingsBtn').classList.remove('hidden');
+        document.getElementById('statsRangeBtn').classList.remove('hidden');
+        document.getElementById('clearSearchBtn').classList.add('hidden');
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResultsOverlay').classList.add('hidden');
+        document.body.classList.remove('lock-bg');
+        updateStats();
+    }
+
     function execSearch() {
-        const q = document.getElementById('searchInput').value.trim().toLowerCase(), overlay = document.getElementById('searchResultsOverlay');
+        const q = document.getElementById('searchInput').value.trim().toLowerCase();
+        const overlay = document.getElementById('searchResultsOverlay');
         if (!q) { overlay.classList.add('hidden'); updateStats(); return; }
         overlay.innerHTML = ''; let tS = 0, tH = 0, count = 0;
-        const matched = Object.keys(workData).filter(d => workData[d].some(r => r.title.toLowerCase().includes(q) || (r.note && r.note.toLowerCase().includes(q)))).sort((a,b)=>b.localeCompare(a));
+        const matched = Object.keys(workData).filter(d => workData[d].some(r => r.title.toLowerCase().includes(q)||(r.note&&r.note.toLowerCase().includes(q)))).sort((a,b) => b.localeCompare(a));
         if (matched.length) {
             overlay.classList.remove('hidden');
-            matched.forEach(d => { workData[d].forEach((item, idx) => {
-                if (!item.title.toLowerCase().includes(q) && !(item.note && item.note.toLowerCase().includes(q))) return;
-                count++;
-                const pay = item.hours * item.rate * (!!dynamicHolidays[d]?2:1); tS += pay; tH += item.hours;
-                const div = document.createElement('div'); div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center mb-2 border border-slate-100";
-                div.onclick = () => openDetail(d, idx);
-                div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500">${d.replace(/-/g,'/')}</p><p class="font-bold">${item.title}</p></div><div class="text-right"><p class="font-black">$${Math.round(pay).toLocaleString()}</p><p class="text-[9px] text-slate-400">${item.hours.toFixed(1)}h</p></div>`;
-                overlay.appendChild(div);
-            }); });
-            
+            matched.forEach(d => {
+                workData[d].forEach((item, idx) => {
+                    if (!item.title.toLowerCase().includes(q) && !(item.note && item.note.toLowerCase().includes(q))) return;
+                    count++;
+                    const pay = item.hours*item.rate*(!!dynamicHolidays[d]?2:1); tS += pay; tH += item.hours;
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-50 p-4 rounded-2xl flex justify-between items-center border border-slate-100 active:scale-[0.98] transition-all cursor-pointer";
+                    div.onclick = () => openDetail(d, idx);
+                    div.innerHTML = `<div><p class="text-[9px] font-black text-blue-500 mb-0.5">${d.replace(/-/g,'/')}</p><p class="font-bold text-slate-800">${item.title}</p></div><div class="text-right"><p class="font-black text-slate-800">$${Math.round(pay).toLocaleString()}</p><p class="text-[9px] text-slate-400 font-bold">${item.hours.toFixed(1)}h</p></div>`;
+                    overlay.appendChild(div);
+                });
+            });
             document.getElementById('labelSalary').innerText = "預估薪資";
             document.getElementById('labelHours').innerText = "累積工時";
-            document.getElementById('totalHoursNet').innerHTML = `${tH.toFixed(1)} <span class="opacity-40 text-[10px]">hr (${count}筆)</span>`;
+            document.getElementById('totalHoursNet').innerHTML = `${tH.toFixed(1)} <span style="opacity:0.55;font-size:10px;font-weight:400">hr (${count}筆)</span>`;
             document.getElementById('totalSalaryNet').innerText = `$${Math.round(tS).toLocaleString()}`;
         }
     }
-    
+
     function handleSearchBlur() { if (!document.getElementById('searchInput').value) setTimeout(closeSearch, 200); }
 
     function setupGestureEvents() {
         const app = document.getElementById('app');
         app.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) { touchStartX = e.touches[0].pageX; touchStartY = e.touches[0].pageY; } 
-            else if (e.touches.length === 2) pinchStartDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            if (e.touches.length === 1) { touchStartX = e.touches[0].pageX; touchStartY = e.touches[0].pageY; }
+            else if (e.touches.length === 2) pinchStartDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
         }, { passive: true });
         app.addEventListener('touchmove', (e) => {
             if (e.touches.length === 1) {
-                const dx = Math.abs(e.touches[0].pageX - touchStartX), dy = Math.abs(e.touches[0].pageY - touchStartY);
+                const dx = Math.abs(e.touches[0].pageX-touchStartX), dy = Math.abs(e.touches[0].pageY-touchStartY);
                 if (dx > dy && dx > 10 && !e.target.closest('.swipe-item-container') && e.cancelable) e.preventDefault();
             } else if (e.touches.length === 2 && pinchStartDist > 0) {
-                const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                const d = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
                 if (!isYearView && d/pinchStartDist < 0.75) { toggleView('year'); pinchStartDist = 0; }
             }
         }, { passive: false });
         app.addEventListener('touchend', (e) => {
             if (e.changedTouches.length === 1 && e.touches.length === 0) {
                 touchEndX = e.changedTouches[0].pageX; touchEndY = e.changedTouches[0].pageY;
-                const dx = touchEndX - touchStartX, dy = touchEndY - touchStartY;
-                if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > swipeThreshold) changeDate(dx > 0 ? -1 : 1);
+                const dx = touchEndX-touchStartX, dy = touchEndY-touchStartY;
+                if (Math.abs(dx) > Math.abs(dy)*2 && Math.abs(dx) > swipeThreshold) changeDate(dx > 0 ? -1 : 1);
             }
             pinchStartDist = 0;
         }, { passive: true });
