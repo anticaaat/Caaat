@@ -34,52 +34,7 @@
             <p class="text-slate-400 mt-1 text-sm">點選章節開始練習</p>
         </div>
 
-        <div class="flex flex-col gap-4 flex-grow justify-center pb-12">
-            <button onclick="selectChapter(0)"
-                class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🏗️</div>
-                    <div class="flex-grow">
-                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Chapter 5</p>
-                        <h2 class="text-lg font-black text-slate-900">第五章 成本法</h2>
-                        <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">40</span> 題單選題</p>
-                    </div>
-                    <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </button>
-
-            <button onclick="selectChapter(1)"
-                class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">📊</div>
-                    <div class="flex-grow">
-                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Chapter 6</p>
-                        <h2 class="text-lg font-black text-slate-900">第六章 比較法</h2>
-                        <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">27</span> 題單選題</p>
-                    </div>
-                    <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </button>
-
-            <button onclick="selectChapter(2)"
-                class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">📜</div>
-                    <div class="flex-grow">
-                        <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-0.5">Land Law</p>
-                        <h2 class="text-lg font-black text-slate-900">土地法規</h2>
-                        <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">40</span> 題單選題</p>
-                    </div>
-                    <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </button>
-        </div>
+        <div id="hubList" class="flex flex-col gap-4 pb-16"></div>
     </div>
 
 
@@ -96,7 +51,7 @@
         <div class="flex flex-col items-center text-center gap-4 flex-grow justify-center">
             <div id="startIcon" class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-4xl">🏗️</div>
             <div>
-                <p class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">不動產估價</p>
+                <p id="startSubject" class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">不動產估價</p>
                 <h1 id="startTitle" class="text-2xl font-black text-slate-900 leading-snug">第五章 成本法</h1>
                 <p class="text-slate-400 mt-2 text-sm font-medium">共 <span id="startCount" class="text-slate-700 font-black">40</span> 題單選題</p>
             </div>
@@ -191,8 +146,7 @@
 // ─── 題庫 ─────────────────────────────────────────────────────────────────────
 const CHAPTERS = [
   {
-    icon: '🏗️',
-    iconBg: 'bg-blue-100',
+    icon: '🏗️', iconBg: 'bg-blue-100', accentText: 'text-blue-500', label: 'Chapter 5', subject: '不動產估價',
     title: '第五章 成本法',
     questions: [
       // ── 成本法 上 (第01–20題) ──
@@ -240,8 +194,7 @@ const CHAPTERS = [
     ]
   },
   {
-    icon: '📊',
-    iconBg: 'bg-emerald-100',
+    icon: '📊', iconBg: 'bg-emerald-100', accentText: 'text-emerald-500', label: 'Chapter 6', subject: '不動產估價',
     title: '第六章 比較法',
     questions: [
       { no:"01", q:"運用迴歸分析法，截距項以外其他各主要影響價格因素之迴歸係數估計值同時為零之顯著機率不得大於下列何者？", opts:["百分之五","百分之七","百分之十五","百分之三十"], ans:0 },
@@ -274,8 +227,7 @@ const CHAPTERS = [
     ]
   },
   {
-    icon: '📜',
-    iconBg: 'bg-amber-100',
+    icon: '📜', iconBg: 'bg-amber-100', accentText: 'text-amber-500', label: 'Land Law', subject: '不動產估價',
     title: '土地法規',
     questions: [
       { no:"01", q:"（114年）辦理土地徵收時，徵收事業經行政院核定為重大建設，徵收範圍內之特定農業區農牧用地，如土地所有權人對於土地列入徵收範圍有爭議，經說明後仍有異議，則中央目的事業主管機關應辦理那一項民眾參與方式？", opts:["聽證","說明會","公聽會","陳述意見"], ans:0 },
@@ -319,6 +271,93 @@ const CHAPTERS = [
       { no:"39", q:"（103年）區段徵收土地時，有關抵價地面積及移轉時課徵土地增值稅之規定，下列何者為非？", opts:["抵價地總面積，以徵收總面積百分之五十為原則","經農地重劃者，該重劃地區部分不得少於百分之四十五","領回抵價地後第一次移轉時，以原土地所有人徵收時原有土地之地價為原地價","區段徵收後，領回抵價地後第一次移轉時，其土地增值稅減徵百分之四十"], ans:2 },
       { no:"40", q:"（103年）徵收土地時，其土地改良物原應一併徵收。但下列情形何者得不受此一限制？", opts:["填墓及其他紀念物必須遷移","依法令規定得建造之建築改良物","土地改良物所有權人要求取回，並自公告期滿之日起三十日內自行遷移","農作改良物之種類或數量與正常種植情形不相當者，其全部之農作改良物"], ans:0 }
     ]
+  },
+  {
+    icon: '📈', iconBg: 'bg-indigo-100', accentText: 'text-indigo-500', label: 'Interest Rates', subject: '金融與貨幣市場',
+    title: '利率的風險與期限結構',
+    questions: [
+      { no:"01", q:"利率的風險結構是指：", opts:["其他條件一樣，到期期限不同的債券有不同的利率","到期期限一樣，其他條件不同的債券有不同的利率","信用風險與流動性不同的債券有不同的利率","以上皆非"], ans:1 },
+      { no:"02", q:"當公司倒帳風險上升時：", opts:["投資人對公司債需求減少、對國庫券需求增加","公司債券供給增加","投資人對公司債需求增加、對國庫券需求減少","公司債供給減少"], ans:0 },
+      { no:"03", q:"5年期公司債的利率為10%，5年期公債的利率為6%，兩者的利率差距4%稱為：", opts:["流動性風險溢酬","信用風險溢酬","市場風險溢酬","期間風險溢酬"], ans:1 },
+      { no:"04", q:"一般而言，公司的信用評等等級越高，其違約風險：", opts:["越小","越大","無關","無法判斷"], ans:0 },
+      { no:"05", q:"一般而言，信用評等低的債券，其殖利率比信用評等高的債券：", opts:["高","低","相同","無法判定"], ans:0 },
+      { no:"06", q:"繪製殖利率曲線時，縱軸與橫軸分別代表：", opts:["票面利率、到期期限","到期收益率、到期期限","到期收益率、票面利率","以上皆非"], ans:1 },
+      { no:"07", q:"下列哪一種殖利率曲線代表未來景氣可能大幅衰退：", opts:["陡峭而且正斜率的殖利率曲線","平坦而且正斜率的殖利率曲線","陡峭而且負斜率的殖利率曲線","平坦而且負斜率的殖利率曲線"], ans:2 },
+      { no:"08", q:"如果長期利率低於短期利率，則下列哪一種情況最不可能發生：", opts:["預期通貨膨脹率將會下跌","市場對中央銀行的反通貨膨脹政策有信心","預期未來將會發生經濟衰退","預期未來經濟將會快速成長"], ans:3 },
+      { no:"09", q:"殖利率曲線出現負斜率代表：", opts:["長期債券的利率高於短期債券的利率","長期債券的利率等於短期債券的利率","長期債券的利率小於短期債券的利率","以上皆可"], ans:2 },
+      { no:"10", q:"根據期限偏好理論，殖利率曲線一般呈現：", opts:["正斜率","負斜率","水平","視各種期限債券個別之供需力量而定"], ans:0 },
+      { no:"11", q:"假設2年期的債券年利率為5%，3年期的債券年利率為4%，根據「預期理論」，2年後的預期1年期利率約為：", opts:["1%","2%","3%","5%"], ans:1 },
+      { no:"12", q:"目前2年期政府公債的利率為5%、1年期公債利率為4%，根據「預期理論」，預期明年的1年期利率約為：", opts:["3%","4%","5%","6%"], ans:3 },
+      { no:"13", q:"假設目前的1年期利率為2%，預期1年後與2年後將出現的1年期利率分別為3%、4%，投資人對於3年期債券所要求的期限溢酬為0.5%，則3年期的債券利率約為：", opts:["3.5%","3.75%","4.25%","4.5%"], ans:0 }
+    ]
+  },
+  {
+    icon: '🏦', iconBg: 'bg-violet-100', accentText: 'text-violet-500', label: 'Banking', subject: '金融與貨幣市場',
+    title: '銀行的業務與經營',
+    questions: [
+      { no:"01", q:"下列何者不是銀行的負債項目：", opts:["政府存款","進口結匯保證金","政府債券","企業及個人存款"], ans:2 },
+      { no:"02", q:"銀行持有的資產中那一項的流動性最高？", opts:["超額準備","國庫券","商業本票","可轉讓定期存單"], ans:0 },
+      { no:"03", q:"下列何者不是銀行的資產項目？", opts:["證券投資","不動產投資","國外資產","政府存款"], ans:3 },
+      { no:"04", q:"下列何者可以反映銀行的資金運用效率：", opts:["流動比率","資本適足率","逾放比率","存放比率"], ans:3 },
+      { no:"05", q:"下列何者不是銀行的資產負債表外業務？", opts:["出售放款","手續費收入","衍生性金融商品交易","放款利息收入"], ans:3 },
+      { no:"06", q:"下列何者可以反映銀行的存款運用效率：", opts:["逾放比率","流動比率","資本適足率","存放比率"], ans:3 },
+      { no:"07", q:"下列何者的自有資金比例最低：", opts:["汽車業","電子業","銀行業","紡織業"], ans:2 },
+      { no:"08", q:"下列何者可以衡量銀行的資產品質：", opts:["流動準備率","逾期放款比率","資本適足率","資產報酬率"], ans:1 },
+      { no:"09", q:"銀行為因應利率變動影響之管理稱為：", opts:["信用風險管理","利率風險管理","流動性管理","負債管理"], ans:1 },
+      { no:"10", q:"一般而言，若銀行的固定利率資產金額大於固定利率負債金額，則利率上升將會導致：", opts:["銀行的利息收入淨額增加","銀行的利息收入淨額減少","銀行的利息收入淨額不變","以上皆有可能"], ans:1 },
+      { no:"11", q:"當銀行的利率缺口為負，則下列敘述何者正確：", opts:["利率上升對銀行有利","利率下降對銀行不利","若預期利率上升，銀行應擴大缺口金額","若預期利率下降，銀行應擴大缺口金額"], ans:3 },
+      { no:"12", q:"當銀行的利率缺口為正，則下列敘述何者正確：", opts:["利率下降對銀行有利","利率上升對銀行不利","若預期利率上升，銀行應擴大缺口金額","若預期利率下降，銀行應擴大缺口金額"], ans:2 },
+      { no:"13", q:"某銀行浮動利率資產金額為250億，固定利率資產為250億，浮動利率負債金額為200億，固定利率負債為300億，當利率上升1％時：", opts:["利率的變動不影響銀行損益","銀行每年損失約5000萬元","銀行每年獲利約5000萬元","以上皆有可能"], ans:2 },
+      { no:"14", q:"下列敘述何者正確：", opts:["存款保險制度使流動性管理的重要性降低","資產管理之目的在開拓存款來源","資產管理之目的在分散風險並尋求高投資報酬","流動性管理之目的在創造銀行最大報酬"], ans:2 },
+      { no:"15", q:"在銀行的資產總額中以下列何者所佔的比重最大：", opts:["準備金","政府公債","應收現金","放款"], ans:3 },
+      { no:"16", q:"依我國現行法規，下列何者不能充當銀行的存款準備金：", opts:["庫存現金","待收票據","國庫券","在中央銀行之存款"], ans:1 },
+      { no:"17", q:"下列何者不是銀行管理的項目：", opts:["資本適足管理","資產管理","存貨管理","流動性管理"], ans:2 },
+      { no:"18", q:"下列何者不能提高銀行的自有資本比例？", opts:["增資","減少大額存款","增加保留盈餘","減少風險性放款"], ans:1 },
+      { no:"19", q:"下列何者無法提高銀行的自有資本比例：", opts:["賣出持有的證券","發行新普通股","減少股利發放","買回本身的股票"], ans:3 },
+      { no:"20", q:"銀行倒閉時，下列那一項負債最不可能獲得償付？", opts:["向同業拆借之借款","存款戶之存款","銀行發行之次順位債券","美元存款"], ans:2 }
+    ]
+  },
+  {
+    icon: '💰', iconBg: 'bg-rose-100', accentText: 'text-rose-500', label: 'Money & Price', subject: '金融與貨幣市場',
+    title: '貨幣與物價',
+    questions: [
+      { no:"01", q:"大多數的經濟學家利用貨幣數量理論來說明：", opts:["利率的長期決定因素","利率的短期決定因素","物價膨脹率的長期決定因素","物價膨脹率的短期決定因素"], ans:2 },
+      { no:"02", q:"物價膨脹與下列何者較有關係？", opts:["貨幣的價值","商品本身的價值","利率","以上皆是"], ans:0 },
+      { no:"03", q:"當整體的物價水準上升時：", opts:["貨幣的價值會上升","貨幣的價值會下跌","貨幣供給會增加","以上(b)與(c)均正確"], ans:1 },
+      { no:"04", q:"下列何者會使貨幣需求量增加？", opts:["貨幣的價值上升","貨幣的價值下跌","利率上升","以上(b)與(c)均正確"], ans:1 },
+      { no:"05", q:"在長期，下列何者會調整至使貨幣需求量等於貨幣供給量的水準：", opts:["一般物價","所得","利率","匯率"], ans:0 },
+      { no:"06", q:"當物價水準高於均衡水準時：", opts:["貨幣的價值會上升","人們的貨幣需求量大於貨幣供給量","物價水準會下跌","以上皆是"], ans:3 },
+      { no:"07", q:"古典二分法（classical dichotomy）將經濟變數分為：", opts:["有形變數與無形變數","名目變數與實質變數","短期變數與長期變數","以上皆非"], ans:1 },
+      { no:"08", q:"根據古典分析：", opts:["名目變數與實質變數均受到貨幣體系變動的影響","名目變數受到貨幣體系變動的影響，但實質變數則否","實質變數受到貨幣體系變動的影響，但名目變數則否","名目變數與實質變數均不受貨幣體系變動的影響"], ans:1 }
+    ]
+  },
+  {
+    icon: '🏛️', iconBg: 'bg-teal-100', accentText: 'text-teal-500', label: 'Central Bank', subject: '金融與貨幣市場',
+    title: '中央銀行與貨幣政策',
+    questions: [
+      { no:"01", q:"下列何者不是貨幣政策的最終目標？", opts:["銀行信用","物價穩定","經濟成長","充分就業"], ans:0 },
+      { no:"02", q:"下列貨幣供給創造過程中的參與者，何者扮演的角色最重要？", opts:["中央銀行","存款貨幣機構","存款者","借款者"], ans:0 },
+      { no:"03", q:"下列何者屬於貨幣政策的最終目標？", opts:["低通貨膨脹率","造成經濟大幅波動","減緩經濟成長","貨幣供給成長率呈現不規則的變化"], ans:0 },
+      { no:"04", q:"下列何者不是中央銀行經營的目標？", opts:["促進金融穩定","健全銀行業務","維護幣值穩定","協助政局安定"], ans:3 },
+      { no:"05", q:"下列之貨幣政策工具，何者不是以影響貨幣供給總額為目的？", opts:["存款準備率","重貼現利率","公開市場操作","消費者信用管制"], ans:3 },
+      { no:"06", q:"下列何者不是中央銀行的「主要」貨幣政策工具？", opts:["公開市場操作","貼現窗口融通制度","準備金制度","選擇性信用融通"], ans:3 },
+      { no:"07", q:"下列何者不屬於中央銀行制定與執行貨幣政策之業務？", opts:["發行貨幣","訂定存款準備率","公開市場操作","金融監理"], ans:3 },
+      { no:"08", q:"下列何者不屬於貨幣政策的中間目標？", opts:["M1A","M1B","M2","準備貨幣"], ans:3 },
+      { no:"09", q:"下列何者不是中央銀行貨幣政策的「操作目標」？", opts:["準備金","國際收支平衡","拆款利率","貨幣市場利率"], ans:1 },
+      { no:"10", q:"下列何者不是衡量物價膨脹率的指標？", opts:["消費者物價指數（CPI）","生產者物價指數（PPI）","營造工程物價指數（CCI）","國民生產毛額平減指數（GNP Deflator）"], ans:2 },
+      { no:"11", q:"下列何種總體經濟變數常被各國中央銀行當作中間目標？", opts:["失業率","貨幣供給量","通貨膨脹率","貨幣基數"], ans:1 },
+      { no:"12", q:"中央銀行若選擇控制貨幣供給為其中間目標，就會失去對以下何者的控制？", opts:["失業率","匯率水準","通貨膨脹率","利率水準"], ans:3 },
+      { no:"13", q:"下列何者會使一國之貨幣供給量減少？", opts:["中央銀行進行公開市場買入","景氣轉好，企業貸款投資需求增加","發生銀行危機，存戶不願意繼續將錢存在銀行","中央銀行降低法定準備率"], ans:2 },
+      { no:"14", q:"下列敘述何者錯誤？", opts:["貨幣政策的最終目標，彼此之間有時會相互衝突","景氣過熱時中央銀行採取緊縮性貨幣政策以避免通貨膨脹發生是屬於「權衡式政策」","貨幣政策執行過程中常存在著時間落後","央銀行可以同時盯住利率和貨幣數量"], ans:3 },
+      { no:"15", q:"金融機構間為因應準備金提存需要而形成的資金借貸市場稱為：", opts:["商業本票市場","國庫券市場","金融業拆款市場","銀行承兌匯票市場"], ans:2 },
+      { no:"16", q:"下列有關貨幣政策操作目標與中間目標之敘述，何者錯誤？", opts:["中央銀行可以釘住「價格目標」","中央銀行可以釘住「數量目標」","中央銀行可以同時釘住「價格目標」與「數量目標」","以上皆非"], ans:2 },
+      { no:"17", q:"為了讓利率低於市場均衡利率水準，中央銀行必須：", opts:["賣出有價證券以提高有價證券之市場價格","賣出有價證券以降低有價證券之市場價格","買入有價證券以提高有價證券之市場價格","買入有價證券以降低有價證券之市場價格"], ans:2 },
+      { no:"18", q:"下列何項政策代表中央銀行將採取擴張性貨幣政策？", opts:["提高貼現率","進行公開市場買入","提高拆款利率","提高法定準備率"], ans:1 },
+      { no:"19", q:"中央銀行透過下列何種政策工具扮演「最後貸款者」的角色？", opts:["重貼現政策","準備金政策","公開市場買進政策","公開市場賣出政策"], ans:0 },
+      { no:"20", q:"下列有關銀行體系向中央銀行貼現貸款之敘述何者正確？", opts:["中央銀行透過調整重貼現率可以完全控制貼現放款的金額","市場利率的高低會影響銀行重貼現的意願","銀行向中央銀行增加貼現會使貨幣供給減少","重貼現率的高低不會影響貨幣基數的大小"], ans:1 },
+      { no:"21", q:"中央銀行採取下列何種政策對貨幣乘數（money multiplier）有最直接之影響？", opts:["進行公開市場操作","改變貼現率","改變拆款利率","改變法定準備率"], ans:3 },
+      { no:"22", q:"下列有關「貨幣政策的時間落後」之敘述，何者正確？", opts:["經濟問題發生後一段時間，中央銀行才察覺經濟問題的存在，這段時間稱為行政落後","中央銀行瞭解經濟問題的存在及其影響，到採取因應措施所經過的時間稱為認知落後","中央銀行採取貨幣政策措施之後，到貨幣政策影響實質經濟活動所需要的時間稱為影響落後","時間落後的期間越長或是越不規則，貨幣政策越容易發揮預期的效果"], ans:2 }
+    ]
   }
 ];
 
@@ -332,7 +371,25 @@ let activeQuestions = null; // null = use chapter questions; array = wrong-quest
 function currentQuestions() { return activeQuestions ?? CHAPTERS[chapterIdx].questions; }
 
 // ─── Hub ──────────────────────────────────────────────────────────────────────
-function showHub() { showView('hubView'); }
+function renderHub() {
+    document.getElementById('hubList').innerHTML = CHAPTERS.map((ch, i) => `
+        <button onclick="selectChapter(${i})"
+            class="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 text-left shadow-sm active:scale-95 transition-all">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 ${ch.iconBg} rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">${ch.icon}</div>
+                <div class="flex-grow min-w-0">
+                    <p class="text-[10px] font-black ${ch.accentText} uppercase tracking-widest mb-0.5">${ch.label}</p>
+                    <h2 class="text-base font-black text-slate-900 leading-snug">${ch.title}</h2>
+                    <p class="text-sm text-slate-400 font-medium mt-0.5">共 <span class="text-slate-700 font-black">${ch.questions.length}</span> 題</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </button>`).join('');
+}
+
+function showHub() { renderHub(); showView('hubView'); }
 
 function selectChapter(idx) {
     chapterIdx = idx;
@@ -340,6 +397,9 @@ function selectChapter(idx) {
     const iconEl = document.getElementById('startIcon');
     iconEl.textContent = ch.icon;
     iconEl.className = `w-20 h-20 ${ch.iconBg} rounded-full flex items-center justify-center text-4xl`;
+    const subjEl = document.getElementById('startSubject');
+    subjEl.textContent = ch.subject;
+    subjEl.className = `text-xs font-black ${ch.accentText} uppercase tracking-widest mb-2`;
     document.getElementById('startTitle').textContent = ch.title;
     document.getElementById('startCount').textContent = ch.questions.length;
     document.querySelector('input[name="mode"][value="practice"]').checked = true;
@@ -560,6 +620,8 @@ function showView(id) {
     document.getElementById(id).classList.remove('hidden');
     document.getElementById(id).classList.add('flex');
 }
+
+renderHub();
 </script>
 </body>
 </html>
