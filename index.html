@@ -308,7 +308,7 @@
                 <div class="flex gap-2">
                     <button onclick="execRangeStats()" class="flex-grow bg-blue-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all text-sm">執行查詢</button>
                     <button id="copyRangeBtn" onclick="copyRangeToClipboard()" class="hidden w-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center active:scale-95 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                     </button>
                 </div>
             </div>
@@ -538,6 +538,21 @@
                     <textarea id="inputNote" rows="2" placeholder="在此輸入排班細節..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-bold outline-none resize-none shadow-sm"></textarea>
                 </div>
 
+                <!-- 新增：Double 按鈕與自訂節日名稱區塊 -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black text-slate-700">雙倍薪資 (Double)</span>
+                            <span class="text-[10px] font-black text-rose-500 bg-rose-100 px-2 py-0.5 rounded-full">國定/自訂節日</span>
+                        </div>
+                        <button id="customDoubleBtn" type="button" onclick="toggleCustomDoubleInput()" class="px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider">未開啟</button>
+                    </div>
+                    <div id="customDoubleInputWrapper" class="hidden pt-2 border-t border-slate-200">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-1">節日名稱</label>
+                        <input type="text" id="inputCustomHolidayName" placeholder="例如：颱風假、紀念日" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-rose-500 shadow-sm">
+                    </div>
+                </div>
+
                 <div id="previewCard" class="bg-blue-600 p-5 rounded-3xl text-white shadow-xl flex justify-between items-end">
                     <div>
                         <p class="text-[10px] font-bold opacity-70 mb-1">本次預計薪資</p>
@@ -628,9 +643,14 @@
             defaultRate: 190, defaultTitle: "上班", defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreak: 0,
             showTitle: true, showTime: false, showHours: true, showSalary: true, showNote: false
         },
-        titleHistory: {} 
+        titleHistory: {},
+        customHolidays: {} // 新增：儲存手動設定的雙倍假日
     };
     
+    if (!storageData.customHolidays) {
+        storageData.customHolidays = {};
+    }
+
     let workData = storageData.records;
 
     // 2026 國定假日原始清單
@@ -683,6 +703,13 @@
                 }
             }
         });
+
+        // 新增：將使用者手動設定的雙倍假日合併進 dynamicHolidays
+        if (storageData && storageData.customHolidays) {
+            Object.entries(storageData.customHolidays).forEach(([dateStr, name]) => {
+                dynamicHolidays[dateStr] = name || "雙倍薪資";
+            });
+        }
     }
 
     class iOSPicker {
@@ -900,7 +927,6 @@
 
         let copyText = lastQueryResult.map(item => {
             let label = showTitle ? ` ${item.titleText}` : '';
-            // 修正：這裡移除了 ${item.timeText} 原本左右的括弧
             let parts = [`${item.dateText}${label} ${item.timeText}`];
             if (showHours) parts.push(`${item.hoursText}`);
             if (showPay) parts.push(`${item.payText}`);
@@ -991,6 +1017,7 @@
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
                 if (confirm("確定要匯入嗎？現有紀錄將被蓋掉")) {
                     storageData = decoded; workData = storageData.records;
+                    if (!storageData.customHolidays) storageData.customHolidays = {};
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
                     location.reload();
                 }
@@ -1014,7 +1041,7 @@
         for (let d = 1; d <= dim; d++) {
             const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isW = [0, 6].includes(new Date(year, month, d).getDay());
-            // 判定是否紅底：是國定假日 OR 是週末假日 OR 屬於補假(4/3, 4/6)
+            // 判定是否紅底：是國定假日 OR 是自訂雙倍假日 OR 是週末假日 OR 屬於補假(4/3, 4/6)
             const isH = !!dynamicHolidays[dStr];
             const isWkHoliday = !!weekendHolidays[dStr];
             
@@ -1029,7 +1056,7 @@
                     info += `<div class="${theme.bg} ${theme.border} ${theme.text} border-l-2 px-1 py-0.5 rounded-sm flex flex-col">${s.showTitle?`<div class="text-[8px] font-black truncate">${item.title}</div>`:''}${s.showTime?`<div class="text-[7px] font-bold opacity-80">${item.startTime}-${item.endTime}</div>`:''}${s.showHours?`<div class="text-[7px] font-bold opacity-70">${item.hours.toFixed(1)}h</div>`:''}${s.showSalary?`<div class="text-[7px] font-bold opacity-70">$${pay}</div>`:''}</div>`;
                 });
             }
-            // 只有國定假日 (dynamicHolidays) 才有紅點
+            // 只有國定假日或手動自訂雙倍假日 (dynamicHolidays) 才有紅點
             el.innerHTML = `<div class="text-[10px] font-black ${isH || isWkHoliday || isW ? 'text-red-500' : 'text-slate-400'}">${d}</div>${isH ? '<div class="holiday-dot"></div>' : ''}${info}</div>`;
             el.onclick = () => { selectedDateStr = dStr; if (data && data.length > 0) openDailyList(dStr); else renderCalendar(); };
             grid.appendChild(el);
@@ -1130,6 +1157,23 @@
         updatePreview();
     }
 
+    function toggleCustomDoubleInput(f) {
+        const btn = document.getElementById('customDoubleBtn');
+        const wrap = document.getElementById('customDoubleInputWrapper');
+        let act = f !== undefined ? f : !btn.classList.contains('bg-rose-600');
+        if (act) { 
+            btn.innerText = "已開啟"; 
+            btn.className = "px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black transition-all uppercase tracking-wider"; 
+            wrap.classList.remove('hidden'); 
+        } else { 
+            btn.innerText = "未開啟"; 
+            btn.className = "px-4 py-2 bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black transition-all uppercase tracking-wider"; 
+            wrap.classList.add('hidden'); 
+            document.getElementById('inputCustomHolidayName').value = ''; 
+        }
+        updatePreview();
+    }
+
     function openModalForSelected() {
         if (editingIndex === -1) {
             const s = storageData.settings;
@@ -1139,6 +1183,20 @@
             pickers.sH.setValue(sh); pickers.sM.setValue(sm); pickers.eH.setValue(eh); pickers.eM.setValue(em);
         }
         document.body.classList.add('lock-bg'); document.getElementById('modalDate').innerText = selectedDateStr.replace(/-/g, '/');
+        
+        // 載入當前日期的雙倍假日/自訂節日狀態
+        const customName = storageData.customHolidays && storageData.customHolidays[selectedDateStr];
+        const sysHolidayName = RAW_HOLIDAYS_2026[selectedDateStr];
+        if (customName) {
+            toggleCustomDoubleInput(true);
+            document.getElementById('inputCustomHolidayName').value = customName;
+        } else if (sysHolidayName) {
+            toggleCustomDoubleInput(true);
+            document.getElementById('inputCustomHolidayName').value = sysHolidayName;
+        } else {
+            toggleCustomDoubleInput(false);
+        }
+
         const h = dynamicHolidays[selectedDateStr], tag = document.getElementById('holidayTag');
         if (h) { tag.innerText = `${h} 2x`; tag.classList.remove('hidden'); } else tag.classList.add('hidden');
         updatePreview(); const modal = document.getElementById('editModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
@@ -1156,7 +1214,8 @@
     function updatePreview() {
         const rate = parseFloat(document.getElementById('inputRate').value) || 0, bm = parseInt(document.getElementById('breakMinutes').value) || 0;
         let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
-        const hrs = Math.max(0, diff - bm) / 60, pay = Math.round(hrs * rate * (!!dynamicHolidays[selectedDateStr] ? 2 : 1));
+        const isDoubleActive = document.getElementById('customDoubleBtn')?.classList.contains('bg-rose-600') || !!dynamicHolidays[selectedDateStr];
+        const hrs = Math.max(0, diff - bm) / 60, pay = Math.round(hrs * rate * (isDoubleActive ? 2 : 1));
         document.getElementById('previewGrossHours').innerText = `${hrs.toFixed(2)}h`;
         document.getElementById('previewNetSalary').innerText = `$${pay.toLocaleString()}`;
     }
@@ -1166,10 +1225,24 @@
         const sT = `${String(pickers.sH.getValue()).padStart(2,'0')}:${String(pickers.sM.getValue()).padStart(2,'0')}`, eT = `${String(pickers.eH.getValue()).padStart(2,'0')}:${String(pickers.eM.getValue()).padStart(2,'0')}`;
         let diff = (pickers.eH.getValue() * 60 + pickers.eM.getValue()) - (pickers.sH.getValue() * 60 + pickers.sM.getValue()); if (diff < 0) diff += 1440;
         const rec = { title, hours: Math.max(0, diff - bm)/60, rate, startTime: sT, endTime: eT, breakMinutes: bm, note: document.getElementById('inputNote').value, color: selectedColor };
+        
+        // 處理自訂雙倍假日儲存邏輯
+        const isDoubleOn = document.getElementById('customDoubleBtn').classList.contains('bg-rose-600');
+        const customNameInput = document.getElementById('inputCustomHolidayName').value.trim();
+        if (!storageData.customHolidays) storageData.customHolidays = {};
+        if (isDoubleOn) {
+            storageData.customHolidays[selectedDateStr] = customNameInput || "雙倍薪資";
+        } else {
+            delete storageData.customHolidays[selectedDateStr];
+        }
+
         if (!storageData.titleHistory) storageData.titleHistory = {}; storageData.titleHistory[title] = { rate, startTime: sT, endTime: eT, breakMinutes: bm, color: selectedColor };
         if (!Array.isArray(workData[selectedDateStr])) workData[selectedDateStr] = [];
         if (editingIndex > -1) workData[selectedDateStr][editingIndex] = rec; else workData[selectedDateStr].push(rec);
-        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate; localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
+        storageData.settings.defaultTitle = title; storageData.settings.defaultRate = rate; 
+        
+        calculateHolidays(); // 重新計算節日清單
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData)); 
         closeModal(); renderCalendar();
     }
 
