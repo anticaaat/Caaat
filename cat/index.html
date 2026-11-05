@@ -21,6 +21,7 @@
   --accent:#007aff; --accent-ink:#ffffff;
   --glass:rgba(255,255,255,.56); --glass-card:rgba(255,255,255,.66); --glass-strong:rgba(255,255,255,.72);
   --lens-bg:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.12)); --lens-rest:rgba(118,118,128,.14);
+  --sheet-bg:rgba(247,247,250,.97);
   --glass-border:rgba(255,255,255,.85); --glass-edge:rgba(255,255,255,.95);
   --hair:rgba(60,60,67,.12); --fill:rgba(118,118,128,.12); --fill2:rgba(118,118,128,.08);
   --seg-on:#ffffff;
@@ -42,6 +43,7 @@
     --accent:#0a84ff;
     --glass:rgba(38,38,42,.52); --glass-card:rgba(36,36,40,.72); --glass-strong:rgba(44,44,48,.70);
     --lens-bg:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.06)); --lens-rest:rgba(255,255,255,.12);
+    --sheet-bg:rgba(30,30,33,.97);
     --glass-border:rgba(255,255,255,.10); --glass-edge:rgba(255,255,255,.16);
     --hair:rgba(255,255,255,.10); --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.16);
     --seg-on:#636366;
@@ -260,15 +262,18 @@ svg{display:block}
 .tabs-in>button:active svg{transform:scale(.9)}
 
 /* ---------- 底部表單 ---------- */
-.mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40;display:none;align-items:flex-end;justify-content:center;transition:background .3s}
+.mask{position:fixed;inset:0;z-index:40;display:none;align-items:flex-end;justify-content:center}
 .mask.show{display:flex}
-.mask.closing{background:rgba(0,0,0,0)}
-.sheet{width:100%;max-width:540px;border-radius:30px 30px 0 0;max-height:86vh;overflow-y:auto;padding:0 18px calc(var(--safe-b) + 20px);transition:transform .3s cubic-bezier(.2,.9,.3,1);
-  animation:up .28s cubic-bezier(.2,.9,.3,1);overscroll-behavior:contain;background:var(--glass-strong);border-bottom:0;
-  -webkit-backdrop-filter:blur(40px) saturate(180%);backdrop-filter:blur(40px) saturate(180%)}
+.mask .dim{position:absolute;inset:0;background:rgba(0,0,0,.3);will-change:opacity;transition:opacity .28s;animation:dimIn .25s}
+@keyframes dimIn{from{opacity:0}}
+.mask.closing .dim{opacity:0}
+/* 表單不用即時模糊（後面已經有暗色遮罩），拖動和收起時只需要移動，不用重算模糊 */
+.sheet{position:relative;width:100%;max-width:540px;border-radius:30px 30px 0 0;max-height:86vh;overflow-y:auto;padding:0 18px calc(var(--safe-b) + 20px);
+  animation:up .3s cubic-bezier(.2,.9,.3,1);overscroll-behavior:contain;border-bottom:0;will-change:transform;
+  background:var(--sheet-bg)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 @keyframes up{from{transform:translateY(60px);opacity:.3}to{transform:none;opacity:1}}
 .sh-head{position:sticky;top:0;z-index:5;margin:0 -18px 14px;padding:8px 18px 10px;cursor:grab;touch-action:none;
-  background:linear-gradient(var(--glass-strong) 70%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  background:linear-gradient(var(--sheet-bg) 78%,transparent)}
 .sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--text3);opacity:.5;margin:0 auto 10px}
 .sh-bar{display:flex;align-items:center;gap:10px}
 .sheet h2{margin:0;flex:1;min-width:0;font-size:21px;font-weight:750;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
@@ -285,7 +290,13 @@ svg{display:block}
 .field textarea{height:auto;min-height:76px;padding:12px 14px;resize:vertical}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .grid2>*{min-width:0}
-.field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left;height:auto;min-height:46px;padding:12px 14px;line-height:22px}
+.dt{position:relative;display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;border-radius:13px;background:var(--fill);font-size:16px;cursor:pointer}
+.dt:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.dt .dtv{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt .dtv.ph{color:var(--text3)}
+.dt svg{width:18px;height:18px;color:var(--text3);flex:none}
+.dt input{position:absolute!important;inset:0;width:100%!important;height:100%!important;opacity:0;margin:0;padding:0!important;border:0;cursor:pointer;-webkit-appearance:none;appearance:none}
+.field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left}
 .field input::-webkit-date-and-time-value{text-align:left;margin:0;line-height:22px;min-height:22px}
 .field input::-webkit-datetime-edit{padding:0;line-height:22px}
 .field input::-webkit-datetime-edit-fields-wrapper{padding:0}
@@ -432,7 +443,7 @@ svg{display:block}
   <button class="fab glass float-glass" id="fab" aria-label="新增紀錄"></button>
 </div></div>
 
-<div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+<div class="mask" id="mask"><div class="dim" id="dim"></div><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 <div class="viewer" id="viewer"><div class="vtrack"></div><div class="vcount"></div><button class="xbtn vclose" aria-label="關閉"></button></div>
 
@@ -457,6 +468,8 @@ const IC={
   photo:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-4.5-4.5-8.5 8"/>',
   bolt:'<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
   heart:'<path d="M19.5 12.6 12 20l-7.5-7.4A4.8 4.8 0 1 1 12 6.4a4.8 4.8 0 1 1 7.5 6.2z"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   bell:'<path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5"/><path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0"/>',
   camera:'<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5l1.5-2.5h6L16.5 7H19a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.5"/>',
   replay:'<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 3.5V9H9"/>',
@@ -841,7 +854,7 @@ function renderHome(){
       <div><b class="num">${home??'—'}<small>${home!=null?'天':''}</small></b><span>到家第幾天</span></div>
       <div><b class="num">${cat.birthday?(nextBirthday(cat.birthday)===0?'🎂':nextBirthday(cat.birthday)):'—'}<small>${cat.birthday&&nextBirthday(cat.birthday)?'天':''}</small></b><span>距離生日</span></div>
     </div>
-    <div class="hero-foot"><span>今天已記 ${todays.length} 筆${lastFeed?` · 上次餵食 ${relTime(lastFeed)}`:''}</span><button class="pill-btn glass" id="heroRecap">${svg('sparkle',2)}看看回顧</button></div>
+    <div class="hero-foot"><span>今天已記 ${todays.length} 筆${lastFeed?` · 上次餵食 ${relTime(lastFeed)}`:''}</span></div>
   </div>
 
   ${rems.length?`<div class="label">提醒</div><div class="group glass">${rems.map(r=>`<div class="row rem ${r.cls}" data-hist="${r.type}" role="button" style="cursor:pointer">${ti(r.type)}<div class="main"><div class="title" style="font-size:15px">${esc(r.text)}</div>${r.sub?`<div class="desc">${esc(r.sub)}</div>`:''}</div><span class="when">${r.when}</span></div>`).join('')}</div>`:''}
@@ -857,7 +870,6 @@ function renderHome(){
   ${todays.length?`<div class="group glass">${todays.map(recRow).join('')}</div>`:'<div class="card glass empty" style="padding:26px">今天還沒有紀錄</div>'}`;
   $('#editCat').onclick=()=>openCatForm(cat);
   $('#toCharts').onclick=()=>show('charts');
-  $('#heroRecap').onclick=openRecap;
   el.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>{RET=null;openRecordForm({type:b.dataset.quick})});
   el.querySelectorAll('[data-hist]').forEach(b=>b.onclick=()=>openTypeHistory(b.dataset.hist));
   bindRecRows(el);
@@ -1085,6 +1097,7 @@ function renderSettings(){
   el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openCatForm(catById(b.dataset.edit)));
   $('#litterDays').onchange=e=>{DB.settings.litterDays=Math.max(1,+e.target.value||7);save();toast('已儲存')};
   $('#startDate').onchange=e=>{DB.settings.startDate=e.target.value;save();toast('已儲存')};
+  enhanceDates(el);
   $('#exp').onclick=exportBackup;
   $('#imp').onclick=()=>$('#impFile').click();
   $('#impFile').onchange=async e=>{
@@ -1100,6 +1113,23 @@ function renderSettings(){
 }
 
 /* ================= 表單 ================= */
+/* 日期／時間：原生選擇器透明蓋在上面，顯示的文字自己畫，iPhone 上一定置中 */
+function fmtDTV(inp){
+  const v=inp.value; if(!v)return '';
+  if(inp.type==='date'){const [y,m,d]=v.split('-');return y===todayStr().slice(0,4)?`${+m}月${+d}日 ${weekday(v)}`:`${y}/${+m}/${+d}`}
+  const [h,mi]=v.split(':').map(Number); return `${h<12?'上午':'下午'} ${h%12||12}:${pad(mi)}`;
+}
+function enhanceDates(root){
+  root.querySelectorAll('input[type=date],input[type=time]').forEach(inp=>{
+    if(inp.parentNode.classList.contains('dt'))return;
+    const w=document.createElement('div'); w.className='dt';
+    w.innerHTML=`<span class="dtv"></span>${svg(inp.type==='date'?'cal':'clock',1.8)}`;
+    inp.parentNode.insertBefore(w,inp); w.appendChild(inp);
+    const v=w.querySelector('.dtv'), upd=()=>{const t=fmtDTV(inp);v.textContent=t||(inp.type==='date'?'選擇日期':'選擇時間');v.classList.toggle('ph',!t)};
+    upd(); inp.addEventListener('input',upd); inp.addEventListener('change',upd);
+    inp.addEventListener('click',()=>{try{inp.showPicker&&inp.showPicker()}catch(e){}});
+  });
+}
 let SHEET_CLOSE=null;
 function openSheet(title,body,opts={}){
   const sh=$('#sheet'),m=$('#mask'); clearTimeout(closeSheet._t);
@@ -1107,6 +1137,7 @@ function openSheet(title,body,opts={}){
   if(opts.onClose)SHEET_CLOSE=opts.onClose;
   sh.className='sheet glass float-glass'; sh.style.transform=''; sh.style.transition=''; m.classList.remove('closing');
   sh.innerHTML=`<div class="sh-head"><div class="grab"></div><div class="sh-bar">${opts.back?`<button class="xbtn" id="shBack" aria-label="上一步">${svg('chevL',2.4)}</button>`:''}<h2>${title}</h2><button class="xbtn" id="shClose" aria-label="關閉">${svg('x',2.4)}</button></div></div>${body}`;
+  enhanceDates(sh);
   m.classList.add('show'); document.body.style.overflow='hidden'; sh.scrollTop=0;
   $('#shClose').onclick=closeSheet; if(opts.back)$('#shBack').onclick=opts.back;
 }
@@ -1118,28 +1149,28 @@ function closeSheet(){
   const sh=$('#sheet'),m=$('#mask'); if(!m.classList.contains('show'))return;
   if(SHEET_CLOSE){const f=SHEET_CLOSE;SHEET_CLOSE=null;try{f()}catch(e){}}
   document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
-  sh.style.transition='transform .28s cubic-bezier(.4,0,1,1)'; sh.style.transform='translateY(105%)'; m.classList.add('closing');
+  sh.style.transition='transform .26s cubic-bezier(.3,0,.8,.6)'; sh.style.transform='translate3d(0,105%,0)'; $('#dim').style.transition=''; $('#dim').style.opacity=''; m.classList.add('closing');
   closeSheet._t=setTimeout(()=>{m.classList.remove('show','closing');sh.style.transform='';sh.style.transition='';document.body.style.overflow=''},280);
 }
-$('#mask').addEventListener('click',e=>{if(e.target.id==='mask')closeSheet()});
+$('#mask').addEventListener('click',e=>{if(e.target.id==='mask'||e.target.id==='dim')closeSheet()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#viewer').classList.contains('show'))closeViewer();else closeSheet()}});
 // 下拉關閉：在標題列往下拉，或內容已捲到最上面時往下拉
 (function(){
-  const sh=$('#sheet'),m=$('#mask'); let sy=null,dy=0,t0=0,drag=false,fromHead=false,atTop=true;
+  const sh=$('#sheet'),m=$('#mask'),dim=$('#dim'); let sy=null,dy=0,t0=0,drag=false,fromHead=false,atTop=true;
   const startY=y=>{sy=y;dy=0;t0=performance.now();drag=false};
   const moveY=(y,ev)=>{
     if(sy==null)return; const d=y-sy;
     if(!drag){
       if(Math.abs(d)<6)return;
-      if(d>0&&(fromHead||(atTop&&sh.scrollTop<=0)))drag=true; else{sy=null;return}
+      if(d>0&&(fromHead||(atTop&&sh.scrollTop<=0))){drag=true;dim.style.transition='none'} else{sy=null;return}
     }
     if(ev.cancelable)ev.preventDefault();
     dy=Math.max(0,d); const r=dy<0?0:dy;
-    sh.style.transition='none'; sh.style.transform=`translateY(${r}px)`;
-    m.style.background=`rgba(0,0,0,${(.28*Math.max(0,1-r/(sh.offsetHeight||1))).toFixed(3)})`;
+    sh.style.transition='none'; sh.style.transform=`translate3d(0,${r}px,0)`;
+    dim.style.opacity=Math.max(0,1-r/(sh.offsetHeight||1)).toFixed(3);
   };
   const endY=()=>{
-    if(sy==null)return; sy=null; m.style.background='';
+    if(sy==null)return; sy=null; dim.style.transition='';dim.style.opacity='';
     if(!drag)return; drag=false;
     const v=dy/Math.max(1,performance.now()-t0);
     if(dy>Math.min(140,sh.offsetHeight*.3)||v>.65)closeSheet();
@@ -1605,7 +1636,7 @@ function dietCard(cat){
 /* ================= 自動更新 =================
    主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
    有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
-const APP_VERSION='2026.11.06.3';
+const APP_VERSION='2026.11.06.4';
 let updateShown=false;
 async function checkUpdate(){
   if(updateShown||location.protocol==='file:')return;
