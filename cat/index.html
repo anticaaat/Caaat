@@ -248,8 +248,8 @@ svg{display:block}
 .tabs{position:relative;flex:1;height:64px;border-radius:999px;pointer-events:auto}
 /* 模糊背景與會動的內容分開：滑塊移動時不會讓毛玻璃重新計算 */
 .tabs-bg{position:absolute!important;inset:0;border-radius:999px;pointer-events:none}
-.tabs-in{position:relative;height:100%;padding:5px;display:grid;grid-template-columns:repeat(4,1fr);touch-action:none;user-select:none;-webkit-user-select:none}
-.tabs button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:color .2s}
+.tabs-in{position:relative;height:100%;padding:5px;display:grid;grid-template-columns:repeat(5,1fr);touch-action:none;user-select:none;-webkit-user-select:none}
+.tabs button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;white-space:nowrap;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:color .2s}
 .tabs button svg{width:22px;height:22px}
 .tabs button.on{color:var(--accent)}
 .tabs .lens{border-radius:999px}.tabs .lens>i{background:var(--lens-rest)}
@@ -285,8 +285,10 @@ svg{display:block}
 .field textarea{height:auto;min-height:76px;padding:12px 14px;resize:vertical}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .grid2>*{min-width:0}
-.field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left}
-.field input::-webkit-date-and-time-value{text-align:left}
+.field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left;height:auto;min-height:46px;padding:12px 14px;line-height:22px}
+.field input::-webkit-date-and-time-value{text-align:left;margin:0;line-height:22px;min-height:22px}
+.field input::-webkit-datetime-edit{padding:0;line-height:22px}
+.field input::-webkit-datetime-edit-fields-wrapper{padding:0}
 .tabs-in>button svg{transition:transform .2s}
 .dragging>button.on svg{transform:scale(1.15)}
 .opts{display:flex;flex-wrap:wrap;gap:7px}
@@ -413,6 +415,7 @@ svg{display:block}
   <section id="view-records" class="hide"></section>
   <section id="view-charts" class="hide"></section>
   <section id="view-diary" class="hide"></section>
+  <section id="view-recap" class="hide"></section>
   <section id="view-settings" class="hide"></section>
 </div>
 
@@ -423,6 +426,7 @@ svg{display:block}
       <button data-view="diary"></button>
       <button data-view="records"></button>
       <button data-view="charts"></button>
+      <button data-view="recap"></button>
     </div>
   </nav>
   <button class="fab glass float-glass" id="fab" aria-label="新增紀錄"></button>
@@ -741,10 +745,10 @@ window.addEventListener('resize',()=>SLIDERS.forEach(s=>{if(!s.el.isConnected)SL
 
 /* ================= 導覽 ================= */
 let VIEW='home';
-const TITLES={home:'今天',diary:'日記',records:'紀錄',charts:'圖表',settings:'設定'};
-const TABDEF={home:['home','首頁'],diary:['book','日記'],records:['list','紀錄'],charts:['chart','圖表']};
-const TABORDER=['home','diary','records','charts'];
-const VIEWS=['home','diary','records','charts','settings'];
+const TITLES={home:'今天',diary:'日記',records:'紀錄',charts:'圖表',recap:'回顧',settings:'設定'};
+const TABDEF={home:['home','首頁'],diary:['book','日記'],records:['list','紀錄'],charts:['chart','圖表'],recap:['sparkle','回顧']};
+const TABORDER=['home','diary','records','charts','recap'];
+const VIEWS=['home','diary','records','charts','recap','settings'];
 document.querySelectorAll('#tabsIn [data-view]').forEach(b=>{const [ic,l]=TABDEF[b.dataset.view];b.innerHTML=svg(ic)+l});
 $('#tabsIn').insertAdjacentHTML('afterbegin','<span class="lens"><i></i></span>');
 const TAB=liquid($('#tabsIn'),{index:0,onPick:i=>show(TABORDER[i])});
@@ -754,7 +758,7 @@ $('#fab').onclick=()=>{if(!DB.cats.length)return openCatForm();if(VIEW==='diary'
 const stamp=()=>`${VER}|${DB.current}|${todayStr()}`;
 function show(v){
   VIEW=v; const sec=$('#view-'+v);
-  if(sec.dataset.stamp===stamp()){chrome();SLIDERS.forEach(x=>{if(sec.contains(x.el))x.set(x.cur,false)})} else render();
+  if(sec.dataset.stamp===stamp()){chrome();SLIDERS.forEach(x=>{if(sec.contains(x.el))x.set(x.cur,false)});if(v==='recap')countUp(sec)} else render();
   window.scrollTo(0,0);
 }
 function chrome(){
@@ -764,7 +768,7 @@ function chrome(){
   $('#headSub').textContent=`${+todayStr().slice(5,7)}月${+todayStr().slice(8)}日 ${weekday(todayStr())}`;
   renderSwitch();
 }
-const RENDER={home:()=>renderHome(),diary:()=>renderDiary(),records:()=>renderRecords(),charts:()=>renderCharts(),settings:()=>renderSettings()};
+const RENDER={home:()=>renderHome(),diary:()=>renderDiary(),records:()=>renderRecords(),charts:()=>renderCharts(),recap:()=>renderRecap($('#view-recap')),settings:()=>renderSettings()};
 function renderView(v){const sec=$('#view-'+v);RENDER[v]();flushCharts();hydratePhotos(sec);sec.dataset.stamp=stamp()}
 function render(){chrome();renderView(VIEW);schedulePrerender()}
 // 空閒時先把其他分頁畫好，切換分頁時就不用等
@@ -774,7 +778,7 @@ addEventListener('pointerdown',()=>TOUCHING=true,true);addEventListener('pointer
 function schedulePrerender(){clearTimeout(PRE);PRE=setTimeout(()=>{if(TOUCHING)return schedulePrerender();const v=TABORDER.find(x=>x!==VIEW&&$('#view-'+x).dataset.stamp!==stamp());if(!v)return;renderView(v);schedulePrerender()},350)}
 function renderSwitch(){
   const el=$('#catSwitch');
-  if(!DB.cats.length||VIEW==='settings'||VIEW==='diary'){el.innerHTML='';el.classList.add('hide');return}
+  if(!DB.cats.length||VIEW==='settings'||VIEW==='diary'||VIEW==='recap'){el.innerHTML='';el.classList.add('hide');return}
   el.classList.remove('hide'); const cur=curCat();
   el.innerHTML=DB.cats.map(c=>`<button class="cchip glass ${cur&&c.id===cur.id?'on':''}" data-id="${c.id}">${avHTML(c)}${esc(c.name)}</button>`).join('')
     +`<button class="cchip glass add" id="addCatChip">＋ 新增貓咪</button>`;
@@ -807,7 +811,7 @@ function renderHome(){
     let v='尚無紀錄',d='輕觸以記錄',warn=false,n=null;
     if(r){n=diffDays(r.date,t);v=type==='feed'?relTime(r):relDays(n);d=[fmtShort(r.date),ex.desc&&ex.desc(r)].filter(Boolean).join(' · ');if(ex.warnAfter&&n>=ex.warnAfter)warn=true}
     else if(ex.warnAfter)warn=true;
-    return `<button class="tile glass ${warn?'warn':''}" data-quick="${type}"><div class="row1">${ti(type)}${warn&&r?`<span class="badge">該處理了</span>`:''}</div>
+    return `<button class="tile glass ${warn?'warn':''}" data-hist="${type}"><div class="row1">${ti(type)}${warn&&r?`<span class="badge">該處理了</span>`:''}</div>
       <div><div class="t">${label}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div></button>`;
   };
   const tiles=[
@@ -840,7 +844,7 @@ function renderHome(){
     <div class="hero-foot"><span>今天已記 ${todays.length} 筆${lastFeed?` · 上次餵食 ${relTime(lastFeed)}`:''}</span><button class="pill-btn glass" id="heroRecap">${svg('sparkle',2)}看看回顧</button></div>
   </div>
 
-  ${rems.length?`<div class="label">提醒</div><div class="group glass">${rems.map(r=>`<div class="row rem ${r.cls}">${ti(r.type)}<div class="main"><div class="title" style="font-size:15px">${esc(r.text)}</div>${r.sub?`<div class="desc">${esc(r.sub)}</div>`:''}</div><span class="when">${r.when}</span></div>`).join('')}</div>`:''}
+  ${rems.length?`<div class="label">提醒</div><div class="group glass">${rems.map(r=>`<div class="row rem ${r.cls}" data-hist="${r.type}" role="button" style="cursor:pointer">${ti(r.type)}<div class="main"><div class="title" style="font-size:15px">${esc(r.text)}</div>${r.sub?`<div class="desc">${esc(r.sub)}</div>`:''}</div><span class="when">${r.when}</span></div>`).join('')}</div>`:''}
 
   <div class="label">最近狀態</div>
   <div class="tiles">${tiles}</div>
@@ -854,7 +858,8 @@ function renderHome(){
   $('#editCat').onclick=()=>openCatForm(cat);
   $('#toCharts').onclick=()=>show('charts');
   $('#heroRecap').onclick=openRecap;
-  el.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>openRecordForm({type:b.dataset.quick}));
+  el.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>{RET=null;openRecordForm({type:b.dataset.quick})});
+  el.querySelectorAll('[data-hist]').forEach(b=>b.onclick=()=>openTypeHistory(b.dataset.hist));
   bindRecRows(el);
 }
 function reminders(cat){
@@ -993,7 +998,7 @@ function renderCharts(){
 }
 
 /* ================= 回顧卡 ================= */
-function openRecap(){openSheet('回顧','<div id="recapHost"></div>');renderRecap($('#recapHost'))}
+function openRecap(){show('recap')}
 function recapStats(){
   const t=todayStr();
   const dates=[DB.settings.startDate,...DB.cats.map(c=>c.adopt),...DB.records.map(r=>r.date)].filter(d=>d&&d<=t).sort();
@@ -1105,7 +1110,11 @@ function openSheet(title,body,opts={}){
   m.classList.add('show'); document.body.style.overflow='hidden'; sh.scrollTop=0;
   $('#shClose').onclick=closeSheet; if(opts.back)$('#shBack').onclick=opts.back;
 }
+// 從「歷史紀錄」打開的表單，儲存或返回後回到歷史紀錄
+let RET=null;
+function finishSheet(){if(RET){const f=RET;render();f()}else{closeSheet();render()}}
 function closeSheet(){
+  RET=null;
   const sh=$('#sheet'),m=$('#mask'); if(!m.classList.contains('show'))return;
   if(SHEET_CLOSE){const f=SHEET_CLOSE;SHEET_CLOSE=null;try{f()}catch(e){}}
   document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
@@ -1145,7 +1154,33 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#viewer').cla
     addEventListener('pointermove',mv);addEventListener('pointerup',up)});
 })();
 
+function openTypeHistory(type){
+  const T=TYPES[type], cat=curCat(), t=todayStr();
+  const rs=recsOf(type==='litter'?null:cat.id).filter(r=>r.type===type);
+  const back=()=>openTypeHistory(type);
+  const last=rs[0], cost=rs.reduce((s,r)=>s+(+r.cost||0),0);
+  const next=rs.find(r=>r.next&&r.next>=t);
+  const kp=[['紀錄',`${rs.length}<small style="font-size:12px;color:var(--text2)"> 次</small>`],['上次',last?(type==='feed'?relTime(last):relDays(diffDays(last.date,t))):'—']];
+  if(T.cost)kp.push(['累計花費',money(cost)]); else if(type==='weight'&&last)kp.push(['目前',`${last.kg}<small style="font-size:12px;color:var(--text2)"> kg</small>`]);
+  else if(type==='play')kp.push(['總時間',`${rs.reduce((s,r)=>s+(+r.minutes||0),0)}<small style="font-size:12px;color:var(--text2)"> 分</small>`]);
+  else kp.push(['近 7 天',`${rs.filter(r=>r.date>addDays(t,-7)).length}<small style="font-size:12px;color:var(--text2)"> 次</small>`]);
+  let html='',cm='',buf='';
+  const flush=()=>{if(buf){html+=`<div class="group glass">${buf}</div>`;buf=''}};
+  for(const r of rs.slice(0,150)){const m=r.date.slice(0,7);if(m!==cm){flush();cm=m;html+=`<div class="label" style="margin-top:16px">${m.slice(0,4)}年${+m.slice(5)}月</div>`}buf+=recRow(r)}
+  flush();
+  openSheet(`${ti(type)}${T.name}`,`
+    <div class="kpis">${kp.map(([l,v])=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>
+    ${next?`<div class="row rem soon" style="background:var(--warn-bg);border-radius:14px;margin-bottom:12px">${ti(type)}<div class="main"><div class="title" style="font-size:15px">${type==='vet'?'下次回診':'下次施打 / 投藥'}</div><div class="desc">${fmtLong(next.next)}${next.kind?' · '+esc(next.kind):''}</div></div><span class="when">${diffDays(t,next.next)===0?'今天':diffDays(t,next.next)+' 天後'}</span></div>`:''}
+    ${type==='weight'?`<div class="card glass" style="padding:14px">${lineChart({pts:weightSeries(cat.id),fmt:v=>v.toFixed(2)+' kg',fmtAxis:v=>v.toFixed(1),h:150,empty:'還沒有體重紀錄'})}</div>`:''}
+    <button class="btn" id="hAdd">${svg('plus',2.4)}新增${T.name}</button>
+    ${rs.length?html:`<div class="empty" style="padding:28px 0">還沒有${T.name}的紀錄</div>`}`,{fresh:true});
+  flushCharts();
+  const sh=$('#sheet');
+  $('#hAdd').onclick=()=>{RET=back;openRecordForm({type})};
+  sh.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>{RET=back;openRecordForm(DB.records.find(r=>r.id===b.dataset.rec))});
+}
 function openTypePicker(){
+  RET=null;
   openSheet('新增紀錄',`<div class="types"><button data-diary><span class="ti" style="--c:#ff9f0a">${svg('photo',2)}</span>日記</button>${Object.entries(TYPES).map(([k,T])=>`<button data-t="${k}">${ti(k)}${T.name}</button>`).join('')}</div>`,{fresh:true});
   $('#sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>openRecordForm({type:b.dataset.t}));
   $('#sheet').querySelector('[data-diary]').onclick=()=>openDiaryForm();
@@ -1166,7 +1201,7 @@ function openRecordForm(rec){
     ${T.fields.map(fieldHTML).join('')}
     ${T.cost?`<div class="field"><label>金額（元）${T.costReq?' *':''}</label><input type="number" inputmode="decimal" data-k="cost" value="${rec.cost??''}" placeholder="0"></div>`:''}
     <div class="field"><label>備註</label><textarea data-k="note" placeholder="想記下的事…">${esc(rec.note||'')}</textarea></div>
-    <div class="btn-row">${isNew?'':'<button class="btn danger" id="del" style="flex:0 0 96px">刪除</button>'}<button class="btn" id="saveRec">儲存</button></div>`);
+    <div class="btn-row">${isNew?'':'<button class="btn danger" id="del" style="flex:0 0 96px">刪除</button>'}<button class="btn" id="saveRec">儲存</button></div>`,{back:RET||undefined});
   const sh=$('#sheet');
   sh.querySelectorAll('[data-seg]').forEach(seg=>{
     const inp=sh.querySelector(`input[data-k="${seg.dataset.seg}"]`);
@@ -1182,9 +1217,9 @@ function openRecordForm(rec){
     if(T.costReq&&!out.cost)return toast('請填寫金額');
     if(out.type==='weight'&&(out.kg<=0||out.kg>30))return toast('體重數字好像不太對');
     const i=DB.records.findIndex(r=>r.id===out.id); if(i>=0)DB.records[i]=out; else DB.records.push(out);
-    save();closeSheet();render();toast(isNew?`已記錄${T.name}`:'已更新');
+    save();finishSheet();toast(isNew?`已記錄${T.name}`:'已更新');
   };
-  const del=$('#del'); if(del)del.onclick=()=>{if(!confirm('刪除這筆紀錄？'))return;DB.records=DB.records.filter(r=>r.id!==rec.id);save();closeSheet();render();toast('已刪除')};
+  const del=$('#del'); if(del)del.onclick=()=>{if(!confirm('刪除這筆紀錄？'))return;DB.records=DB.records.filter(r=>r.id!==rec.id);save();finishSheet();toast('已刪除')};
 }
 
 const EMOJIS=['🐱','😺','🐈','🐈‍⬛','😸','😻','🦁','🐯'];
@@ -1343,9 +1378,8 @@ function renderDiary(){
       :'<div class="card glass empty" style="padding:30px">寫日記時加的照片會收在這裡</div>';
     el._album=all;
   }
-  el.innerHTML=`<div class="drow">${segc('dm',DMODE,[['timeline','時間軸'],['calendar','月曆'],['album','相簿']])}<button class="pill-btn glass" id="openRecap">${svg('sparkle',2)}回顧</button></div>${DMODE==='timeline'?memoryCard(list):''}${body}`;
+  el.innerHTML=`<div class="drow">${segc('dm',DMODE,[['timeline','時間軸'],['calendar','月曆'],['album','相簿']])}</div>${DMODE==='timeline'?memoryCard(list):''}${body}`;
   bindSegc(el,{dm:v=>{DMODE=v;render()}});
-  $('#openRecap').onclick=openRecap;
   const nd=$('#newDiary'); if(nd)nd.onclick=()=>openDiaryForm();
   el.querySelectorAll('[data-vph]').forEach(c=>c.onclick=ev=>{ev.stopPropagation();const e=DB.diary.find(x=>x.id===c.dataset.vph);openViewer(e.photos,+c.dataset.i)});
   el.querySelectorAll('[data-entry]').forEach(c=>c.onclick=()=>openDiaryForm(DB.diary.find(x=>x.id===c.dataset.entry)));
@@ -1464,7 +1498,7 @@ function feedPick(first){
     <div class="opts" id="ftabs" style="margin-bottom:12px">${[['recent','近期'],['fav','收藏'],['all','全部食物']].map(([k,l])=>`<button type="button" data-t="${k}" class="${F.tab===k?'on':''}">${l}</button>`).join('')}</div>
     <div id="flist"></div>
     <button class="btn ghost" id="newFood" style="margin-top:12px">${svg('plus',2.2)}新增食物</button>
-    <button class="link" id="skipFood" style="display:block;margin:16px auto 4px">不指定食物，直接記錄</button>`,{fresh:!!first});
+    <button class="link" id="skipFood" style="display:block;margin:16px auto 4px">不指定食物，直接記錄</button>`,{fresh:!!first,back:RET||undefined});
   const draw=()=>{
     const foods=DB.foods||[], q=F.q.trim().toLowerCase();
     let list=q?foods.filter(f=>[f.brand,f.name,f.kind,f.meat].join(' ').toLowerCase().includes(q))
@@ -1494,7 +1528,7 @@ function feedReact(first){
     <div class="grid2"><div class="field"><label>餵食量（g）</label><input type="number" inputmode="decimal" id="ffed" value="${F.fed}" placeholder="例如 40"></div>
     <div class="field"><label>剩食量（g）</label><input type="number" inputmode="decimal" id="fleft" value="${F.left}" placeholder="0"></div></div>
     <div class="opts" id="leftQ" style="margin:-4px 0 18px">${[['0','全吃完'],['.15','剩一點'],['.5','剩一半'],['.9','幾乎沒吃']].map(([v,l])=>`<button type="button" data-q="${v}">${l}</button>`).join('')}</div>
-    <button class="btn" id="fnext">下一步</button>`,{back:F.rec?null:()=>{F.step=1;feedStep()},fresh:!!first});
+    <button class="btn" id="fnext">下一步</button>`,{back:F.rec?(RET||null):()=>{F.step=1;feedStep()},fresh:!!first});
   const fcat=$('#fcat'); if(fcat)singleOpts(fcat,F.catId,v=>{if(v)F.catId=v;else{F.catId=cat.id;fcat.querySelector(`[data-v="${cat.id}"]`).classList.add('on')}});
   $('#ffed').oninput=e=>F.fed=e.target.value; $('#fleft').oninput=e=>F.left=e.target.value;
   $('#reacts').querySelectorAll('button').forEach(b=>b.onclick=()=>{F.reaction=b.dataset.r;$('#reacts').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
@@ -1523,10 +1557,10 @@ function feedTime(){
     const note=$('#fnote').value.trim(); if(note)out.note=note;
     const i=DB.records.findIndex(r=>r.id===out.id); if(i>=0)DB.records[i]=out; else DB.records.push(out);
     const cat=catById(out.catId), isNew=!F.rec;
-    save(); closeSheet(); render();
+    save(); finishSheet();
     successPop(isNew?`${cat?cat.name:'咪咪'}紀錄成功！`:'已更新',out.food||'');
   };
-  const d2=$('#fdel2'); if(d2)d2.onclick=()=>{if(!confirm('刪除這筆餵食紀錄？'))return;DB.records=DB.records.filter(r=>r.id!==F.rec.id);save();closeSheet();render();toast('已刪除')};
+  const d2=$('#fdel2'); if(d2)d2.onclick=()=>{if(!confirm('刪除這筆餵食紀錄？'))return;DB.records=DB.records.filter(r=>r.id!==F.rec.id);save();finishSheet();toast('已刪除')};
 }
 let SPT=0;
 function successPop(title,sub){
@@ -1571,7 +1605,7 @@ function dietCard(cat){
 /* ================= 自動更新 =================
    主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
    有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
-const APP_VERSION='2026.11.06.2';
+const APP_VERSION='2026.11.06.3';
 let updateShown=false;
 async function checkUpdate(){
   if(updateShown||location.protocol==='file:')return;
