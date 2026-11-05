@@ -769,7 +769,9 @@ function renderView(v){const sec=$('#view-'+v);RENDER[v]();flushCharts();hydrate
 function render(){chrome();renderView(VIEW);schedulePrerender()}
 // 空閒時先把其他分頁畫好，切換分頁時就不用等
 let PRE=0;
-function schedulePrerender(){clearTimeout(PRE);PRE=setTimeout(()=>{const v=TABORDER.find(x=>x!==VIEW&&$('#view-'+x).dataset.stamp!==stamp());if(!v)return;renderView(v);schedulePrerender()},350)}
+let TOUCHING=false;
+addEventListener('pointerdown',()=>TOUCHING=true,true);addEventListener('pointerup',()=>TOUCHING=false,true);addEventListener('pointercancel',()=>TOUCHING=false,true);
+function schedulePrerender(){clearTimeout(PRE);PRE=setTimeout(()=>{if(TOUCHING)return schedulePrerender();const v=TABORDER.find(x=>x!==VIEW&&$('#view-'+x).dataset.stamp!==stamp());if(!v)return;renderView(v);schedulePrerender()},350)}
 function renderSwitch(){
   const el=$('#catSwitch');
   if(!DB.cats.length||VIEW==='settings'||VIEW==='diary'){el.innerHTML='';el.classList.add('hide');return}
@@ -1569,7 +1571,7 @@ function dietCard(cat){
 /* ================= 自動更新 =================
    主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
    有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
-const APP_VERSION='2026.11.06.1';
+const APP_VERSION='2026.11.06.2';
 let updateShown=false;
 async function checkUpdate(){
   if(updateShown||location.protocol==='file:')return;
