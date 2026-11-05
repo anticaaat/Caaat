@@ -19,7 +19,8 @@
   --bg:#f2f2f7;
   --text:#1c1c1e; --text2:#6c6c70; --text3:#a1a1a6;
   --accent:#007aff; --accent-ink:#ffffff;
-  --glass:rgba(255,255,255,.56); --glass-strong:rgba(255,255,255,.80);
+  --glass:rgba(255,255,255,.56); --glass-card:rgba(255,255,255,.66); --glass-strong:rgba(255,255,255,.72);
+  --lens-bg:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.12)); --lens-rest:rgba(118,118,128,.14);
   --glass-border:rgba(255,255,255,.85); --glass-edge:rgba(255,255,255,.95);
   --hair:rgba(60,60,67,.12); --fill:rgba(118,118,128,.12); --fill2:rgba(118,118,128,.08);
   --seg-on:#ffffff;
@@ -39,7 +40,8 @@
     --bg:#000000;
     --text:#f5f5f7; --text2:#98989f; --text3:#636366;
     --accent:#0a84ff;
-    --glass:rgba(38,38,42,.52); --glass-strong:rgba(44,44,48,.82);
+    --glass:rgba(38,38,42,.52); --glass-card:rgba(36,36,40,.72); --glass-strong:rgba(44,44,48,.70);
+    --lens-bg:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.06)); --lens-rest:rgba(255,255,255,.12);
     --glass-border:rgba(255,255,255,.10); --glass-edge:rgba(255,255,255,.16);
     --hair:rgba(255,255,255,.10); --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.16);
     --seg-on:#636366;
@@ -56,7 +58,7 @@
 html,body{margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
-body::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none;
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none;transform:translateZ(0);
   background:
     radial-gradient(40% 35% at 12% 8%,var(--wall1),transparent 70%),
     radial-gradient(38% 30% at 92% 18%,var(--wall2),transparent 70%),
@@ -71,8 +73,9 @@ svg{display:block}
 .hide{display:none!important}
 
 /* ---------- 液態玻璃 ---------- */
-.glass{position:relative;background:var(--glass);border:1px solid var(--glass-border);border-radius:26px;box-shadow:var(--shadow);
-  -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%)}
+.glass{position:relative;background:var(--glass-card);border:1px solid var(--glass-border);border-radius:26px;box-shadow:var(--shadow)}
+/* 浮在內容上面的元件才用真正的背景模糊（卡片下面只有靜態背景，用半透明就有相同效果，滑動更順） */
+.float-glass{background:var(--glass-strong);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%)}
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:linear-gradient(155deg,var(--glass-edge) 0%,transparent 28%,transparent 72%,rgba(255,255,255,.08) 100%);opacity:.55}
 .glass>*{position:relative}
@@ -170,11 +173,12 @@ svg{display:block}
 .segc .lens{border-radius:8px;background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
 
 /* 液態玻璃滑塊（可拖曳） */
-.lens{position:absolute;top:0;left:0;height:100%;z-index:0;pointer-events:none;will-change:transform;
-  transition:transform .55s cubic-bezier(.28,1.45,.45,1),opacity .2s,background .25s,box-shadow .25s}
-.lens.drag{z-index:2;background:rgba(255,255,255,.22)!important;
-  -webkit-backdrop-filter:saturate(200%) brightness(1.06);backdrop-filter:saturate(200%) brightness(1.06);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),inset 0 3px 8px rgba(255,255,255,.55),inset 0 -4px 10px rgba(0,0,0,.08),0 10px 28px -6px rgba(0,0,0,.28)!important}
+.lens{position:absolute;top:0;left:0;height:100%;z-index:0;pointer-events:none;will-change:transform;backface-visibility:hidden;
+  transition:transform .5s cubic-bezier(.3,1.4,.5,1),opacity .2s}
+.lens::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .18s;
+  background:var(--lens-bg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 2px 5px rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.07),0 8px 22px -6px rgba(0,0,0,.25)}
+.lens.drag{z-index:2}
+.lens.drag::after{opacity:1}
 
 /* ---------- 圖表 ---------- */
 .chart{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -239,15 +243,16 @@ svg{display:block}
 /* ---------- 底部導覽（浮動玻璃） ---------- */
 .dock{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 12px);z-index:20;pointer-events:none}
 .dock .in{max-width:540px;margin:0 auto;padding:0 16px;display:flex;gap:10px;align-items:center}
-.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr);padding:5px;border-radius:999px;pointer-events:auto;background:var(--glass-strong);touch-action:none;user-select:none;-webkit-user-select:none}
+.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr);padding:5px;border-radius:999px;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;height:64px}
 .tabs button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:color .2s}
 .tabs button svg{width:22px;height:22px}
 .tabs button.on{color:var(--accent)}
-.tabs .lens{border-radius:999px;background:var(--fill)}
-.fab{width:62px;height:62px;border-radius:50%;pointer-events:auto;display:grid;place-items:center;color:#fff;flex:none;
-  background:radial-gradient(120% 120% at 30% 15%,rgba(255,255,255,.45),transparent 45%),var(--accent);
-  box-shadow:0 10px 24px -6px color-mix(in srgb,var(--accent) 60%,transparent),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 6px rgba(0,0,0,.12)}
-.fab svg{width:26px;height:26px}
+.tabs .lens{border-radius:999px;background:var(--lens-rest)}
+.fab{width:64px;height:64px;border-radius:50%;pointer-events:auto;display:grid;place-items:center;color:var(--accent);flex:none;
+  transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.fab svg{width:27px;height:27px}
+.fab:active{transform:scale(.88);transition-duration:.12s}
+.tabs>button:active svg{transform:scale(.9)}
 
 /* ---------- 底部表單 ---------- */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40;display:none;align-items:flex-end;justify-content:center;transition:background .3s}
@@ -277,9 +282,8 @@ svg{display:block}
 .grid2>*{min-width:0}
 .field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left}
 .field input::-webkit-date-and-time-value{text-align:left}
-.dragging>button svg{transition:transform .2s}
-.dragging>button.on svg{transform:scale(1.18)}
-.segc.dragging>button.on,.tabs.dragging>button.on{transform:scale(1.06);transition:transform .2s,color .2s}
+.tabs>button svg{transition:transform .2s}
+.dragging>button.on svg{transform:scale(1.15)}
 .opts{display:flex;flex-wrap:wrap;gap:7px}
 .opts button{height:34px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;line-height:1}
 .opts button svg{width:15px;height:15px}
@@ -292,14 +296,14 @@ svg{display:block}
   -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .fade{animation:fade .3s ease-out}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
     <div><div class="sub" id="headSub"></div><h1 id="headTitle">今天</h1></div>
-    <button class="round glass" id="gear" aria-label="設定"></button>
+    <button class="round glass float-glass" id="gear" aria-label="設定"></button>
   </div>
   <div class="cats" id="catSwitch"></div>
   <section id="view-home"></section>
@@ -310,13 +314,13 @@ svg{display:block}
 </div>
 
 <div class="dock"><div class="in">
-  <nav class="tabs glass" id="tabs">
+  <nav class="tabs glass float-glass" id="tabs">
     <button data-view="home" class="on"></button>
     <button data-view="records"></button>
     <button data-view="charts"></button>
     <button data-view="recap"></button>
   </nav>
-  <button class="fab" id="fab" aria-label="新增紀錄"></button>
+  <button class="fab glass float-glass" id="fab" aria-label="新增紀錄"></button>
 </div></div>
 
 <div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
@@ -379,7 +383,8 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function defaults(){return {cats:[],records:[],settings:{litterDays:7,startDate:''},current:null}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE_KEY));if(d&&d.cats&&d.records)return Object.assign(defaults(),d)}catch(e){}return defaults()}
 let DB=load();
-function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(DB))}catch(e){toast('儲存空間不足，請到設定匯出備份')}}
+let VER=0;
+function save(){VER++;try{localStorage.setItem(STORE_KEY,JSON.stringify(DB))}catch(e){toast('儲存空間不足，請到設定匯出備份')}}
 
 /* ================= 日期 ================= */
 const pad=n=>String(n).padStart(2,'0');
@@ -576,39 +581,38 @@ function bindSegc(root,handlers){root.querySelectorAll('[data-segc]').forEach(g=
 const SLIDERS=new Set();
 function liquid(el,{index=0,onPick,delay=0}){
   const lens=el.querySelector('.lens'), btns=[...el.querySelectorAll(':scope>button')], n=btns.length;
-  let cur=index, x=0, sx=0, lx=0, down=false, drag=false, lastX=0, lastT=0, vel=0, pid=null;
-  const per=()=>btns[0].offsetWidth, off=()=>btns[0].offsetLeft;
-  const clampX=v=>Math.max(0,Math.min((n-1)*per(),v));
-  const near=v=>Math.max(0,Math.min(n-1,Math.round(v/per())));
-  const mark=i=>btns.forEach((b,k)=>b.classList.toggle('on',k===i));
-  const place=(v,anim,sc='')=>{lens.style.transition=anim?'':'none';lens.style.transform=`translateX(${v}px)${sc}`;x=v};
+  let cur=index, shown=-2, x=0, tx=0, sx=0, lx=0, down=false, drag=false, lastX=0, lastT=0, vel=0, pid=null, raf=0, W=0, O=0, L0=0;
+  const measure=()=>{W=btns[0].offsetWidth;O=btns[0].offsetLeft};
+  const clampX=v=>Math.max(0,Math.min((n-1)*W,v));
+  const near=v=>Math.max(0,Math.min(n-1,Math.round(v/W)));
+  const mark=i=>{if(i===shown)return;shown=i;btns.forEach((b,k)=>b.classList.toggle('on',k===i))};
+  const frame=()=>{raf=0;x=tx;const st=Math.min(.3,Math.abs(vel)*.1);
+    lens.style.transform=`translate3d(${x}px,0,0) scale(${(1.12+st).toFixed(3)},${(1.12-st*.4).toFixed(3)})`;mark(near(x))};
   function set(i,anim=true){
-    cur=i; lens.style.width=per()+'px'; lens.style.left=off()+'px'; lens.style.top=btns[0].offsetTop+'px'; lens.style.height=btns[0].offsetHeight+'px';
+    measure(); cur=i;
+    lens.style.width=W+'px'; lens.style.left=O+'px'; lens.style.top=btns[0].offsetTop+'px'; lens.style.height=btns[0].offsetHeight+'px';
     if(i<0){lens.style.opacity=0;mark(-1);return}
-    lens.style.opacity=1; place(i*per(),anim); mark(i);
+    lens.style.opacity=1; lens.style.transition=anim?'':'none'; x=i*W; lens.style.transform=`translate3d(${x}px,0,0)`; mark(i);
   }
-  const localX=e=>e.clientX-el.getBoundingClientRect().left-off();
   el.addEventListener('pointerdown',e=>{
-    if(e.button>0)return; down=true; drag=false; pid=e.pointerId; sx=e.clientX; lastX=e.clientX; lastT=e.timeStamp; vel=0;
-    lx=cur>=0?cur*per():clampX(localX(e)-per()/2);
+    if(e.button>0)return; measure(); down=true; drag=false; pid=e.pointerId; sx=e.clientX; lastX=sx; lastT=e.timeStamp; vel=0;
+    L0=el.getBoundingClientRect().left+O;
+    lx=cur>=0?cur*W:clampX(sx-L0-W/2);
     try{el.setPointerCapture(pid)}catch(_){}
   });
   el.addEventListener('pointermove',e=>{
     if(!down||e.pointerId!==pid)return;
     const dx=e.clientX-sx;
-    if(!drag&&Math.abs(dx)>6){drag=true;lens.classList.add('drag');el.classList.add('dragging');lens.style.opacity=1}
-    if(!drag)return;
-    const dt=Math.max(1,e.timeStamp-lastT); vel=vel*.6+((e.clientX-lastX)/dt)*.4; lastX=e.clientX; lastT=e.timeStamp;
-    const st=Math.min(.35,Math.abs(vel)*.12);
-    place(clampX(lx+dx),false,` scale(${(1.14+st).toFixed(3)},${(1.14-st*.5).toFixed(3)})`);
-    mark(near(x));
+    if(!drag){if(Math.abs(dx)<5)return;drag=true;lens.style.transition='none';lens.style.opacity=1;lens.classList.add('drag');el.classList.add('dragging')}
+    const dt=Math.max(1,e.timeStamp-lastT); vel=vel*.7+((e.clientX-lastX)/dt)*.3; lastX=e.clientX; lastT=e.timeStamp;
+    tx=clampX(lx+dx); if(!raf)raf=requestAnimationFrame(frame);
   });
   const end=(e,cancel)=>{
-    if(!down||e.pointerId!==pid)return; down=false;
+    if(!down||e.pointerId!==pid)return; down=false; if(raf){cancelAnimationFrame(raf);raf=0;x=tx}
     const prev=cur; let i;
-    if(cancel)i=prev; else if(drag)i=near(x); else i=Math.max(0,Math.min(n-1,Math.floor(localX(e)/per())));
+    if(cancel)i=prev; else if(drag)i=near(x); else i=Math.max(0,Math.min(n-1,Math.floor((e.clientX-L0)/W)));
     lens.classList.remove('drag'); el.classList.remove('dragging'); set(i,true);
-    if(i!==prev&&i>=0&&!cancel){if(delay)setTimeout(()=>onPick(i),delay);else onPick(i)}
+    if(i!==prev&&i>=0&&!cancel){if(delay)setTimeout(()=>onPick(i),delay);else requestAnimationFrame(()=>onPick(i))}
   };
   el.addEventListener('pointerup',e=>end(e,false));
   el.addEventListener('pointercancel',e=>end(e,true));
@@ -630,15 +634,24 @@ const TAB=liquid($('#tabs'),{index:0,onPick:i=>show(TABORDER[i])});
 $('#fab').innerHTML=svg('plus',2.4); $('#gear').innerHTML=svg('gear');
 $('#gear').onclick=()=>show(VIEW==='settings'?'home':'settings');
 $('#fab').onclick=()=>{if(!DB.cats.length)return openCatForm();openTypePicker()};
-function show(v){VIEW=v;render();window.scrollTo(0,0);const s=$('#view-'+v);s.classList.remove('fade');void s.offsetWidth;s.classList.add('fade')}
-function render(){
+const stamp=()=>`${VER}|${DB.current}|${todayStr()}`;
+function show(v){
+  VIEW=v; const sec=$('#view-'+v);
+  if(sec.dataset.stamp===stamp()){chrome();SLIDERS.forEach(x=>{if(sec.contains(x.el))x.set(x.cur,false)});if(v==='recap')countUp(sec)} else render();
+  window.scrollTo(0,0); sec.classList.remove('fade'); void sec.offsetWidth; sec.classList.add('fade');
+}
+function chrome(){
   const ti_=TABORDER.indexOf(VIEW); if(TAB.cur!==ti_)TAB.set(ti_,true);
   ['home','records','charts','recap','settings'].forEach(x=>$('#view-'+x).classList.toggle('hide',x!==VIEW));
   $('#headTitle').textContent=TITLES[VIEW];
   $('#headSub').textContent=`${+todayStr().slice(5,7)}月${+todayStr().slice(8)}日 ${weekday(todayStr())}`;
   renderSwitch();
+}
+function render(){
+  chrome();
   ({home:renderHome,records:renderRecords,charts:renderCharts,recap:renderRecap,settings:renderSettings})[VIEW]();
   flushCharts();
+  $('#view-'+VIEW).dataset.stamp=stamp();
 }
 function renderSwitch(){
   const el=$('#catSwitch');
@@ -948,7 +961,7 @@ function renderSettings(){
 /* ================= 表單 ================= */
 function openSheet(title,body){
   const sh=$('#sheet'),m=$('#mask'); clearTimeout(closeSheet._t);
-  sh.className='sheet glass'; sh.style.transform=''; sh.style.transition=''; m.classList.remove('closing');
+  sh.className='sheet glass float-glass'; sh.style.transform=''; sh.style.transition=''; m.classList.remove('closing');
   sh.innerHTML=`<div class="sh-head"><div class="grab"></div><div class="sh-bar"><h2>${title}</h2><button class="xbtn" id="shClose" aria-label="關閉">${svg('x',2.4)}</button></div></div>${body}`;
   m.classList.add('show'); document.body.style.overflow='hidden'; sh.scrollTop=0;
   $('#shClose').onclick=closeSheet;
