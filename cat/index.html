@@ -170,15 +170,17 @@ svg{display:block}
 .segc{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:10px;padding:2px;touch-action:none;user-select:none;-webkit-user-select:none}
 .segc button{position:relative;z-index:1;padding:5px 11px;font-size:12.5px;font-weight:600;border-radius:8px;color:var(--text2);white-space:nowrap;transition:color .2s}
 .segc button.on{color:var(--text)}
-.segc .lens{border-radius:8px;background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.segc .lens{border-radius:8px}.segc .lens>i{background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
 
 /* 液態玻璃滑塊（可拖曳） */
-.lens{position:absolute;top:0;left:0;height:100%;z-index:0;pointer-events:none;will-change:transform;backface-visibility:hidden;
-  transition:transform .5s cubic-bezier(.3,1.4,.5,1),opacity .2s}
-.lens::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .18s;
-  background:var(--lens-bg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 2px 5px rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.07),0 8px 22px -6px rgba(0,0,0,.25)}
-.lens.drag{z-index:2}
-.lens.drag::after{opacity:1}
+.lens{position:absolute;top:0;left:0;height:100%;z-index:0;pointer-events:none;will-change:transform;contain:strict;
+  transition:transform .45s cubic-bezier(.3,1.35,.5,1),opacity .2s}
+.lens>i{position:absolute;inset:0;border-radius:inherit;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.lens>i::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .15s;
+  background:var(--lens-bg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 2px 5px rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.07),0 6px 16px -6px rgba(0,0,0,.25)}
+.lens.drag{z-index:2;contain:none}
+.lens.drag>i{transform:scale(1.13)}
+.lens.drag>i::after{opacity:1}
 
 /* ---------- 圖表 ---------- */
 .chart{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -243,16 +245,19 @@ svg{display:block}
 /* ---------- 底部導覽（浮動玻璃） ---------- */
 .dock{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 12px);z-index:20;pointer-events:none}
 .dock .in{max-width:540px;margin:0 auto;padding:0 16px;display:flex;gap:10px;align-items:center}
-.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr);padding:5px;border-radius:999px;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;height:64px}
+.tabs{position:relative;flex:1;height:64px;border-radius:999px;pointer-events:auto}
+/* 模糊背景與會動的內容分開：滑塊移動時不會讓毛玻璃重新計算 */
+.tabs-bg{position:absolute!important;inset:0;border-radius:999px;pointer-events:none}
+.tabs-in{position:relative;height:100%;padding:5px;display:grid;grid-template-columns:repeat(4,1fr);touch-action:none;user-select:none;-webkit-user-select:none}
 .tabs button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:color .2s}
 .tabs button svg{width:22px;height:22px}
 .tabs button.on{color:var(--accent)}
-.tabs .lens{border-radius:999px;background:var(--lens-rest)}
+.tabs .lens{border-radius:999px}.tabs .lens>i{background:var(--lens-rest)}
 .fab{width:64px;height:64px;border-radius:50%;pointer-events:auto;display:grid;place-items:center;color:var(--accent);flex:none;
   transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
 .fab svg{width:27px;height:27px}
 .fab:active{transform:scale(.88);transition-duration:.12s}
-.tabs>button:active svg{transform:scale(.9)}
+.tabs-in>button:active svg{transform:scale(.9)}
 
 /* ---------- 底部表單 ---------- */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40;display:none;align-items:flex-end;justify-content:center;transition:background .3s}
@@ -282,7 +287,7 @@ svg{display:block}
 .grid2>*{min-width:0}
 .field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left}
 .field input::-webkit-date-and-time-value{text-align:left}
-.tabs>button svg{transition:transform .2s}
+.tabs-in>button svg{transition:transform .2s}
 .dragging>button.on svg{transform:scale(1.15)}
 .opts{display:flex;flex-wrap:wrap;gap:7px}
 .opts button{height:34px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;line-height:1}
@@ -295,8 +300,106 @@ svg{display:block}
   font-size:14px;font-weight:600;z-index:60;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);border:1px solid var(--glass-border);
   -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.fade{animation:fade .3s ease-out}
-@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- 日記 ---------- */
+.drow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.pill-btn{height:34px;padding:0 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:650;flex:none}
+.pill-btn svg{width:16px;height:16px;color:var(--accent)}
+.dentry{padding:14px 14px 16px;margin-bottom:12px;cursor:pointer}
+.dentry .dh{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);font-weight:600}
+.dentry .dh .mood{font-size:17px}
+.dentry .dh .cs{margin-left:auto;display:flex;padding-left:6px}
+.dentry .dh .cs .av{width:24px;height:24px;font-size:13px;margin-left:-6px;box-shadow:0 0 0 2px var(--glass-strong)}
+.dentry .txt{font-size:15px;line-height:1.7;margin-top:10px;white-space:pre-wrap;word-break:break-word}
+.pg{display:grid;gap:3px;border-radius:16px;overflow:hidden;margin-top:12px}
+.pg .c{position:relative;aspect-ratio:1;overflow:hidden;background:var(--fill)}
+.pg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pg.n1{grid-template-columns:1fr}.pg.n1 .c{aspect-ratio:4/3}
+.pg.n2{grid-template-columns:1fr 1fr}
+.pg.nm{grid-template-columns:repeat(3,1fr)}
+.pg .more{position:absolute;inset:0;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:700}
+.mem{overflow:hidden;padding:0;margin-bottom:14px;cursor:pointer}
+.mem .im{position:relative;aspect-ratio:16/10;background:var(--fill)}
+.mem img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mem .cap{position:absolute;left:0;right:0;bottom:0;padding:44px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.62));color:#fff}
+.mem .cap b{display:block;font-size:17px;letter-spacing:-.01em}.mem .cap span{font-size:13px;opacity:.92;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mem.noimg .cap{position:static;background:none;color:var(--text);padding:16px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-h b{font-size:17px;letter-spacing:-.01em}
+.cal-h button{width:34px;height:34px;border-radius:50%;background:var(--fill);display:grid;place-items:center}
+.cal-h button:disabled{opacity:.3}
+.cal-h button svg{width:16px;height:16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .wd{text-align:center;font-size:11.5px;color:var(--text3);font-weight:600;padding:0 0 4px}
+.cal .d{position:relative;aspect-ratio:1;border-radius:10px;background:var(--fill2);overflow:hidden;display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--text2)}
+.cal .d img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cal .d.img .n{position:absolute;left:4px;top:2px;font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);z-index:1}
+.cal .d.dot::after{content:"";position:absolute;bottom:5px;left:50%;margin-left:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.cal .d.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent)}
+.cal .d.today.img{box-shadow:0 0 0 2px var(--accent)}
+.cal .d.future{opacity:.35}
+.cal .blank{background:none}
+.album{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:18px;overflow:hidden}
+.album button{aspect-ratio:1;position:relative;overflow:hidden;background:var(--fill)}
+.album img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph-edit{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.ph-edit::-webkit-scrollbar{display:none}
+.ph-edit .p{position:relative;width:80px;height:80px;border-radius:14px;overflow:hidden;flex:none;background:var(--fill)}
+.ph-edit .p img{width:100%;height:100%;object-fit:cover}
+.ph-edit .p.busy{display:grid;place-items:center;font-size:11.5px;color:var(--text2)}
+.ph-edit .rm{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center}
+.ph-edit .rm svg{width:12px;height:12px}
+.ph-edit .add{width:80px;height:80px;border-radius:14px;border:1.5px dashed var(--text3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--text2);flex:none}
+.ph-edit .add svg{width:22px;height:22px}
+.viewer{position:fixed;inset:0;z-index:70;background:#000;display:none}
+.viewer.show{display:block}
+.vtrack{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.vtrack::-webkit-scrollbar{display:none}
+.vtrack .s{flex:none;width:100vw;height:100%;scroll-snap-align:center;display:grid;place-items:center}
+.vtrack img{max-width:100%;max-height:100%;object-fit:contain}
+.viewer .vclose{position:absolute;top:calc(var(--safe-t) + 12px);right:16px;background:rgba(255,255,255,.18);color:#fff}
+.viewer .vcount{position:absolute;top:calc(var(--safe-t) + 19px);left:0;right:0;text-align:center;color:#fff;font-size:14px;font-weight:600;pointer-events:none}
+
+/* ---------- 餵食流程 ---------- */
+.steps{height:3px;background:var(--fill);border-radius:2px;margin:-2px 0 16px;overflow:hidden}
+.steps i{display:block;height:100%;background:var(--text);border-radius:2px;transition:width .35s}
+.search{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;border-radius:13px;background:var(--fill);margin-bottom:12px}
+.search svg{width:18px;height:18px;color:var(--text3);flex:none}
+.search input{flex:1;border:0;background:none;outline:none;font-size:16px;min-width:0;height:100%}
+.fav{width:36px;height:36px;display:grid;place-items:center;color:var(--text3);flex:none;margin-right:-6px}
+.fav svg{width:20px;height:20px}
+.fav.on{color:#ff2d55}
+.initial{width:38px;height:38px;border-radius:11px;background:var(--fill);display:grid;place-items:center;font-weight:700;font-size:15px;flex:none;color:var(--text2)}
+.foodcard{padding:12px 14px;border-radius:18px;background:var(--fill2);margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.foodcard b{display:block;font-size:15.5px}.foodcard span.sub{display:block;font-size:13px;color:var(--text2);margin-top:1px}
+.reacts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.reacts button{height:52px;border-radius:14px;background:var(--fill2);border:1.5px solid transparent;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;font-weight:650;font-size:15px;text-align:left}
+.reacts button.on{border-color:var(--text);background:var(--glass-card)}
+.reacts .ck{margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--text);color:var(--bg);display:none;place-items:center}
+.reacts .ck svg{width:12px;height:12px}
+.reacts button.on .ck{display:grid}
+.shape{width:18px;height:18px;flex:none;display:inline-block}
+.rshape{display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-right:5px}
+.special{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:var(--fill2);margin-bottom:14px;cursor:pointer}
+.special .bi{width:34px;height:34px;border-radius:10px;background:var(--warn-bg);color:var(--warn);display:grid;place-items:center;flex:none}
+.special .bi svg{width:18px;height:18px}
+.special b{font-size:15px;display:block}.special small{font-size:12.5px;color:var(--text2);line-height:1.5;display:block;margin-top:2px}
+.special input{margin:6px 0 0 auto;width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.success{position:fixed;inset:0;z-index:80;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.success.show{opacity:1}
+.success .box{padding:22px 28px 20px;border-radius:24px;text-align:center;min-width:230px;transform:scale(.88);transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.success.show .box{transform:none}
+.success .box svg{width:38px;height:38px;color:#e0782f;margin:0 auto 8px;display:block}
+.success b{display:block;font-size:17px}.success span{display:block;font-size:13px;color:var(--text2);margin-top:4px}
+.stack{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;margin:2px 0 10px}
+.stack i{display:block;height:100%}
+.rrow{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:5px 0}
+.rrow .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow .ct{font-weight:600}
+.rrow .pc{color:var(--text3);width:40px;text-align:right;font-size:12.5px}
+.sub-h{font-size:13px;font-weight:650;color:var(--text2);margin:18px 0 8px}
+.hero-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:12.5px;color:var(--text2)}
+
 </style>
 </head>
 <body>
@@ -309,22 +412,25 @@ svg{display:block}
   <section id="view-home"></section>
   <section id="view-records" class="hide"></section>
   <section id="view-charts" class="hide"></section>
-  <section id="view-recap" class="hide"></section>
+  <section id="view-diary" class="hide"></section>
   <section id="view-settings" class="hide"></section>
 </div>
 
 <div class="dock"><div class="in">
-  <nav class="tabs glass float-glass" id="tabs">
-    <button data-view="home" class="on"></button>
-    <button data-view="records"></button>
-    <button data-view="charts"></button>
-    <button data-view="recap"></button>
+  <nav class="tabs" id="tabs"><span class="tabs-bg glass float-glass"></span>
+    <div class="tabs-in" id="tabsIn">
+      <button data-view="home" class="on"></button>
+      <button data-view="diary"></button>
+      <button data-view="records"></button>
+      <button data-view="charts"></button>
+    </div>
   </nav>
   <button class="fab glass float-glass" id="fab" aria-label="新增紀錄"></button>
 </div></div>
 
 <div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
+<div class="viewer" id="viewer"><div class="vtrack"></div><div class="vcount"></div><button class="xbtn vclose" aria-label="關閉"></button></div>
 
 <script>
 /* ================= 圖示（線條風） ================= */
@@ -339,6 +445,14 @@ const IC={
   male:'<circle cx="10" cy="14" r="5.5"/><path d="M14 10l6-6M15 4h5v5"/>',
   female:'<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5V21M9 18h6"/>',
   chev:'<path d="m9 5.5 6.5 6.5L9 18.5"/>',
+  chevL:'<path d="M15 5.5 8.5 12l6.5 6.5"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  check2:'<path d="M2 12.5 6.2 16.7 14 8.5"/><path d="m10.6 16.4.4.4L19.5 8.5"/><path d="M22 8.5 13.7 16.8"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  book:'<path d="M5 4.8A1.8 1.8 0 0 1 6.8 3H19v15H6.8A1.8 1.8 0 0 0 5 19.8z"/><path d="M5 19.8A1.8 1.8 0 0 0 6.8 21.5H19"/><path d="M9 7.5h6"/>',
+  photo:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-4.5-4.5-8.5 8"/>',
+  bolt:'<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
+  heart:'<path d="M19.5 12.6 12 20l-7.5-7.4A4.8 4.8 0 1 1 12 6.4a4.8 4.8 0 1 1 7.5 6.2z"/>',
   bell:'<path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5"/><path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0"/>',
   camera:'<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5l1.5-2.5h6L16.5 7H19a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.5"/>',
   replay:'<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 3.5V9H9"/>',
@@ -359,7 +473,7 @@ const IC={
   health:'<path d="M19.5 12.6 12 20l-7.5-7.4A4.8 4.8 0 1 1 12 6.4a4.8 4.8 0 1 1 7.5 6.2z"/>',
   expense:'<circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.4c-.4-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2s1.2 1.6 2.8 2 2.8.8 2.8 2-1.2 2-2.8 2c-1.3 0-2.4-.5-2.8-1.4M12 6.3v11.4"/>',
 };
-function svg(name,sw=1.8){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${IC[name]||''}</svg>`}
+function svg(name,sw=1.8,fill='none'){return `<svg viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${IC[name]||''}</svg>`}
 
 /* ================= 資料 ================= */
 const STORE_KEY='caaat-data-v1';
@@ -380,7 +494,7 @@ const TYPES={
 function ti(type,cls='ti'){const T=TYPES[type];return `<span class="${cls}" style="--c:${T?T.c:'#8e8e93'}">${svg(type,2)}</span>`}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function defaults(){return {cats:[],records:[],settings:{litterDays:7,startDate:''},current:null}}
+function defaults(){return {cats:[],records:[],foods:[],diary:[],settings:{litterDays:7,startDate:''},current:null}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE_KEY));if(d&&d.cats&&d.records)return Object.assign(defaults(),d)}catch(e){}return defaults()}
 let DB=load();
 let VER=0;
@@ -433,6 +547,11 @@ function recsOf(catId){return sortRecs(DB.records.filter(r=>!catId||r.catId===ca
 function lastOf(type,catId,pred){return recsOf(catId).find(r=>r.type===type&&(!pred||pred(r)))}
 function recSummary(r){
   const T=TYPES[r.type],parts=[]; if(!T)return '';
+  if(r.type==='feed'&&(r.foodId||r.reaction||r.fed!=null)){
+    const l=feedLabel(r); if(l)parts.push(l); if(r.reaction&&REACT[r.reaction])parts.push(REACT[r.reaction].n);
+    if(r.fed!=null&&r.fed!=='')parts.push(`餵 ${r.fed}g`); if(r.left)parts.push(`剩 ${r.left}g`);
+    if(r.special)parts.push('特殊狀況'); if(r.note)parts.push(r.note); return parts.join(' · ');
+  }
   if(r.type==='weight'&&r.kg)parts.push(`${r.kg} kg`);
   for(const f of T.fields){if(f.k==='kg')continue;const v=r[f.k];if(!v)continue;
     if(f.k==='next')parts.push(`下次 ${fmtShort(v)}`); else if(f.k==='minutes')parts.push(`${v} 分鐘`); else parts.push(v)}
@@ -572,7 +691,7 @@ function donutChart(o){
     <text class="cl" x="100" y="122" text-anchor="middle" style="fill:var(--text2);font-size:12px;font-weight:600">${o.centerLabel||'合計'}</text></svg></div>
     <div class="legend">${legend}</div></div>`;
 }
-function segc(name,cur,opts){return `<div class="segc" data-segc="${name}" data-cur="${cur}"><span class="lens"></span>${opts.map(([v,l])=>`<button data-v="${v}">${l}</button>`).join('')}</div>`}
+function segc(name,cur,opts){return `<div class="segc" data-segc="${name}" data-cur="${cur}"><span class="lens"><i></i></span>${opts.map(([v,l])=>`<button data-v="${v}">${l}</button>`).join('')}</div>`}
 function bindSegc(root,handlers){root.querySelectorAll('[data-segc]').forEach(g=>{
   const btns=[...g.querySelectorAll('button')];
   liquid(g,{index:btns.findIndex(b=>b.dataset.v===g.dataset.cur),delay:260,onPick:i=>handlers[g.dataset.segc](btns[i].dataset.v)});
@@ -581,13 +700,11 @@ function bindSegc(root,handlers){root.querySelectorAll('[data-segc]').forEach(g=
 const SLIDERS=new Set();
 function liquid(el,{index=0,onPick,delay=0}){
   const lens=el.querySelector('.lens'), btns=[...el.querySelectorAll(':scope>button')], n=btns.length;
-  let cur=index, shown=-2, x=0, tx=0, sx=0, lx=0, down=false, drag=false, lastX=0, lastT=0, vel=0, pid=null, raf=0, W=0, O=0, L0=0;
+  let cur=index, shown=-2, x=0, sx=0, lx=0, down=false, drag=false, pid=null, W=0, O=0, L0=0;
   const measure=()=>{W=btns[0].offsetWidth;O=btns[0].offsetLeft};
   const clampX=v=>Math.max(0,Math.min((n-1)*W,v));
   const near=v=>Math.max(0,Math.min(n-1,Math.round(v/W)));
   const mark=i=>{if(i===shown)return;shown=i;btns.forEach((b,k)=>b.classList.toggle('on',k===i))};
-  const frame=()=>{raf=0;x=tx;const st=Math.min(.3,Math.abs(vel)*.1);
-    lens.style.transform=`translate3d(${x}px,0,0) scale(${(1.12+st).toFixed(3)},${(1.12-st*.4).toFixed(3)})`;mark(near(x))};
   function set(i,anim=true){
     measure(); cur=i;
     lens.style.width=W+'px'; lens.style.left=O+'px'; lens.style.top=btns[0].offsetTop+'px'; lens.style.height=btns[0].offsetHeight+'px';
@@ -595,7 +712,7 @@ function liquid(el,{index=0,onPick,delay=0}){
     lens.style.opacity=1; lens.style.transition=anim?'':'none'; x=i*W; lens.style.transform=`translate3d(${x}px,0,0)`; mark(i);
   }
   el.addEventListener('pointerdown',e=>{
-    if(e.button>0)return; measure(); down=true; drag=false; pid=e.pointerId; sx=e.clientX; lastX=sx; lastT=e.timeStamp; vel=0;
+    if(e.button>0)return; measure(); down=true; drag=false; pid=e.pointerId; sx=e.clientX;
     L0=el.getBoundingClientRect().left+O;
     lx=cur>=0?cur*W:clampX(sx-L0-W/2);
     try{el.setPointerCapture(pid)}catch(_){}
@@ -603,16 +720,15 @@ function liquid(el,{index=0,onPick,delay=0}){
   el.addEventListener('pointermove',e=>{
     if(!down||e.pointerId!==pid)return;
     const dx=e.clientX-sx;
-    if(!drag){if(Math.abs(dx)<5)return;drag=true;lens.style.transition='none';lens.style.opacity=1;lens.classList.add('drag');el.classList.add('dragging')}
-    const dt=Math.max(1,e.timeStamp-lastT); vel=vel*.7+((e.clientX-lastX)/dt)*.3; lastX=e.clientX; lastT=e.timeStamp;
-    tx=clampX(lx+dx); if(!raf)raf=requestAnimationFrame(frame);
+    if(!drag){if(Math.abs(dx)<4)return;drag=true;lens.style.transition='none';lens.style.opacity=1;lens.classList.add('drag');el.classList.add('dragging')}
+    x=clampX(lx+dx); lens.style.transform=`translate3d(${x}px,0,0)`; mark(near(x));
   });
   const end=(e,cancel)=>{
-    if(!down||e.pointerId!==pid)return; down=false; if(raf){cancelAnimationFrame(raf);raf=0;x=tx}
+    if(!down||e.pointerId!==pid)return; down=false;
     const prev=cur; let i;
     if(cancel)i=prev; else if(drag)i=near(x); else i=Math.max(0,Math.min(n-1,Math.floor((e.clientX-L0)/W)));
     lens.classList.remove('drag'); el.classList.remove('dragging'); set(i,true);
-    if(i!==prev&&i>=0&&!cancel){if(delay)setTimeout(()=>onPick(i),delay);else requestAnimationFrame(()=>onPick(i))}
+    if(i!==prev&&i>=0&&!cancel){if(delay)setTimeout(()=>onPick(i),delay);else onPick(i)}
   };
   el.addEventListener('pointerup',e=>end(e,false));
   el.addEventListener('pointercancel',e=>end(e,true));
@@ -625,37 +741,38 @@ window.addEventListener('resize',()=>SLIDERS.forEach(s=>{if(!s.el.isConnected)SL
 
 /* ================= 導覽 ================= */
 let VIEW='home';
-const TITLES={home:'今天',records:'紀錄',charts:'圖表',recap:'回顧',settings:'設定'};
-const TABDEF={home:['home','首頁'],records:['list','紀錄'],charts:['chart','圖表'],recap:['sparkle','回顧']};
-const TABORDER=['home','records','charts','recap'];
-document.querySelectorAll('#tabs [data-view]').forEach(b=>{const [ic,l]=TABDEF[b.dataset.view];b.innerHTML=svg(ic)+l});
-$('#tabs').insertAdjacentHTML('afterbegin','<span class="lens"></span>');
-const TAB=liquid($('#tabs'),{index:0,onPick:i=>show(TABORDER[i])});
+const TITLES={home:'今天',diary:'日記',records:'紀錄',charts:'圖表',settings:'設定'};
+const TABDEF={home:['home','首頁'],diary:['book','日記'],records:['list','紀錄'],charts:['chart','圖表']};
+const TABORDER=['home','diary','records','charts'];
+const VIEWS=['home','diary','records','charts','settings'];
+document.querySelectorAll('#tabsIn [data-view]').forEach(b=>{const [ic,l]=TABDEF[b.dataset.view];b.innerHTML=svg(ic)+l});
+$('#tabsIn').insertAdjacentHTML('afterbegin','<span class="lens"><i></i></span>');
+const TAB=liquid($('#tabsIn'),{index:0,onPick:i=>show(TABORDER[i])});
 $('#fab').innerHTML=svg('plus',2.4); $('#gear').innerHTML=svg('gear');
 $('#gear').onclick=()=>show(VIEW==='settings'?'home':'settings');
-$('#fab').onclick=()=>{if(!DB.cats.length)return openCatForm();openTypePicker()};
+$('#fab').onclick=()=>{if(!DB.cats.length)return openCatForm();if(VIEW==='diary')return openDiaryForm();openTypePicker()};
 const stamp=()=>`${VER}|${DB.current}|${todayStr()}`;
 function show(v){
   VIEW=v; const sec=$('#view-'+v);
-  if(sec.dataset.stamp===stamp()){chrome();SLIDERS.forEach(x=>{if(sec.contains(x.el))x.set(x.cur,false)});if(v==='recap')countUp(sec)} else render();
-  window.scrollTo(0,0); sec.classList.remove('fade'); void sec.offsetWidth; sec.classList.add('fade');
+  if(sec.dataset.stamp===stamp()){chrome();SLIDERS.forEach(x=>{if(sec.contains(x.el))x.set(x.cur,false)})} else render();
+  window.scrollTo(0,0);
 }
 function chrome(){
   const ti_=TABORDER.indexOf(VIEW); if(TAB.cur!==ti_)TAB.set(ti_,true);
-  ['home','records','charts','recap','settings'].forEach(x=>$('#view-'+x).classList.toggle('hide',x!==VIEW));
+  VIEWS.forEach(x=>$('#view-'+x).classList.toggle('hide',x!==VIEW));
   $('#headTitle').textContent=TITLES[VIEW];
   $('#headSub').textContent=`${+todayStr().slice(5,7)}月${+todayStr().slice(8)}日 ${weekday(todayStr())}`;
   renderSwitch();
 }
-function render(){
-  chrome();
-  ({home:renderHome,records:renderRecords,charts:renderCharts,recap:renderRecap,settings:renderSettings})[VIEW]();
-  flushCharts();
-  $('#view-'+VIEW).dataset.stamp=stamp();
-}
+const RENDER={home:()=>renderHome(),diary:()=>renderDiary(),records:()=>renderRecords(),charts:()=>renderCharts(),settings:()=>renderSettings()};
+function renderView(v){const sec=$('#view-'+v);RENDER[v]();flushCharts();hydratePhotos(sec);sec.dataset.stamp=stamp()}
+function render(){chrome();renderView(VIEW);schedulePrerender()}
+// 空閒時先把其他分頁畫好，切換分頁時就不用等
+let PRE=0;
+function schedulePrerender(){clearTimeout(PRE);PRE=setTimeout(()=>{const v=TABORDER.find(x=>x!==VIEW&&$('#view-'+x).dataset.stamp!==stamp());if(!v)return;renderView(v);schedulePrerender()},350)}
 function renderSwitch(){
   const el=$('#catSwitch');
-  if(!DB.cats.length||VIEW==='settings'||VIEW==='recap'){el.innerHTML='';el.classList.add('hide');return}
+  if(!DB.cats.length||VIEW==='settings'||VIEW==='diary'){el.innerHTML='';el.classList.add('hide');return}
   el.classList.remove('hide'); const cur=curCat();
   el.innerHTML=DB.cats.map(c=>`<button class="cchip glass ${cur&&c.id===cur.id?'on':''}" data-id="${c.id}">${avHTML(c)}${esc(c.name)}</button>`).join('')
     +`<button class="cchip glass add" id="addCatChip">＋ 新增貓咪</button>`;
@@ -686,7 +803,7 @@ function renderHome(){
   const tile=(type,label,ex={})=>{
     const r=lastOf(type,type==='litter'?null:cat.id,ex.pred);
     let v='尚無紀錄',d='輕觸以記錄',warn=false,n=null;
-    if(r){n=diffDays(r.date,t);v=relDays(n);d=[fmtShort(r.date),ex.desc&&ex.desc(r)].filter(Boolean).join(' · ');if(ex.warnAfter&&n>=ex.warnAfter)warn=true}
+    if(r){n=diffDays(r.date,t);v=type==='feed'?relTime(r):relDays(n);d=[fmtShort(r.date),ex.desc&&ex.desc(r)].filter(Boolean).join(' · ');if(ex.warnAfter&&n>=ex.warnAfter)warn=true}
     else if(ex.warnAfter)warn=true;
     return `<button class="tile glass ${warn?'warn':''}" data-quick="${type}"><div class="row1">${ti(type)}${warn&&r?`<span class="badge">該處理了</span>`:''}</div>
       <div><div class="t">${label}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div></button>`;
@@ -694,13 +811,14 @@ function renderHome(){
   const tiles=[
     tile('litter','換貓砂',{warnAfter:ld,pred:r=>r.kind!=='清理結塊'&&r.kind!=='補砂',desc:r=>r.kind||''}),
     tile('vet','看醫生',{desc:r=>r.reason||r.clinic||''}),
-    tile('feed','餵食',{desc:r=>r.food||''}),
+    tile('feed','餵食',{desc:r=>feedLabel(r)}),
     tile('play','互動',{desc:r=>r.kind||''}),
     tile('vaccine','疫苗驅蟲',{desc:r=>r.kind||''}),
     tile('groom','美容清潔',{desc:r=>r.kind||''}),
   ].join('');
   const rems=reminders(cat), todays=recsOf(cat.id).filter(r=>r.date===t);
   const wpts=ws.filter(p=>p.x>=addDays(t,-90));
+  const lastFeed=lastOf('feed',cat.id);
   el.innerHTML=`
   <div class="card glass hero">
     <div class="top">
@@ -717,6 +835,7 @@ function renderHome(){
       <div><b class="num">${home??'—'}<small>${home!=null?'天':''}</small></b><span>到家第幾天</span></div>
       <div><b class="num">${cat.birthday?(nextBirthday(cat.birthday)===0?'🎂':nextBirthday(cat.birthday)):'—'}<small>${cat.birthday&&nextBirthday(cat.birthday)?'天':''}</small></b><span>距離生日</span></div>
     </div>
+    <div class="hero-foot"><span>今天已記 ${todays.length} 筆${lastFeed?` · 上次餵食 ${relTime(lastFeed)}`:''}</span><button class="pill-btn glass" id="heroRecap">${svg('sparkle',2)}看看回顧</button></div>
   </div>
 
   ${rems.length?`<div class="label">提醒</div><div class="group glass">${rems.map(r=>`<div class="row rem ${r.cls}">${ti(r.type)}<div class="main"><div class="title" style="font-size:15px">${esc(r.text)}</div>${r.sub?`<div class="desc">${esc(r.sub)}</div>`:''}</div><span class="when">${r.when}</span></div>`).join('')}</div>`:''}
@@ -732,6 +851,7 @@ function renderHome(){
   ${todays.length?`<div class="group glass">${todays.map(recRow).join('')}</div>`:'<div class="card glass empty" style="padding:26px">今天還沒有紀錄</div>'}`;
   $('#editCat').onclick=()=>openCatForm(cat);
   $('#toCharts').onclick=()=>show('charts');
+  $('#heroRecap').onclick=openRecap;
   el.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>openRecordForm({type:b.dataset.quick}));
   bindRecRows(el);
 }
@@ -756,7 +876,7 @@ function recRow(r){
   const T=TYPES[r.type]||{name:r.type}, c=catById(r.catId);
   return `<button class="row" data-rec="${r.id}">${ti(r.type)}<span class="main">
     <div class="title">${T.name}${DB.cats.length>1&&c?`<small>${esc(c.name)}</small>`:''}</div>
-    <div class="desc">${esc(recSummary(r))||'&nbsp;'}</div></span>
+    <div class="desc">${r.reaction?shape(r.reaction,'rshape'):''}${esc(recSummary(r))||'&nbsp;'}</div></span>
     <span class="right">${r.cost?`<b class="num">${money(r.cost)}</b>`:''}<span class="num">${r.time||''}</span></span></button>`;
 }
 function bindRecRows(el){el.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>openRecordForm(DB.records.find(r=>r.id===b.dataset.rec)))}
@@ -792,7 +912,7 @@ function renderRecords(){
 }
 
 /* ================= 圖表 ================= */
-let WRANGE='90', ERANGE='month', DAILY='all';
+let WRANGE='90', ERANGE='month', DAILY='all', FRANGE='week';
 const COST_GROUPS=[['food','飲食','var(--s1)'],['med','醫療','var(--s2)'],['litter','貓砂','var(--s3)'],['goods','用品玩具','var(--s4)'],['groom','美容清潔','var(--s5)'],['other','其他','var(--s-other)']];
 function costGroup(r){
   if(['vet','vaccine','med'].includes(r.type))return 'med';
@@ -830,13 +950,15 @@ function renderCharts(){
   const days=[];for(let i=13;i>=0;i--)days.push(addDays(t,-i));
   const mine=recsOf(cat.id);
   const dItems=days.map(d=>{const rs=mine.filter(r=>r.date===d&&(DAILY==='all'||r.type===DAILY));
-    const v=DAILY==='play'?rs.reduce((s,r)=>s+(+r.minutes||0),0):rs.length;return {label:fmtShort(d),tip:`${fmtShort(d)} ${weekday(d)}`,value:v}});
-  const dUnit=DAILY==='play'?' 分鐘':' 次';
+    const rs2=DAILY==='eat'?mine.filter(r=>r.date===d&&r.type==='feed'&&!r.special):rs;
+    const v=DAILY==='play'?rs.reduce((s,r)=>s+(+r.minutes||0),0):DAILY==='eat'?rs2.reduce((s,r)=>s+eaten(r),0):rs.length;return {label:fmtShort(d),tip:`${fmtShort(d)} ${weekday(d)}`,value:Math.round(v)}});
+  const dUnit=DAILY==='play'?' 分鐘':DAILY==='eat'?' g':' 次';
 
   // 次數排行
   const counts=Object.keys(TYPES).map(k=>({k,n:mine.filter(r=>r.type===k).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
 
   el.innerHTML=`
+  ${dietCard(cat)}
   <div class="card glass">
     <div class="ctitle"><h3>體重</h3>${segc('w',WRANGE,[['30','1個月'],['90','3個月'],['all','全部']])}</div>
     <div class="kpis"><div class="kpi"><span>目前</span><b class="num">${k1}<small style="font-size:12px;color:var(--text2)"> kg</small></b></div>
@@ -857,7 +979,7 @@ function renderCharts(){
 
   <div class="card glass">
     <div class="ctitle"><h3>每日紀錄</h3><span class="meta">近 14 天</span></div>
-    <div style="margin:-4px 0 12px">${segc('d',DAILY,[['all','全部'],['feed','餵食'],['play','互動'],['water','喝水'],['poop','便便']])}</div>
+    <div style="margin:-4px 0 12px">${segc('d',DAILY,[['all','全部'],['feed','餵食'],['eat','進食量'],['play','互動'],['water','喝水']])}</div>
     ${barChart({items:dItems,fmt:v=>v+dUnit,fmtShort:v=>String(v),empty:'近 14 天沒有這類紀錄',aria:'每日紀錄直條圖'})}
   </div>
 
@@ -865,10 +987,11 @@ function renderCharts(){
     <div class="ctitle"><h3>紀錄次數</h3><span class="meta">${esc(cat.name)} · 全部</span></div>
     ${counts.length?counts.map(x=>`<div class="hbar"><span class="lab">${TYPES[x.k].name}</span><span class="track"><span class="fill" style="display:block;width:${(x.n/counts[0].n*100).toFixed(1)}%"></span></span><span class="amt num">${x.n} 次</span></div>`).join(''):'<div class="empty">還沒有紀錄</div>'}
   </div>`;
-  bindSegc(el,{w:v=>{WRANGE=v;render()},e:v=>{ERANGE=v;render()},d:v=>{DAILY=v;render()}});
+  bindSegc(el,{w:v=>{WRANGE=v;render()},e:v=>{ERANGE=v;render()},d:v=>{DAILY=v;render()},f:v=>{FRANGE=v;render()}});
 }
 
 /* ================= 回顧卡 ================= */
+function openRecap(){openSheet('回顧','<div id="recapHost"></div>');renderRecap($('#recapHost'))}
 function recapStats(){
   const t=todayStr();
   const dates=[DB.settings.startDate,...DB.cats.map(c=>c.adopt),...DB.records.map(r=>r.date)].filter(d=>d&&d<=t).sort();
@@ -876,11 +999,12 @@ function recapStats(){
   const recs=DB.records.filter(r=>r.date>=start&&r.date<=t);
   return {start,days,recordedDays:new Set(recs.map(r=>r.date)).size,
     feed:recs.filter(r=>r.type==='feed').length, play:recs.filter(r=>r.type==='play').length,
-    care:recs.length, cost:recs.reduce((s,r)=>s+(+r.cost||0),0)};
+    care:recs.length, cost:recs.reduce((s,r)=>s+(+r.cost||0),0),
+    diary:(DB.diary||[]).length, photos:(DB.diary||[]).reduce((s,e)=>s+(e.photos||[]).length,0),
+    strip:diarySorted().flatMap(e=>e.photos||[]).slice(0,6)};
 }
-function renderRecap(){
-  const el=$('#view-recap');
-  if(!DB.cats.length){el.innerHTML='<div class="card glass empty">先建立貓咪檔案吧</div>';return}
+function renderRecap(el){
+  if(!DB.cats.length){el.innerHTML='<div class="empty">先建立貓咪檔案吧</div>';return}
   const s=recapStats(), cats=DB.cats.slice(0,9);
   el.innerHTML=`
   <div class="recap" id="recapCard">
@@ -898,9 +1022,12 @@ function renderRecap(){
       <div class="r c-blue num" style="font-size:28px" data-count="${Math.round(s.cost)}" data-money="1">$0</div></div>
     <div class="rbar"><div class="l"><b>累積記錄</b></div>
       <div class="r c-orange num" style="font-size:18px"><span data-count="${s.recordedDays}">0</span> / ${s.days} 天</div></div>
+    <div class="rbar"><div class="l"><b>貓咪日記</b><small>寫下的每一天</small></div>
+      <div class="r c-green num" style="font-size:18px"><span data-count="${s.diary}">0</span> 篇 · <span data-count="${s.photos}">0</span> 張照片</div></div>
+    ${s.strip.length?`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:10px">${s.strip.map(id=>`<span style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--fill)">${phImg(id,'t','style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"')}</span>`).join('')}</div>`:''}
   </div>
   <div class="btn-row"><button class="btn ghost" id="replay">${svg('replay',2)}重播</button><button class="btn" id="saveImg">${svg('camera',2)}存成圖片</button></div>`;
-  countUp(el); $('#replay').onclick=()=>countUp(el); $('#saveImg').onclick=saveRecapImage;
+  hydratePhotos(el); countUp(el); $('#replay').onclick=()=>countUp(el); $('#saveImg').onclick=saveRecapImage;
 }
 function countUp(root){
   const els=[...root.querySelectorAll('[data-count]')],dur=1600,t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
@@ -929,6 +1056,8 @@ function renderSettings(){
   el.innerHTML=`
   <div class="label" style="display:flex;justify-content:space-between"><span>我的貓咪</span><button class="link" id="addCat">新增</button></div>
   <div class="group glass">${DB.cats.length?DB.cats.map(c=>`<button class="row" data-edit="${c.id}">${avHTML(c,'av" style="width:36px;height:36px')}<div class="main"><div class="title">${esc(c.name)}</div><div class="desc">${c.birthday?ageText(c.birthday):'未填生日'}${c.breed?' · '+esc(c.breed):''}</div></div><span class="chev">${svg('chev',2.2)}</span></button>`).join(''):'<div class="empty">還沒有貓咪</div>'}</div>
+  <div class="label" style="display:flex;justify-content:space-between"><span>食物清單</span><button class="link" id="addFood">新增</button></div>
+  <div class="group glass">${(DB.foods||[]).length?DB.foods.map(f=>`<button class="row" data-fedit="${f.id}"><span class="initial">${esc((f.brand||f.name||'?').slice(0,1))}</span><div class="main"><div class="title">${esc(f.brand||f.name)}</div><div class="desc">${esc([f.brand?f.name:'',f.kind,f.meat].filter(Boolean).join(' · '))||'&nbsp;'}</div></div>${f.fav?`<span style="color:#ff2d55;width:16px;height:16px;flex:none">${svg('heart',2,'currentColor')}</span>`:''}<span class="chev">${svg('chev',2.2)}</span></button>`).join(''):'<div class="empty">記錄餵食時新增的食物會出現在這裡</div>'}</div>
   <div class="label">偏好</div>
   <div class="card glass" style="padding:16px 16px 2px">
     <div class="field"><label>多久要全部換一次貓砂（天）</label><input type="number" id="litterDays" min="1" value="${DB.settings.litterDays||7}"></div>
@@ -939,41 +1068,50 @@ function renderSettings(){
     <p style="font-size:13.5px;margin:0 0 4px;color:var(--text2);line-height:1.6">資料只存在這支手機的瀏覽器裡。換手機或清除瀏覽器資料前，記得先匯出備份。</p>
     <div class="btn-row"><button class="btn ghost" id="exp">${svg('down',2)}匯出</button><button class="btn ghost" id="imp">${svg('up',2)}匯入</button></div>
     <input type="file" id="impFile" accept="application/json,.json" class="hide">
-    <p class="num" style="font-size:12px;margin:12px 0 0;color:var(--text3)">共 ${DB.records.length} 筆紀錄 · ${DB.cats.length} 隻貓 · 版本 ${APP_VERSION}</p>
+    <p class="num" style="font-size:12px;margin:12px 0 0;color:var(--text3)">共 ${DB.records.length} 筆紀錄 · ${(DB.diary||[]).length} 篇日記 · ${DB.cats.length} 隻貓 · 版本 ${APP_VERSION}</p>
   </div>
   <button class="btn danger" id="wipe" style="margin-top:6px">清除所有資料</button>`;
   $('#addCat').onclick=()=>openCatForm();
+  const fdone=()=>{closeSheet();render()};
+  $('#addFood').onclick=()=>openFoodForm(null,fdone);
+  el.querySelectorAll('[data-fedit]').forEach(b=>b.onclick=()=>openFoodForm(foodById(b.dataset.fedit),fdone));
   el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openCatForm(catById(b.dataset.edit)));
   $('#litterDays').onchange=e=>{DB.settings.litterDays=Math.max(1,+e.target.value||7);save();toast('已儲存')};
   $('#startDate').onchange=e=>{DB.settings.startDate=e.target.value;save();toast('已儲存')};
-  $('#exp').onclick=()=>{const blob=new Blob([JSON.stringify(DB,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`caaat-backup-${todayStr()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+  $('#exp').onclick=exportBackup;
   $('#imp').onclick=()=>$('#impFile').click();
   $('#impFile').onchange=async e=>{
     const f=e.target.files[0];if(!f)return;
     try{const d=JSON.parse(await f.text());if(!Array.isArray(d.cats)||!Array.isArray(d.records))throw 0;
-      if(!confirm(`要用備份檔取代目前資料嗎？\n（備份：${d.cats.length} 隻貓、${d.records.length} 筆紀錄）`))return;
-      DB=Object.assign(defaults(),d);save();render();toast('匯入完成')}catch(err){toast('檔案格式不正確')}
+      if(!confirm(`要用備份檔取代目前資料嗎？\n（備份：${d.cats.length} 隻貓、${d.records.length} 筆紀錄、${(d.diary||[]).length} 篇日記）`))return;
+      toast('匯入中…');
+      if(d.photos){await PH.clear();for(const [id,v] of Object.entries(d.photos))await PH.put(id,{f:await (await fetch(v.f)).blob(),t:await (await fetch(v.t)).blob()})}
+      delete d.photos; DB=Object.assign(defaults(),d);save();render();toast('匯入完成')}catch(err){toast('檔案格式不正確')}
     e.target.value='';
   };
-  $('#wipe').onclick=()=>{if(confirm('確定要刪除所有貓咪與紀錄嗎？此動作無法復原。')&&confirm('真的確定嗎？建議先匯出備份。')){DB=defaults();save();render();toast('已清除')}};
+  $('#wipe').onclick=()=>{if(confirm('確定要刪除所有貓咪與紀錄嗎？此動作無法復原。')&&confirm('真的確定嗎？建議先匯出備份。')){DB=defaults();PH.clear().catch(()=>{});save();render();toast('已清除')}};
 }
 
 /* ================= 表單 ================= */
-function openSheet(title,body){
+let SHEET_CLOSE=null;
+function openSheet(title,body,opts={}){
   const sh=$('#sheet'),m=$('#mask'); clearTimeout(closeSheet._t);
+  if(!m.classList.contains('show')||opts.fresh){SHEET_CLOSE=null}
+  if(opts.onClose)SHEET_CLOSE=opts.onClose;
   sh.className='sheet glass float-glass'; sh.style.transform=''; sh.style.transition=''; m.classList.remove('closing');
-  sh.innerHTML=`<div class="sh-head"><div class="grab"></div><div class="sh-bar"><h2>${title}</h2><button class="xbtn" id="shClose" aria-label="關閉">${svg('x',2.4)}</button></div></div>${body}`;
+  sh.innerHTML=`<div class="sh-head"><div class="grab"></div><div class="sh-bar">${opts.back?`<button class="xbtn" id="shBack" aria-label="上一步">${svg('chevL',2.4)}</button>`:''}<h2>${title}</h2><button class="xbtn" id="shClose" aria-label="關閉">${svg('x',2.4)}</button></div></div>${body}`;
   m.classList.add('show'); document.body.style.overflow='hidden'; sh.scrollTop=0;
-  $('#shClose').onclick=closeSheet;
+  $('#shClose').onclick=closeSheet; if(opts.back)$('#shBack').onclick=opts.back;
 }
 function closeSheet(){
   const sh=$('#sheet'),m=$('#mask'); if(!m.classList.contains('show'))return;
+  if(SHEET_CLOSE){const f=SHEET_CLOSE;SHEET_CLOSE=null;try{f()}catch(e){}}
   document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
   sh.style.transition='transform .28s cubic-bezier(.4,0,1,1)'; sh.style.transform='translateY(105%)'; m.classList.add('closing');
   closeSheet._t=setTimeout(()=>{m.classList.remove('show','closing');sh.style.transform='';sh.style.transition='';document.body.style.overflow=''},280);
 }
 $('#mask').addEventListener('click',e=>{if(e.target.id==='mask')closeSheet()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#viewer').classList.contains('show'))closeViewer();else closeSheet()}});
 // 下拉關閉：在標題列往下拉，或內容已捲到最上面時往下拉
 (function(){
   const sh=$('#sheet'),m=$('#mask'); let sy=null,dy=0,t0=0,drag=false,fromHead=false,atTop=true;
@@ -1006,10 +1144,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 })();
 
 function openTypePicker(){
-  openSheet('新增紀錄',`<div class="types">${Object.entries(TYPES).map(([k,T])=>`<button data-t="${k}">${ti(k)}${T.name}</button>`).join('')}</div>`);
+  openSheet('新增紀錄',`<div class="types"><button data-diary><span class="ti" style="--c:#ff9f0a">${svg('photo',2)}</span>日記</button>${Object.entries(TYPES).map(([k,T])=>`<button data-t="${k}">${ti(k)}${T.name}</button>`).join('')}</div>`,{fresh:true});
   $('#sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>openRecordForm({type:b.dataset.t}));
+  $('#sheet').querySelector('[data-diary]').onclick=()=>openDiaryForm();
 }
 function openRecordForm(rec){
+  if(rec.type==='feed')return openFeedFlow(rec.id?rec:null);
   const isNew=!rec.id, T=TYPES[rec.type], cat=curCat();
   rec=Object.assign({date:todayStr(),time:nowTime(),catId:cat?cat.id:''},rec);
   const fieldHTML=f=>{
@@ -1091,10 +1231,345 @@ function resizeImage(file,size){
     img.onerror=no;img.src=url});
 }
 
+/* ================= 照片儲存（IndexedDB，空間比 localStorage 大很多） ================= */
+const PH=(()=>{
+  let dbp=null; const cache=new Map();
+  const open=()=>dbp||(dbp=new Promise((ok,no)=>{const r=indexedDB.open('caaat-photos',1);r.onupgradeneeded=()=>r.result.createObjectStore('p');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}));
+  const run=(mode,fn)=>open().then(db=>new Promise((ok,no)=>{const t=db.transaction('p',mode),q=fn(t.objectStore('p'));t.oncomplete=()=>ok(q?q.result:undefined);t.onerror=t.onabort=()=>no(t.error)}));
+  const drop=id=>['f','t'].forEach(k=>{const u=cache.get(id+k);if(u){URL.revokeObjectURL(u);cache.delete(id+k)}});
+  return {
+    put:(id,v)=>run('readwrite',s=>s.put(v,id)),
+    get:id=>run('readonly',s=>s.get(id)),
+    del:id=>{drop(id);return run('readwrite',s=>s.delete(id))},
+    keys:()=>run('readonly',s=>s.getAllKeys()),
+    clear:()=>{cache.forEach(u=>URL.revokeObjectURL(u));cache.clear();return run('readwrite',s=>s.clear())},
+    async url(id,k='t'){const ck=id+k;if(cache.has(ck))return cache.get(ck);const v=await PH.get(id);if(!v||!v[k])return '';const u=URL.createObjectURL(v[k]);cache.set(ck,u);return u},
+    cached:(id,k='t')=>cache.get(id+k)||'',
+  };
+})();
+function phImg(id,k='t',extra=''){const u=PH.cached(id,k);return `<img data-ph="${id}" data-k="${k}"${u?` src="${u}"`:''} alt="" ${extra}>`}
+function hydratePhotos(root){if(!root)return;root.querySelectorAll('img[data-ph]').forEach(img=>{if(img.getAttribute('src'))return;PH.url(img.dataset.ph,img.dataset.k||'t').then(u=>{if(u)img.src=u}).catch(()=>{})})}
+function loadImg(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>ok([i,u]);i.onerror=()=>{URL.revokeObjectURL(u);no(new Error('img'))};i.src=u})}
+function canvasBlob(c,q){return new Promise(r=>c.toBlob(r,'image/jpeg',q))}
+async function processPhoto(file){
+  const [img,u]=await loadImg(file); const W=img.naturalWidth,H=img.naturalHeight;
+  const sc=Math.min(1,1600/Math.max(W,H)), c=document.createElement('canvas');
+  c.width=Math.round(W*sc); c.height=Math.round(H*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const s=Math.min(W,H), t=document.createElement('canvas'); t.width=t.height=420;
+  t.getContext('2d').drawImage(img,(W-s)/2,(H-s)/2,s,s,0,0,420,420);
+  URL.revokeObjectURL(u);
+  return {f:await canvasBlob(c,.82),t:await canvasBlob(t,.78)};
+}
+function blobToDataURL(b){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)})}
+async function exportBackup(){
+  try{
+    toast('準備備份中…');
+    const photos={}; for(const k of await PH.keys()){const v=await PH.get(k);if(v)photos[k]={f:await blobToDataURL(v.f),t:await blobToDataURL(v.t)}}
+    const blob=new Blob([JSON.stringify(Object.assign({},DB,{photos}))],{type:'application/json'});
+    const file=new File([blob],`caaat-backup-${todayStr()}.json`,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'貓咪日記備份'});return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){if(e&&e.name!=='AbortError')toast('匯出失敗')}
+}
+
+/* ================= 照片瀏覽 ================= */
+function openViewer(ids,start=0){
+  const v=$('#viewer'),tr=v.querySelector('.vtrack'),cnt=v.querySelector('.vcount');
+  tr.innerHTML=ids.map(id=>`<div class="s">${phImg(id,'f')}</div>`).join('');
+  const upd=()=>{cnt.textContent=ids.length>1?`${Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))+1} / ${ids.length}`:''};
+  v.classList.add('show'); hydratePhotos(tr); tr.onscroll=upd;
+  requestAnimationFrame(()=>{tr.scrollLeft=start*tr.clientWidth;upd()});
+}
+function closeViewer(){const v=$('#viewer');v.classList.remove('show');const tr=v.querySelector('.vtrack');tr.style.transform='';v.style.background='';tr.innerHTML=''}
+(function(){
+  const v=$('#viewer'),tr=v.querySelector('.vtrack'); let sx=0,sy=0,dy=0,mode=null;
+  v.querySelector('.vclose').innerHTML=svg('x',2.4); v.querySelector('.vclose').onclick=closeViewer;
+  tr.addEventListener('click',e=>{if(e.target.classList.contains('s'))closeViewer()});
+  v.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;mode=null;dy=0},{passive:true});
+  v.addEventListener('touchmove',e=>{const dx=e.touches[0].clientX-sx,d=e.touches[0].clientY-sy;
+    if(!mode){if(Math.abs(d)>8&&Math.abs(d)>Math.abs(dx))mode='v';else if(Math.abs(dx)>8)mode='h'}
+    if(mode==='v'){if(e.cancelable)e.preventDefault();dy=d;tr.style.transform=`translate3d(0,${dy}px,0)`;v.style.background=`rgba(0,0,0,${Math.max(.25,1-Math.abs(dy)/400).toFixed(2)})`}},{passive:false});
+  v.addEventListener('touchend',()=>{if(mode==='v'){if(Math.abs(dy)>110)closeViewer();else{tr.style.transition='transform .3s';tr.style.transform='';v.style.background='';setTimeout(()=>tr.style.transition='',300)}}mode=null});
+})();
+
+/* ================= 日記 ================= */
+const MOODS=[['happy','😺','開心'],['sleepy','😴','愛睏'],['naughty','😼','調皮'],['clingy','🥰','撒嬌'],['grumpy','😾','生氣'],['sick','🤒','不舒服']];
+const moodEmoji=k=>(MOODS.find(m=>m[0]===k)||[])[1]||'';
+function diarySorted(){return (DB.diary||[]).slice().sort((a,b)=>(b.date+(b.created||'')).localeCompare(a.date+(a.created||'')))}
+function shiftMonth(ym,n){let [y,m]=ym.split('-').map(Number);m+=n;while(m<1){m+=12;y--}while(m>12){m-=12;y++}return `${y}-${pad(m)}`}
+let DMODE='timeline', DMON=todayStr().slice(0,7);
+function photoGrid(e){
+  const ids=e.photos||[],n=ids.length; if(!n)return '';
+  const show=ids.slice(0,6), cls=n===1?'n1':n===2||n===4?'n2':'nm';
+  return `<div class="pg ${cls}">${(n===4?ids:show).map((id,i)=>`<div class="c" data-vph="${e.id}" data-i="${i}">${phImg(id,n===1?'f':'t')}${i===5&&n>6?`<span class="more">+${n-6}</span>`:''}</div>`).join('')}</div>`;
+}
+function entryCard(e){
+  const cs=DB.cats.length>1?(e.catIds||[]).map(id=>catById(id)).filter(Boolean):[];
+  return `<div class="card glass dentry" data-entry="${e.id}">
+    <div class="dh"><span>${fmtShort(e.date)} ${weekday(e.date)}</span>${e.mood?`<span class="mood">${moodEmoji(e.mood)}</span>`:''}${cs.length?`<span class="cs">${cs.map(c=>avHTML(c)).join('')}</span>`:''}</div>
+    ${photoGrid(e)}${e.text?`<div class="txt">${esc(e.text)}</div>`:''}</div>`;
+}
+function memoryCard(list){
+  const t=todayStr(); let best=null,label='';
+  for(const e of list){ if(e.date>=t)continue;
+    if(e.date.slice(5)===t.slice(5)){best=e;label=`${+t.slice(0,4)-+e.date.slice(0,4)} 年前的今天`;break}
+    if(!best&&e.date.slice(8)===t.slice(8)){const m=(+t.slice(0,4)-+e.date.slice(0,4))*12+(+t.slice(5,7)-+e.date.slice(5,7));if(m>0&&m<12){best=e;label=`${m} 個月前的今天`}}
+  }
+  if(!best)return '';
+  const p=(best.photos||[])[0];
+  return `<div class="card glass mem ${p?'':'noimg'}" data-entry="${best.id}">${p?`<div class="im">${phImg(p,'f')}<div class="cap"><b>✨ ${label}</b><span>${esc(best.text||fmtLong(best.date))}</span></div></div>`:`<div class="cap"><b>✨ ${label}</b><span>${esc(best.text||'')}</span></div>`}</div>`;
+}
+function renderDiary(){
+  const el=$('#view-diary'), list=diarySorted();
+  let body='';
+  if(DMODE==='timeline'){
+    if(!list.length)body=`<div class="card glass" style="text-align:center;padding:36px 22px"><div style="width:64px;height:64px;margin:0 auto 12px;color:var(--accent)">${svg('photo',1.4)}</div>
+      <h3 style="margin:0 0 6px;font-size:19px">寫下第一篇貓咪日記</h3><p style="margin:0 0 18px;font-size:14px;color:var(--text2);line-height:1.6">每天留一張照片、幾句話<br>之後就能在月曆和相簿裡回顧</p><button class="btn" id="newDiary">${svg('plus',2.2)}寫日記</button></div>`;
+    else{let cm='';for(const e of list){const m=e.date.slice(0,7);if(m!==cm){cm=m;body+=`<div style="margin:18px 6px 8px;font-size:20px;font-weight:800;letter-spacing:-.02em">${+m.slice(5)}月 <small style="font-size:13px;color:var(--text3);font-weight:600">${m.slice(0,4)}</small></div>`}body+=entryCard(e)}}
+  }else if(DMODE==='calendar'){
+    const [y,m]=DMON.split('-').map(Number), first=new Date(Date.UTC(y,m-1,1)).getUTCDay(), dim=new Date(y,m,0).getDate(), t=todayStr();
+    const by={}; list.forEach(e=>{(by[e.date]=by[e.date]||[]).push(e)});
+    let cells='日一二三四五六'.split('').map(w=>`<div class="wd">${w}</div>`).join('')+'<div class="blank"></div>'.repeat(first);
+    let nE=0,nP=0;
+    for(let d=1;d<=dim;d++){const ds=`${DMON}-${pad(d)}`,es=by[ds]||[],ph=es.flatMap(e=>e.photos||[])[0];nE+=es.length;nP+=es.reduce((s,e)=>s+(e.photos||[]).length,0);
+      cells+=`<button class="d ${ph?'img':es.length?'dot':''} ${ds===t?'today':''} ${ds>t?'future':''}" data-day="${ds}">${ph?phImg(ph):''}<span class="n">${d}</span></button>`}
+    body=`<div class="card glass"><div class="cal-h"><button id="calPrev" aria-label="上個月">${svg('chevL',2.4)}</button><b>${y}年${m}月</b><button id="calNext" aria-label="下個月" ${DMON>=t.slice(0,7)?'disabled':''}>${svg('chev',2.4)}</button></div>
+      <div class="cal">${cells}</div><div style="text-align:center;font-size:12.5px;color:var(--text2);margin-top:12px">本月 ${nE} 篇日記 · ${nP} 張照片</div></div>`;
+  }else{
+    const all=list.flatMap(e=>(e.photos||[]).map(id=>id));
+    body=all.length?`<div class="label" style="margin-top:0">共 ${all.length} 張照片</div><div class="album">${all.map((id,i)=>`<button data-ai="${i}">${phImg(id)}</button>`).join('')}</div>`
+      :'<div class="card glass empty" style="padding:30px">寫日記時加的照片會收在這裡</div>';
+    el._album=all;
+  }
+  el.innerHTML=`<div class="drow">${segc('dm',DMODE,[['timeline','時間軸'],['calendar','月曆'],['album','相簿']])}<button class="pill-btn glass" id="openRecap">${svg('sparkle',2)}回顧</button></div>${DMODE==='timeline'?memoryCard(list):''}${body}`;
+  bindSegc(el,{dm:v=>{DMODE=v;render()}});
+  $('#openRecap').onclick=openRecap;
+  const nd=$('#newDiary'); if(nd)nd.onclick=()=>openDiaryForm();
+  el.querySelectorAll('[data-vph]').forEach(c=>c.onclick=ev=>{ev.stopPropagation();const e=DB.diary.find(x=>x.id===c.dataset.vph);openViewer(e.photos,+c.dataset.i)});
+  el.querySelectorAll('[data-entry]').forEach(c=>c.onclick=()=>openDiaryForm(DB.diary.find(x=>x.id===c.dataset.entry)));
+  el.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>openViewer(el._album,+b.dataset.ai));
+  const cp=$('#calPrev'); if(cp){cp.onclick=()=>{DMON=shiftMonth(DMON,-1);render()};$('#calNext').onclick=()=>{DMON=shiftMonth(DMON,1);render()}}
+  el.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{
+    const d=b.dataset.day, es=list.filter(e=>e.date===d);
+    if(es.length===1)return openDiaryForm(es[0]);
+    if(!es.length){if(d<=todayStr())openDiaryForm(null,d);return}
+    openSheet(fmtLong(d),`<div class="group glass">${es.map(e=>`<div class="row" data-de="${e.id}" role="button">${(e.photos||[])[0]?`<span class="initial" style="overflow:hidden;position:relative">${phImg(e.photos[0],'t','style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"')}</span>`:`<span class="initial">${moodEmoji(e.mood)||'📝'}</span>`}<span class="main"><div class="title">${esc((e.text||'').split('\n')[0]||'（沒有文字）')}</div><div class="desc">${(e.photos||[]).length} 張照片</div></span></div>`).join('')}</div>
+      <button class="btn ghost" id="addSame">${svg('plus',2.2)}再寫一篇</button>`,{fresh:true});
+    hydratePhotos($('#sheet'));
+    $('#sheet').querySelectorAll('[data-de]').forEach(r=>r.onclick=()=>openDiaryForm(DB.diary.find(x=>x.id===r.dataset.de)));
+    $('#addSame').onclick=()=>openDiaryForm(null,d);
+  });
+}
+function openDiaryForm(entry,presetDate){
+  const isNew=!entry, cat=curCat();
+  const e=Object.assign({date:presetDate||todayStr(),catIds:cat?[cat.id]:[],mood:'',text:'',photos:[]},entry||{});
+  let photos=[...(e.photos||[])], removed=[], added=[], busy=0, mood=e.mood||'', catIds=[...(e.catIds||[])];
+  openSheet(isNew?'寫日記':'編輯日記',`
+    <div class="field"><label>照片</label><div class="ph-edit" id="phEdit"></div><input type="file" accept="image/*" multiple id="phFile" class="hide"></div>
+    <div class="field"><label>日期</label><input type="date" id="dDate" value="${e.date}" max="${todayStr()}"></div>
+    <div class="field"><label>今天的牠</label><div class="opts" id="moodSeg">${MOODS.map(([k,em,l])=>`<button type="button" data-m="${k}" class="${mood===k?'on':''}">${em} ${l}</button>`).join('')}</div></div>
+    ${DB.cats.length>1?`<div class="field"><label>主角</label><div class="opts" id="dCats">${DB.cats.map(c=>`<button type="button" data-c="${c.id}" class="${catIds.includes(c.id)?'on':''}">${esc(c.name)}</button>`).join('')}</div></div>`:''}
+    <div class="field"><label>日記</label><textarea id="dText" placeholder="今天發生了什麼？" style="min-height:140px">${esc(e.text||'')}</textarea></div>
+    <div class="btn-row">${isNew?'':'<button class="btn danger" id="delD" style="flex:0 0 96px">刪除</button>'}<button class="btn" id="saveD">儲存</button></div>`,
+    {fresh:true,onClose:()=>{added.forEach(id=>PH.del(id).catch(()=>{}))}});
+  const draw=()=>{
+    $('#phEdit').innerHTML=photos.map((id,i)=>`<div class="p">${phImg(id)}<button type="button" class="rm" data-rm="${i}" aria-label="移除">${svg('x',2.8)}</button></div>`).join('')
+      +'<div class="p busy">處理中…</div>'.repeat(busy)+`<button type="button" class="add" id="phAdd">${svg('camera',1.8)}加照片</button>`;
+    hydratePhotos($('#phEdit'));
+    $('#phAdd').onclick=()=>$('#phFile').click();
+    $('#phEdit').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const id=photos.splice(+b.dataset.rm,1)[0];
+      if(added.includes(id)){added=added.filter(x=>x!==id);PH.del(id).catch(()=>{})}else removed.push(id);draw()});
+  };
+  draw();
+  $('#phFile').onchange=async ev=>{
+    const files=[...ev.target.files]; ev.target.value=''; if(!files.length)return;
+    busy+=files.length; draw();
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+    for(const f of files){try{const v=await processPhoto(f),id=uid();await PH.put(id,v);photos.push(id);added.push(id)}catch(err){toast('有照片讀取失敗')}busy--;draw()}
+  };
+  $('#moodSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');$('#moodSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));if(on){b.classList.add('on');mood=b.dataset.m}else mood=''});
+  const dc=$('#dCats'); if(dc)dc.querySelectorAll('button').forEach(b=>b.onclick=()=>{b.classList.toggle('on');catIds=[...dc.querySelectorAll('button.on')].map(x=>x.dataset.c)});
+  $('#saveD').onclick=()=>{
+    if(busy)return toast('照片還在處理中');
+    const text=$('#dText').value.trim(); if(!photos.length&&!text&&!mood)return toast('寫點什麼或加張照片吧');
+    const out={id:e.id||uid(),date:$('#dDate').value||todayStr(),catIds,mood,text,photos,created:e.created||new Date().toISOString()};
+    DB.diary=DB.diary||[]; const i=DB.diary.findIndex(x=>x.id===out.id); if(i>=0)DB.diary[i]=out; else DB.diary.push(out);
+    removed.forEach(id=>PH.del(id).catch(()=>{})); added=[];
+    save(); closeSheet(); render(); toast(isNew?'日記已儲存':'已更新');
+  };
+  const dd=$('#delD'); if(dd)dd.onclick=()=>{if(!confirm('刪除這篇日記和裡面的照片？'))return;
+    [...photos,...removed].forEach(id=>PH.del(id).catch(()=>{})); added=[];
+    DB.diary=DB.diary.filter(x=>x.id!==e.id); save(); closeSheet(); render(); toast('已刪除')};
+}
+// 清掉沒有被任何日記用到的照片（例如寫到一半關掉）
+setTimeout(async()=>{try{if(!(DB.diary||[]).length)return;const used=new Set(DB.diary.flatMap(e=>e.photos||[]));for(const k of await PH.keys())if(!used.has(k))await PH.del(k)}catch(e){}},4000);
+
+/* ================= 餵食：食物、反應、時間 ================= */
+const REACT={love:{n:'超喜歡',c:'var(--s3)',s:4},ok:{n:'正常進食',c:'var(--s1)',s:3},meh:{n:'勉強吃了',c:'var(--s-other)',s:2},refuse:{n:'完全拒絕',c:'var(--s2)',s:1}};
+const RORDER=['love','ok','meh','refuse'];
+const SHAPES={love:'<path d="M12 2.2l2.4 3.3 4-.9.4 4 3.7 1.7-2.2 3.4 1.5 3.8-4 .7-1.3 3.9L12 20l-4.5 2.1-1.3-3.9-4-.7 1.5-3.8L1.5 10.3l3.7-1.7.4-4 4 .9z"/>',ok:'<path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/>',meh:'<path d="M7.5 5h14.5l-6 14H1.5z"/>',refuse:'<path d="M12 3 22 20.5H2z"/>'};
+function shape(k,cls='shape'){const R=REACT[k];if(!R)return '';return `<svg class="${cls}" viewBox="0 0 24 24" style="color:${R.c}" fill="currentColor" role="img" aria-label="${R.n}">${SHAPES[k]}</svg>`}
+const MEATS=['雞肉','鮭魚','鮪魚','火雞','鴨肉','牛肉','羊肉','鹿肉','兔肉','豬肉','鵪鶉','蟹肉','混合','其他'];
+const FKINDS=['主食罐','副食罐','乾飼料','凍乾','肉泥','鮮食','零食'];
+function foodById(id){return (DB.foods||[]).find(f=>f.id===id)}
+function foodTitle(f){return [f.brand,f.name].filter(Boolean).join(' ')}
+function feedLabel(r){const f=r.foodId&&foodById(r.foodId);return f?foodTitle(f):(r.food||'')}
+function eaten(r){const fed=+r.fed;if(!(fed>0))return 0;return Math.max(0,fed-(+r.left||0))}
+function relTime(r){
+  const t=todayStr(); if(r.date===t&&r.time){const [h,m]=r.time.split(':').map(Number),now=new Date(),mins=now.getHours()*60+now.getMinutes()-(h*60+m);
+    if(mins<0)return '今天'; if(mins<1)return '剛剛'; if(mins<60)return `${mins} 分鐘前`; return `${Math.floor(mins/60)} 小時前`}
+  return relDays(diffDays(r.date,t));
+}
+function singleOpts(box,cur,cb){box.querySelectorAll('button').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');box.querySelectorAll('button').forEach(x=>x.classList.remove('on'));if(on)b.classList.add('on');cb(on?b.dataset.v:'')})}
+function openFoodForm(food,onSaved,back){
+  const isNew=!food, f=Object.assign({brand:'',name:'',kind:'',meat:'',fav:false},food||{});
+  let kind=f.kind, meat=f.meat;
+  openSheet(isNew?'新增食物':'編輯食物',`
+    <div class="field"><label>品牌</label><input id="fb" value="${esc(f.brand)}" placeholder="例如 汪喵星球"></div>
+    <div class="field"><label>品名 / 口味</label><input id="fn" value="${esc(f.name)}" placeholder="例如 主食罐 雞肉"></div>
+    <div class="field"><label>類型</label><div class="opts" id="fk">${FKINDS.map(k=>`<button type="button" data-v="${k}" class="${kind===k?'on':''}">${k}</button>`).join('')}</div></div>
+    <div class="field"><label>主要肉類（用來分析口味偏好）</label><div class="opts" id="fm">${MEATS.map(k=>`<button type="button" data-v="${k}" class="${meat===k?'on':''}">${k}</button>`).join('')}</div></div>
+    <div class="btn-row">${isNew?'':'<button class="btn danger" id="fdel" style="flex:0 0 96px">刪除</button>'}<button class="btn" id="fsave">${isNew&&back?'儲存並選擇':'儲存'}</button></div>`,{back,fresh:!back});
+  singleOpts($('#fk'),kind,v=>kind=v); singleOpts($('#fm'),meat,v=>meat=v);
+  $('#fsave').onclick=()=>{
+    const brand=$('#fb').value.trim(),name=$('#fn').value.trim(); if(!brand&&!name)return toast('請填品牌或品名');
+    const out=Object.assign(f,{id:f.id||uid(),brand,name,kind,meat});
+    DB.foods=DB.foods||[]; const i=DB.foods.findIndex(x=>x.id===out.id); if(i>=0)DB.foods[i]=out; else DB.foods.push(out);
+    save(); onSaved(out);
+  };
+  const del=$('#fdel'); if(del)del.onclick=()=>{if(!confirm('刪除這個食物？過去的餵食紀錄會保留食物名稱。'))return;
+    DB.records.forEach(r=>{if(r.foodId===f.id){r.food=foodTitle(f);delete r.foodId}});
+    DB.foods=DB.foods.filter(x=>x.id!==f.id); save(); onSaved(null)};
+}
+let F=null;
+function openFeedFlow(rec){
+  DB.foods=DB.foods||[]; const cat=curCat();
+  F=rec?{rec,step:2,foodId:rec.foodId&&foodById(rec.foodId)?rec.foodId:null,legacy:rec.food||'',catId:rec.catId,reaction:rec.reaction||'',fed:rec.fed??'',left:rec.left??'',date:rec.date,time:rec.time||'',special:!!rec.special,note:rec.note||'',tab:'recent',q:''}
+       :{rec:null,step:1,foodId:null,legacy:'',catId:cat?cat.id:'',reaction:'',fed:'',left:'',date:todayStr(),time:nowTime(),special:false,note:'',tab:'recent',q:''};
+  SHEET_CLOSE=null; feedStep(true);
+}
+function feedStep(first){[null,feedPick,feedReact,feedTime][F.step](first)}
+const stepsBar=n=>`<div class="steps"><i style="width:${(n/3*100).toFixed(1)}%"></i></div>`;
+function foodCard(){
+  const f=F.foodId&&foodById(F.foodId), title=f?(f.brand||f.name):(F.legacy||'未指定食物'), sub=f?[f.brand?f.name:'',f.kind,f.meat].filter(Boolean).join(' · '):'';
+  return `<div class="foodcard"><span class="initial">${esc(title.slice(0,1))}</span><div style="flex:1;min-width:0"><b>${esc(title)}</b>${sub?`<span class="sub">${esc(sub)}</span>`:''}</div>${F.step===2?'<button class="link" id="chgFood">更換</button>':''}</div>`;
+}
+function recentFoodIds(){const out=[];for(const r of recsOf(null)){if(r.type==='feed'&&r.foodId&&!out.includes(r.foodId)&&foodById(r.foodId))out.push(r.foodId);if(out.length>=20)break}return out}
+function feedPick(first){
+  if(F.tab==='recent'&&!recentFoodIds().length)F.tab='all';
+  openSheet('這餐吃了什麼？',`${stepsBar(1)}
+    <div class="search">${svg('search',2)}<input id="fq" placeholder="搜尋品牌、品名、口味" value="${esc(F.q)}" autocomplete="off" enterkeyhint="search"></div>
+    <div class="opts" id="ftabs" style="margin-bottom:12px">${[['recent','近期'],['fav','收藏'],['all','全部食物']].map(([k,l])=>`<button type="button" data-t="${k}" class="${F.tab===k?'on':''}">${l}</button>`).join('')}</div>
+    <div id="flist"></div>
+    <button class="btn ghost" id="newFood" style="margin-top:12px">${svg('plus',2.2)}新增食物</button>
+    <button class="link" id="skipFood" style="display:block;margin:16px auto 4px">不指定食物，直接記錄</button>`,{fresh:!!first});
+  const draw=()=>{
+    const foods=DB.foods||[], q=F.q.trim().toLowerCase();
+    let list=q?foods.filter(f=>[f.brand,f.name,f.kind,f.meat].join(' ').toLowerCase().includes(q))
+      :F.tab==='recent'?recentFoodIds().map(foodById):F.tab==='fav'?foods.filter(f=>f.fav):foods.slice().sort((a,b)=>foodTitle(a).localeCompare(foodTitle(b),'zh-Hant'));
+    $('#flist').innerHTML=list.length?`<div class="group glass" style="margin:0">${list.map(f=>`<div class="row" data-food="${f.id}" role="button" style="cursor:pointer"><span class="initial">${esc((f.brand||f.name||'?').slice(0,1))}</span><span class="main"><div class="title">${esc(f.brand||f.name)}</div><div class="desc">${esc([f.brand?f.name:'',f.kind,f.meat].filter(Boolean).join(' · '))||'&nbsp;'}</div></span><button type="button" class="fav ${f.fav?'on':''}" data-fav="${f.id}" aria-label="收藏">${svg('heart',2,f.fav?'currentColor':'none')}</button></div>`).join('')}</div>`
+      :`<div class="empty">${q?'找不到符合的食物':F.tab==='fav'?'點食物右邊的愛心就能收藏':'還沒有食物，先新增一個吧'}</div>`;
+    $('#flist').querySelectorAll('[data-food]').forEach(r=>r.onclick=()=>{
+      F.foodId=r.dataset.food; F.legacy='';
+      const last=recsOf(F.catId).find(x=>x.type==='feed'&&x.foodId===F.foodId);
+      if(last&&!F.rec){F.reaction=last.reaction||'';F.fed=last.fed??''}
+      F.step=2; feedStep();
+    });
+    $('#flist').querySelectorAll('[data-fav]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const f=foodById(b.dataset.fav);f.fav=!f.fav;save();draw()});
+  };
+  draw();
+  $('#fq').oninput=ev=>{F.q=ev.target.value;draw()};
+  $('#ftabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{F.tab=b.dataset.t;F.q='';$('#fq').value='';$('#ftabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));draw()});
+  $('#newFood').onclick=()=>openFoodForm(null,f=>{if(f){F.foodId=f.id;F.legacy='';F.step=2}feedStep()},()=>feedStep());
+  $('#skipFood').onclick=()=>{F.foodId=null;F.step=2;feedStep()};
+}
+function feedReact(first){
+  const cat=catById(F.catId)||curCat(), t=todayStr(), mon=addDays(t,-((new Date(toUTC(t)).getUTCDay()+6)%7));
+  const wk=DB.records.filter(r=>r.type==='feed'&&r.catId===(cat&&cat.id)&&r.date>=mon&&r.date<=t).length;
+  openSheet('這餐反應如何？',`${stepsBar(2)}${foodCard()}
+    ${DB.cats.length>1?`<div class="field"><label>哪一隻</label><div class="opts" id="fcat">${DB.cats.map(c=>`<button type="button" data-v="${c.id}" class="${F.catId===c.id?'on':''}">${esc(c.name)}</button>`).join('')}</div></div>`:''}
+    <div class="field"><label>${esc(cat?cat.name:'')} 本週已記錄 ${wk} 筆</label><div class="reacts" id="reacts">${RORDER.map(k=>`<button type="button" data-r="${k}" class="${F.reaction===k?'on':''}">${shape(k)}${REACT[k].n}<span class="ck">${svg('check',3.2)}</span></button>`).join('')}</div></div>
+    <div class="grid2"><div class="field"><label>餵食量（g）</label><input type="number" inputmode="decimal" id="ffed" value="${F.fed}" placeholder="例如 40"></div>
+    <div class="field"><label>剩食量（g）</label><input type="number" inputmode="decimal" id="fleft" value="${F.left}" placeholder="0"></div></div>
+    <div class="opts" id="leftQ" style="margin:-4px 0 18px">${[['0','全吃完'],['.15','剩一點'],['.5','剩一半'],['.9','幾乎沒吃']].map(([v,l])=>`<button type="button" data-q="${v}">${l}</button>`).join('')}</div>
+    <button class="btn" id="fnext">下一步</button>`,{back:F.rec?null:()=>{F.step=1;feedStep()},fresh:!!first});
+  const fcat=$('#fcat'); if(fcat)singleOpts(fcat,F.catId,v=>{if(v)F.catId=v;else{F.catId=cat.id;fcat.querySelector(`[data-v="${cat.id}"]`).classList.add('on')}});
+  $('#ffed').oninput=e=>F.fed=e.target.value; $('#fleft').oninput=e=>F.left=e.target.value;
+  $('#reacts').querySelectorAll('button').forEach(b=>b.onclick=()=>{F.reaction=b.dataset.r;$('#reacts').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    if(F.reaction==='refuse'&&+F.fed>0&&F.left===''){F.left=F.fed;$('#fleft').value=F.fed}});
+  $('#leftQ').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(!(+F.fed>0))return toast('先填餵食量');F.left=String(Math.round(+F.fed*+b.dataset.q));$('#fleft').value=F.left});
+  const cf=$('#chgFood'); if(cf)cf.onclick=()=>{F.step=1;feedStep()};
+  $('#fnext').onclick=()=>{
+    if(!F.reaction)return toast('選一下牠的反應');
+    if(F.fed!==''&&F.left!==''&&+F.left>+F.fed)return toast('剩食量不能比餵食量多');
+    F.step=3; feedStep();
+  };
+}
+function feedTime(){
+  openSheet('選擇餵食時間',`${stepsBar(3)}${foodCard()}
+    <div class="grid2"><div class="field"><label>日期</label><input type="date" id="fdate" value="${F.date}" max="${todayStr()}"></div>
+    <div class="field"><label>時間</label><input type="time" id="ftime" value="${F.time}"></div></div>
+    <label class="special"><span class="bi">${svg('bolt',2)}</span><span><b>這餐有特殊狀況？</b><small>勾選後不會納入分析，例如生病、餵藥、混了新食物。</small></span><input type="checkbox" id="fsp" ${F.special?'checked':''}></label>
+    <div class="field"><label>備註</label><textarea id="fnote" placeholder="想記下的事…">${esc(F.note)}</textarea></div>
+    <div class="btn-row">${F.rec?'<button class="btn danger" id="fdel2" style="flex:0 0 96px">刪除</button>':''}<button class="btn" id="fdone">${F.rec?'儲存':'完成'}</button></div>`,{back:()=>{F.date=$('#fdate').value;F.time=$('#ftime').value;F.note=$('#fnote').value;F.special=$('#fsp').checked;F.step=2;feedStep()}});
+  $('#fdone').onclick=()=>{
+    const f=F.foodId&&foodById(F.foodId);
+    const out={id:F.rec?F.rec.id:uid(),type:'feed',catId:F.catId,date:$('#fdate').value||todayStr(),time:$('#ftime').value,
+      reaction:F.reaction,special:$('#fsp').checked};
+    if(f){out.foodId=f.id;out.food=foodTitle(f)}else if(F.legacy)out.food=F.legacy;
+    if(F.fed!=='')out.fed=+F.fed; if(F.left!=='')out.left=+F.left;
+    const note=$('#fnote').value.trim(); if(note)out.note=note;
+    const i=DB.records.findIndex(r=>r.id===out.id); if(i>=0)DB.records[i]=out; else DB.records.push(out);
+    const cat=catById(out.catId), isNew=!F.rec;
+    save(); closeSheet(); render();
+    successPop(isNew?`${cat?cat.name:'咪咪'}紀錄成功！`:'已更新',out.food||'');
+  };
+  const d2=$('#fdel2'); if(d2)d2.onclick=()=>{if(!confirm('刪除這筆餵食紀錄？'))return;DB.records=DB.records.filter(r=>r.id!==F.rec.id);save();closeSheet();render();toast('已刪除')};
+}
+let SPT=0;
+function successPop(title,sub){
+  let el=$('#success'); if(!el){el=document.createElement('div');el.id='success';el.className='success';el.innerHTML='<div class="box glass float-glass"></div>';document.body.appendChild(el)}
+  el.querySelector('.box').innerHTML=`${svg('check2',2.2)}<b>${esc(title)}</b>${sub?`<span>${esc(sub)}</span>`:''}`;
+  requestAnimationFrame(()=>el.classList.add('show')); clearTimeout(SPT); SPT=setTimeout(()=>el.classList.remove('show'),1500);
+}
+
+/* ================= 飲食分析 ================= */
+function dietCard(cat){
+  const t=todayStr(), span=FRANGE==='week'?7:FRANGE==='month'?30:0, from=span?addDays(t,-(span-1)):'0000';
+  const rs=recsOf(cat.id).filter(r=>r.type==='feed'&&!r.special&&r.date>=from&&r.date<=t);
+  const head=`<div class="ctitle"><h3>飲食分析</h3>${segc('f',FRANGE,[['week','7天'],['month','30天'],['all','全部']])}</div>`;
+  if(!rs.length)return `<div class="card glass">${head}<div class="empty">這段期間還沒有餵食紀錄<br><small>用 ＋ → 餵食 記錄食物和反應，這裡就會出現分析</small></div></div>`;
+  const days=span||Math.max(1,diffDays(rs[rs.length-1].date,t)+1);
+  const withFed=rs.filter(r=>+r.fed>0), eat=withFed.reduce((s,r)=>s+eaten(r),0);
+  const withR=rs.filter(r=>REACT[r.reaction]), rc={}; withR.forEach(r=>rc[r.reaction]=(rc[r.reaction]||0)+1);
+  const refuse=withR.length?Math.round((rc.refuse||0)/withR.length*100):null;
+  // 反應分佈
+  const stack=withR.length?`<div class="sub-h">進食反應</div><div class="stack">${RORDER.filter(k=>rc[k]).map(k=>`<i style="width:${(rc[k]/withR.length*100).toFixed(1)}%;background:${REACT[k].c}"></i>`).join('')}</div>
+    ${RORDER.filter(k=>rc[k]).map(k=>`<div class="rrow">${shape(k)}<span class="nm">${REACT[k].n}</span><span class="ct num">${rc[k]} 次</span><span class="pc num">${Math.round(rc[k]/withR.length*100)}%</span></div>`).join('')}`:'';
+  // 肉類比例
+  const mc={}; let mn=0; rs.forEach(r=>{const f=r.foodId&&foodById(r.foodId);if(f&&f.meat){mc[f.meat]=(mc[f.meat]||0)+1;mn++}});
+  let meats=Object.entries(mc).sort((a,b)=>b[1]-a[1]); if(meats.length>6){const rest=meats.slice(5).reduce((s,x)=>s+x[1],0);meats=meats.slice(0,5).concat([['其他',rest]])}
+  const meatHTML=mn?`<div class="sub-h">口味（肉類）比例</div>${meats.map(([m,c])=>`<div class="hbar"><span class="lab">${esc(m)}</span><span class="track"><span class="fill" style="display:block;width:${(c/meats[0][1]*100).toFixed(1)}%"></span></span><span class="amt num">${Math.round(c/mn*100)}%</span></div>`).join('')}`:'';
+  // 最愛 / 拒吃
+  const fs={}; rs.forEach(r=>{if(!r.foodId||!foodById(r.foodId))return;const o=fs[r.foodId]=fs[r.foodId]||{n:0,sum:0,rn:0,ref:0};o.n++;if(REACT[r.reaction]){o.sum+=REACT[r.reaction].s;o.rn++;if(r.reaction==='refuse')o.ref++}});
+  const keyOf=a=>a>=3.5?'love':a>=2.5?'ok':a>=1.5?'meh':'refuse';
+  const ranked=Object.entries(fs).filter(([,o])=>o.rn).map(([id,o])=>({id,...o,avg:o.sum/o.rn})).sort((a,b)=>b.avg-a.avg||b.n-a.n);
+  const favs=ranked.filter(x=>x.avg>=2.5).slice(0,5), refs=ranked.filter(x=>x.ref>0).sort((a,b)=>b.ref/b.n-a.ref/a.n).slice(0,5);
+  const frow=x=>`<div class="rrow">${shape(keyOf(x.avg))}<span class="nm">${esc(foodTitle(foodById(x.id)))}</span><span class="ct num">${x.n} 次</span></div>`;
+  return `<div class="card glass">${head}
+    <div class="kpis"><div class="kpi"><span>餵食</span><b class="num">${rs.length}<small style="font-size:12px;color:var(--text2)"> 次</small></b></div>
+      <div class="kpi"><span>平均每天吃</span><b class="num">${withFed.length?Math.round(eat/days):'—'}<small style="font-size:12px;color:var(--text2)"> g</small></b></div>
+      <div class="kpi"><span>拒食率</span><b class="num">${refuse??'—'}<small style="font-size:12px;color:var(--text2)">${refuse!=null?' %':''}</small></b></div></div>
+    ${stack}${meatHTML}
+    ${favs.length?`<div class="sub-h">最愛食物</div>${favs.map(frow).join('')}`:''}
+    ${refs.length?`<div class="sub-h">常拒吃</div>${refs.map(x=>`<div class="rrow">${shape('refuse')}<span class="nm">${esc(foodTitle(foodById(x.id)))}</span><span class="ct num">拒絕 ${x.ref}/${x.n} 次</span></div>`).join('')}`:''}
+  </div>`;
+}
+
 /* ================= 自動更新 =================
    主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
    有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
-const APP_VERSION='2026.11.05.5';
+const APP_VERSION='2026.11.06.1';
 let updateShown=false;
 async function checkUpdate(){
   if(updateShown||location.protocol==='file:')return;
