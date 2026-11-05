@@ -110,7 +110,9 @@ svg{display:block}
   box-shadow:0 0 0 3px var(--glass-strong),0 8px 22px -6px rgba(0,0,0,.25)}
 .big-av img{width:100%;height:100%;object-fit:cover}
 .hero .name{font-size:24px;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:6px}
-.hero .sex{font-size:15px;color:var(--text2);font-weight:600}
+.sex{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;flex:none}
+.sex svg{width:15px;height:15px}
+.sex.male{color:#0a84ff;background:rgba(10,132,255,.13)} .sex.female{color:#ff2d55;background:rgba(255,45,85,.12)}
 .hero .meta{font-size:13.5px;color:var(--text2);margin-top:3px}
 .hero .age{margin-top:6px;font-size:15px;font-weight:650}
 .hero .age small{color:var(--text3);font-weight:500;font-size:12.5px;margin-left:4px}
@@ -162,9 +164,17 @@ svg{display:block}
 .fchip .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
 
 /* 分段控制 */
-.segc{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:0}
-.segc button{padding:5px 11px;font-size:12.5px;font-weight:600;border-radius:7px;color:var(--text);white-space:nowrap}
-.segc button.on{background:var(--seg-on);box-shadow:0 2px 6px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.segc{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:10px;padding:2px;touch-action:none;user-select:none;-webkit-user-select:none}
+.segc button{position:relative;z-index:1;padding:5px 11px;font-size:12.5px;font-weight:600;border-radius:8px;color:var(--text2);white-space:nowrap;transition:color .2s}
+.segc button.on{color:var(--text)}
+.segc .lens{border-radius:8px;background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+
+/* 液態玻璃滑塊（可拖曳） */
+.lens{position:absolute;top:0;left:0;height:100%;z-index:0;pointer-events:none;will-change:transform;
+  transition:transform .55s cubic-bezier(.28,1.45,.45,1),opacity .2s,background .25s,box-shadow .25s}
+.lens.drag{z-index:2;background:rgba(255,255,255,.22)!important;
+  -webkit-backdrop-filter:saturate(200%) brightness(1.06);backdrop-filter:saturate(200%) brightness(1.06);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),inset 0 3px 8px rgba(255,255,255,.55),inset 0 -4px 10px rgba(0,0,0,.08),0 10px 28px -6px rgba(0,0,0,.28)!important}
 
 /* ---------- 圖表 ---------- */
 .chart{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -229,24 +239,31 @@ svg{display:block}
 /* ---------- 底部導覽（浮動玻璃） ---------- */
 .dock{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 12px);z-index:20;pointer-events:none}
 .dock .in{max-width:540px;margin:0 auto;padding:0 16px;display:flex;gap:10px;align-items:center}
-.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr);padding:5px;border-radius:999px;pointer-events:auto;background:var(--glass-strong)}
-.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:background .2s,color .2s}
+.tabs{flex:1;display:grid;grid-template-columns:repeat(4,1fr);padding:5px;border-radius:999px;pointer-events:auto;background:var(--glass-strong);touch-action:none;user-select:none;-webkit-user-select:none}
+.tabs button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text2);padding:6px 0 5px;border-radius:999px;transition:color .2s}
 .tabs button svg{width:22px;height:22px}
-.tabs button.on{color:var(--accent);background:var(--fill)}
+.tabs button.on{color:var(--accent)}
+.tabs .lens{border-radius:999px;background:var(--fill)}
 .fab{width:62px;height:62px;border-radius:50%;pointer-events:auto;display:grid;place-items:center;color:#fff;flex:none;
   background:radial-gradient(120% 120% at 30% 15%,rgba(255,255,255,.45),transparent 45%),var(--accent);
   box-shadow:0 10px 24px -6px color-mix(in srgb,var(--accent) 60%,transparent),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 6px rgba(0,0,0,.12)}
 .fab svg{width:26px;height:26px}
 
 /* ---------- 底部表單 ---------- */
-.mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40;display:none;align-items:flex-end;justify-content:center}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:40;display:none;align-items:flex-end;justify-content:center;transition:background .3s}
 .mask.show{display:flex}
-.sheet{width:100%;max-width:540px;border-radius:30px 30px 0 0;max-height:92vh;overflow-y:auto;padding:8px 18px calc(var(--safe-b) + 20px);
+.mask.closing{background:rgba(0,0,0,0)}
+.sheet{width:100%;max-width:540px;border-radius:30px 30px 0 0;max-height:86vh;overflow-y:auto;padding:0 18px calc(var(--safe-b) + 20px);transition:transform .3s cubic-bezier(.2,.9,.3,1);
   animation:up .28s cubic-bezier(.2,.9,.3,1);overscroll-behavior:contain;background:var(--glass-strong);border-bottom:0;
   -webkit-backdrop-filter:blur(40px) saturate(180%);backdrop-filter:blur(40px) saturate(180%)}
 @keyframes up{from{transform:translateY(60px);opacity:.3}to{transform:none;opacity:1}}
-.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--fill);margin:0 auto 14px}
-.sheet h2{margin:0 0 16px;font-size:21px;font-weight:750;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.sh-head{position:sticky;top:0;z-index:5;margin:0 -18px 14px;padding:8px 18px 10px;cursor:grab;touch-action:none;
+  background:linear-gradient(var(--glass-strong) 70%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--text3);opacity:.5;margin:0 auto 10px}
+.sh-bar{display:flex;align-items:center;gap:10px}
+.sheet h2{margin:0;flex:1;min-width:0;font-size:21px;font-weight:750;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.xbtn{width:34px;height:34px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:var(--text2);flex:none}
+.xbtn svg{width:16px;height:16px}
 .types{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px}
 .types button{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--text2)}
 .types .ti{width:56px;height:56px;border-radius:17px}
@@ -256,9 +273,16 @@ svg{display:block}
 .field input,.field select,.field textarea{width:100%;height:46px;padding:0 14px;border:0;border-radius:13px;background:var(--fill);font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
 .field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--accent)}
 .field textarea{height:auto;min-height:76px;padding:12px 14px;resize:vertical}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.grid2>*{min-width:0}
+.field input[type=date],.field input[type=time]{min-width:0;max-width:100%;display:block;text-align:left}
+.field input::-webkit-date-and-time-value{text-align:left}
+.dragging>button svg{transition:transform .2s}
+.dragging>button.on svg{transform:scale(1.18)}
+.segc.dragging>button.on,.tabs.dragging>button.on{transform:scale(1.06);transition:transform .2s,color .2s}
 .opts{display:flex;flex-wrap:wrap;gap:7px}
-.opts button{height:34px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:14px;font-weight:600}
+.opts button{height:34px;padding:0 13px;border-radius:999px;background:var(--fill);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;line-height:1}
+.opts button svg{width:15px;height:15px}
 .opts button.on{background:var(--accent);color:#fff}
 .photo-pick{display:flex;align-items:center;gap:14px}
 .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);margin:0 6px 10px}
@@ -307,6 +331,9 @@ const IC={
   sparkle:'<path d="M12 3.5l1.9 5 5 1.9-5 1.9-1.9 5-1.9-5-5-1.9 5-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
+  x:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  male:'<circle cx="10" cy="14" r="5.5"/><path d="M14 10l6-6M15 4h5v5"/>',
+  female:'<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5V21M9 18h6"/>',
   chev:'<path d="m9 5.5 6.5 6.5L9 18.5"/>',
   bell:'<path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5"/><path d="M10.3 20.5a1.9 1.9 0 0 0 3.4 0"/>',
   camera:'<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5l1.5-2.5h6L16.5 7H19a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/><circle cx="12" cy="13" r="3.5"/>',
@@ -540,20 +567,72 @@ function donutChart(o){
     <text class="cl" x="100" y="122" text-anchor="middle" style="fill:var(--text2);font-size:12px;font-weight:600">${o.centerLabel||'合計'}</text></svg></div>
     <div class="legend">${legend}</div></div>`;
 }
-function segc(name,cur,opts){return `<div class="segc" data-segc="${name}">${opts.map(([v,l])=>`<button data-v="${v}" class="${cur===v?'on':''}">${l}</button>`).join('')}</div>`}
-function bindSegc(root,handlers){root.querySelectorAll('[data-segc]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>handlers[g.dataset.segc](b.dataset.v)))}
+function segc(name,cur,opts){return `<div class="segc" data-segc="${name}" data-cur="${cur}"><span class="lens"></span>${opts.map(([v,l])=>`<button data-v="${v}">${l}</button>`).join('')}</div>`}
+function bindSegc(root,handlers){root.querySelectorAll('[data-segc]').forEach(g=>{
+  const btns=[...g.querySelectorAll('button')];
+  liquid(g,{index:btns.findIndex(b=>b.dataset.v===g.dataset.cur),delay:260,onPick:i=>handlers[g.dataset.segc](btns[i].dataset.v)});
+})}
+/* 液態玻璃滑塊：點選或用手指拖曳，放開後彈性吸附 */
+const SLIDERS=new Set();
+function liquid(el,{index=0,onPick,delay=0}){
+  const lens=el.querySelector('.lens'), btns=[...el.querySelectorAll(':scope>button')], n=btns.length;
+  let cur=index, x=0, sx=0, lx=0, down=false, drag=false, lastX=0, lastT=0, vel=0, pid=null;
+  const per=()=>btns[0].offsetWidth, off=()=>btns[0].offsetLeft;
+  const clampX=v=>Math.max(0,Math.min((n-1)*per(),v));
+  const near=v=>Math.max(0,Math.min(n-1,Math.round(v/per())));
+  const mark=i=>btns.forEach((b,k)=>b.classList.toggle('on',k===i));
+  const place=(v,anim,sc='')=>{lens.style.transition=anim?'':'none';lens.style.transform=`translateX(${v}px)${sc}`;x=v};
+  function set(i,anim=true){
+    cur=i; lens.style.width=per()+'px'; lens.style.left=off()+'px'; lens.style.top=btns[0].offsetTop+'px'; lens.style.height=btns[0].offsetHeight+'px';
+    if(i<0){lens.style.opacity=0;mark(-1);return}
+    lens.style.opacity=1; place(i*per(),anim); mark(i);
+  }
+  const localX=e=>e.clientX-el.getBoundingClientRect().left-off();
+  el.addEventListener('pointerdown',e=>{
+    if(e.button>0)return; down=true; drag=false; pid=e.pointerId; sx=e.clientX; lastX=e.clientX; lastT=e.timeStamp; vel=0;
+    lx=cur>=0?cur*per():clampX(localX(e)-per()/2);
+    try{el.setPointerCapture(pid)}catch(_){}
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!down||e.pointerId!==pid)return;
+    const dx=e.clientX-sx;
+    if(!drag&&Math.abs(dx)>6){drag=true;lens.classList.add('drag');el.classList.add('dragging');lens.style.opacity=1}
+    if(!drag)return;
+    const dt=Math.max(1,e.timeStamp-lastT); vel=vel*.6+((e.clientX-lastX)/dt)*.4; lastX=e.clientX; lastT=e.timeStamp;
+    const st=Math.min(.35,Math.abs(vel)*.12);
+    place(clampX(lx+dx),false,` scale(${(1.14+st).toFixed(3)},${(1.14-st*.5).toFixed(3)})`);
+    mark(near(x));
+  });
+  const end=(e,cancel)=>{
+    if(!down||e.pointerId!==pid)return; down=false;
+    const prev=cur; let i;
+    if(cancel)i=prev; else if(drag)i=near(x); else i=Math.max(0,Math.min(n-1,Math.floor(localX(e)/per())));
+    lens.classList.remove('drag'); el.classList.remove('dragging'); set(i,true);
+    if(i!==prev&&i>=0&&!cancel){if(delay)setTimeout(()=>onPick(i),delay);else onPick(i)}
+  };
+  el.addEventListener('pointerup',e=>end(e,false));
+  el.addEventListener('pointercancel',e=>end(e,true));
+  btns.forEach((b,k)=>b.addEventListener('click',e=>{if(e.detail===0&&k!==cur){set(k);onPick(k)}})); // 鍵盤
+  const api={set,get cur(){return cur},el};
+  SLIDERS.add(api); requestAnimationFrame(()=>set(cur,false));
+  return api;
+}
+window.addEventListener('resize',()=>SLIDERS.forEach(s=>{if(!s.el.isConnected)SLIDERS.delete(s);else s.set(s.cur,false)}));
 
 /* ================= 導覽 ================= */
 let VIEW='home';
 const TITLES={home:'今天',records:'紀錄',charts:'圖表',recap:'回顧',settings:'設定'};
 const TABDEF={home:['home','首頁'],records:['list','紀錄'],charts:['chart','圖表'],recap:['sparkle','回顧']};
-document.querySelectorAll('#tabs [data-view]').forEach(b=>{const [ic,l]=TABDEF[b.dataset.view];b.innerHTML=svg(ic)+l;b.onclick=()=>show(b.dataset.view)});
+const TABORDER=['home','records','charts','recap'];
+document.querySelectorAll('#tabs [data-view]').forEach(b=>{const [ic,l]=TABDEF[b.dataset.view];b.innerHTML=svg(ic)+l});
+$('#tabs').insertAdjacentHTML('afterbegin','<span class="lens"></span>');
+const TAB=liquid($('#tabs'),{index:0,onPick:i=>show(TABORDER[i])});
 $('#fab').innerHTML=svg('plus',2.4); $('#gear').innerHTML=svg('gear');
 $('#gear').onclick=()=>show(VIEW==='settings'?'home':'settings');
 $('#fab').onclick=()=>{if(!DB.cats.length)return openCatForm();openTypePicker()};
 function show(v){VIEW=v;render();window.scrollTo(0,0);const s=$('#view-'+v);s.classList.remove('fade');void s.offsetWidth;s.classList.add('fade')}
 function render(){
-  document.querySelectorAll('#tabs [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===VIEW));
+  const ti_=TABORDER.indexOf(VIEW); if(TAB.cur!==ti_)TAB.set(ti_,true);
   ['home','records','charts','recap','settings'].forEach(x=>$('#view-'+x).classList.toggle('hide',x!==VIEW));
   $('#headTitle').textContent=TITLES[VIEW];
   $('#headSub').textContent=`${+todayStr().slice(5,7)}月${+todayStr().slice(8)}日 ${weekday(todayStr())}`;
@@ -614,7 +693,7 @@ function renderHome(){
     <div class="top">
       <div class="big-av">${cat.photo?`<img src="${cat.photo}">`:(cat.emoji||'🐱')}</div>
       <div style="flex:1;min-width:0">
-        <div class="name">${esc(cat.name)}<span class="sex">${cat.gender==='male'?'♂':cat.gender==='female'?'♀':''}</span>
+        <div class="name">${esc(cat.name)}${cat.gender?`<span class="sex ${cat.gender}">${svg(cat.gender,2.4)}</span>`:''}
           <button class="link" id="editCat" style="margin-left:auto">編輯</button></div>
         <div class="meta">${esc([cat.breed,cat.color,cat.neuter].filter(Boolean).join(' · '))||'&nbsp;'}</div>
         ${cat.birthday?`<div class="age">${ageText(cat.birthday)}${h!=null?`<small>約人類 ${h} 歲</small>`:''}</div>`:`<div class="age" style="color:var(--text3);font-size:13px;font-weight:500">尚未填寫生日</div>`}
@@ -867,12 +946,54 @@ function renderSettings(){
 }
 
 /* ================= 表單 ================= */
-function openSheet(html){const sh=$('#sheet');sh.className='sheet glass';sh.innerHTML='<div class="grab"></div>'+html;$('#mask').classList.add('show');document.body.style.overflow='hidden';sh.scrollTop=0}
-function closeSheet(){$('#mask').classList.remove('show');document.body.style.overflow=''}
+function openSheet(title,body){
+  const sh=$('#sheet'),m=$('#mask'); clearTimeout(closeSheet._t);
+  sh.className='sheet glass'; sh.style.transform=''; sh.style.transition=''; m.classList.remove('closing');
+  sh.innerHTML=`<div class="sh-head"><div class="grab"></div><div class="sh-bar"><h2>${title}</h2><button class="xbtn" id="shClose" aria-label="關閉">${svg('x',2.4)}</button></div></div>${body}`;
+  m.classList.add('show'); document.body.style.overflow='hidden'; sh.scrollTop=0;
+  $('#shClose').onclick=closeSheet;
+}
+function closeSheet(){
+  const sh=$('#sheet'),m=$('#mask'); if(!m.classList.contains('show'))return;
+  document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  sh.style.transition='transform .28s cubic-bezier(.4,0,1,1)'; sh.style.transform='translateY(105%)'; m.classList.add('closing');
+  closeSheet._t=setTimeout(()=>{m.classList.remove('show','closing');sh.style.transform='';sh.style.transition='';document.body.style.overflow=''},280);
+}
 $('#mask').addEventListener('click',e=>{if(e.target.id==='mask')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+// 下拉關閉：在標題列往下拉，或內容已捲到最上面時往下拉
+(function(){
+  const sh=$('#sheet'),m=$('#mask'); let sy=null,dy=0,t0=0,drag=false,fromHead=false,atTop=true;
+  const startY=y=>{sy=y;dy=0;t0=performance.now();drag=false};
+  const moveY=(y,ev)=>{
+    if(sy==null)return; const d=y-sy;
+    if(!drag){
+      if(Math.abs(d)<6)return;
+      if(d>0&&(fromHead||(atTop&&sh.scrollTop<=0)))drag=true; else{sy=null;return}
+    }
+    if(ev.cancelable)ev.preventDefault();
+    dy=Math.max(0,d); const r=dy<0?0:dy;
+    sh.style.transition='none'; sh.style.transform=`translateY(${r}px)`;
+    m.style.background=`rgba(0,0,0,${(.28*Math.max(0,1-r/(sh.offsetHeight||1))).toFixed(3)})`;
+  };
+  const endY=()=>{
+    if(sy==null)return; sy=null; m.style.background='';
+    if(!drag)return; drag=false;
+    const v=dy/Math.max(1,performance.now()-t0);
+    if(dy>Math.min(140,sh.offsetHeight*.3)||v>.65)closeSheet();
+    else{sh.style.transition='transform .45s cubic-bezier(.28,1.35,.45,1)';sh.style.transform='translateY(0)'}
+  };
+  sh.addEventListener('touchstart',e=>{if(e.touches.length>1){sy=null;return}fromHead=!!e.target.closest('.sh-head');atTop=sh.scrollTop<=0;startY(e.touches[0].clientY)},{passive:true});
+  sh.addEventListener('touchmove',e=>moveY(e.touches[0].clientY,e),{passive:false});
+  sh.addEventListener('touchend',endY); sh.addEventListener('touchcancel',endY);
+  // 滑鼠：拖曳標題列
+  sh.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||!e.target.closest('.sh-head')||e.target.closest('button'))return;fromHead=true;atTop=true;startY(e.clientY);
+    const mv=ev=>moveY(ev.clientY,ev),up=()=>{endY();removeEventListener('pointermove',mv);removeEventListener('pointerup',up)};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up)});
+})();
 
 function openTypePicker(){
-  openSheet(`<h2>新增紀錄</h2><div class="types">${Object.entries(TYPES).map(([k,T])=>`<button data-t="${k}">${ti(k)}${T.name}</button>`).join('')}</div>`);
+  openSheet('新增紀錄',`<div class="types">${Object.entries(TYPES).map(([k,T])=>`<button data-t="${k}">${ti(k)}${T.name}</button>`).join('')}</div>`);
   $('#sheet').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>openRecordForm({type:b.dataset.t}));
 }
 function openRecordForm(rec){
@@ -884,8 +1005,7 @@ function openRecordForm(rec){
       <input type="text" data-k="${f.k}" value="${esc(v)}" placeholder="或自行輸入" style="margin-top:8px"></div>`;
     return `<div class="field"><label>${f.l}${f.req?' *':''}</label><input type="${f.t}" data-k="${f.k}" value="${esc(v)}" ${f.step?`step="${f.step}"`:''} ${f.t==='number'?'inputmode="decimal"':''} placeholder="${f.ph||''}"></div>`;
   };
-  openSheet(`<h2>${ti(rec.type)}${isNew?'':'編輯'}${T.name}</h2>
-    ${DB.cats.length>1?`<div class="field"><label>哪一隻</label><div class="opts" id="catSeg">${DB.cats.map(c=>`<button type="button" data-c="${c.id}" class="${rec.catId===c.id?'on':''}">${esc(c.name)}</button>`).join('')}${rec.type==='litter'||rec.type==='expense'?`<button type="button" data-c="all" class="${rec.catId==='all'?'on':''}">全部</button>`:''}</div></div>`:''}
+  openSheet(`${ti(rec.type)}${isNew?'':'編輯'}${T.name}`,`    ${DB.cats.length>1?`<div class="field"><label>哪一隻</label><div class="opts" id="catSeg">${DB.cats.map(c=>`<button type="button" data-c="${c.id}" class="${rec.catId===c.id?'on':''}">${esc(c.name)}</button>`).join('')}${rec.type==='litter'||rec.type==='expense'?`<button type="button" data-c="all" class="${rec.catId==='all'?'on':''}">全部</button>`:''}</div></div>`:''}
     <div class="grid2"><div class="field"><label>日期</label><input type="date" id="fDate" value="${rec.date}"></div>
     <div class="field"><label>時間</label><input type="time" id="fTime" value="${rec.time||''}"></div></div>
     ${T.fields.map(fieldHTML).join('')}
@@ -916,14 +1036,13 @@ const EMOJIS=['🐱','😺','🐈','🐈‍⬛','😸','😻','🦁','🐯'];
 function openCatForm(cat){
   const isNew=!cat; cat=Object.assign({emoji:'🐱',gender:''},cat||{});
   let photo=cat.photo||'',emoji=cat.emoji,gender=cat.gender;
-  openSheet(`<h2>${isNew?'新增貓咪':'編輯 '+esc(cat.name)}</h2>
-    <div class="field photo-pick"><div class="big-av" id="pv" style="width:72px;height:72px;font-size:36px"></div>
+  openSheet(isNew?'新增貓咪':'編輯 '+esc(cat.name),`    <div class="field photo-pick"><div class="big-av" id="pv" style="width:72px;height:72px;font-size:36px"></div>
       <div style="flex:1"><div style="display:flex;gap:8px;align-items:center"><button class="btn ghost" id="pickPhoto" style="width:auto;height:38px;font-size:14px;padding:0 14px">${svg('camera',2)}選擇照片</button>
       ${photo?'<button class="link" id="rmPhoto">移除</button>':''}</div>
       <div class="opts" id="emo" style="margin-top:8px;gap:4px">${EMOJIS.map(e=>`<button type="button" class="${emoji===e?'on':''}" style="padding:0 7px;font-size:18px;height:32px">${e}</button>`).join('')}</div></div>
       <input type="file" accept="image/*" id="photoFile" class="hide"></div>
     <div class="field"><label>名字 *</label><input id="cName" value="${esc(cat.name||'')}" placeholder="例如 麻糬"></div>
-    <div class="field"><label>性別</label><div class="opts" id="gen"><button type="button" data-g="male" class="${gender==='male'?'on':''}">♂ 男生</button><button type="button" data-g="female" class="${gender==='female'?'on':''}">♀ 女生</button></div></div>
+    <div class="field"><label>性別</label><div class="opts" id="gen"><button type="button" data-g="male" class="${gender==='male'?'on':''}">${svg('male',2.2)}男生</button><button type="button" data-g="female" class="${gender==='female'?'on':''}">${svg('female',2.2)}女生</button></div></div>
     <div class="grid2"><div class="field"><label>生日（或推估）</label><input type="date" id="cBirth" value="${cat.birthday||''}"></div>
     <div class="field"><label>到家日</label><input type="date" id="cAdopt" value="${cat.adopt||''}"></div></div>
     <div class="grid2"><div class="field"><label>品種</label><input id="cBreed" value="${esc(cat.breed||'')}" placeholder="例如 米克斯"></div>
