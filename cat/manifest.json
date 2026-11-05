@@ -1,0 +1,16 @@
+{
+  "name": "Caaat 貓咪日記",
+  "short_name": "貓咪日記",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef0fb",
+  "theme_color": "#eef0fb",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
