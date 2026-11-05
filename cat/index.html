@@ -939,7 +939,7 @@ function renderSettings(){
     <p style="font-size:13.5px;margin:0 0 4px;color:var(--text2);line-height:1.6">資料只存在這支手機的瀏覽器裡。換手機或清除瀏覽器資料前，記得先匯出備份。</p>
     <div class="btn-row"><button class="btn ghost" id="exp">${svg('down',2)}匯出</button><button class="btn ghost" id="imp">${svg('up',2)}匯入</button></div>
     <input type="file" id="impFile" accept="application/json,.json" class="hide">
-    <p class="num" style="font-size:12px;margin:12px 0 0;color:var(--text3)">共 ${DB.records.length} 筆紀錄 · ${DB.cats.length} 隻貓</p>
+    <p class="num" style="font-size:12px;margin:12px 0 0;color:var(--text3)">共 ${DB.records.length} 筆紀錄 · ${DB.cats.length} 隻貓 · 版本 ${APP_VERSION}</p>
   </div>
   <button class="btn danger" id="wipe" style="margin-top:6px">清除所有資料</button>`;
   $('#addCat').onclick=()=>openCatForm();
@@ -1091,7 +1091,31 @@ function resizeImage(file,size){
     img.onerror=no;img.src=url});
 }
 
+/* ================= 自動更新 =================
+   主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
+   有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
+const APP_VERSION='2026.11.05.5';
+let updateShown=false;
+async function checkUpdate(){
+  if(updateShown||location.protocol==='file:')return;
+  try{
+    const res=await fetch(location.pathname,{cache:'reload'});
+    const m=(await res.text()).match(/const APP_VERSION='([^']+)'/);
+    if(m&&m[1]!==APP_VERSION){
+      updateShown=true;
+      const b=document.createElement('button');
+      b.className='toast show'; b.style.pointerEvents='auto'; b.style.bottom='calc(var(--safe-b) + 92px)';
+      b.textContent='有新版本，點一下更新';
+      b.onclick=()=>{b.textContent='更新中…';location.reload()};
+      document.body.appendChild(b);
+    }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
+window.addEventListener('pageshow',checkUpdate);
+
 render();
+checkUpdate();
 </script>
 </body>
 </html>
