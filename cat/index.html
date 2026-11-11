@@ -411,6 +411,31 @@ svg{display:block}
 .rrow .ct{font-weight:600}
 .rrow .pc{color:var(--text3);width:40px;text-align:right;font-size:12.5px}
 .sub-h{font-size:13px;font-weight:650;color:var(--text2);margin:18px 0 8px}
+/* ---------- 貓砂筆記 ---------- */
+.lnote{padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.lnote .lh{display:flex;align-items:center;gap:12px}
+.lnote .lh b{display:block;font-size:16px}.lnote .lh .sub{display:block;font-size:13px;color:var(--text2);margin-top:1px}
+.lth{position:relative;width:46px;height:46px;border-radius:13px;overflow:hidden;background:var(--fill);flex:none;display:grid;place-items:center;color:var(--text3)}
+.lth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lth.big{width:72px;height:72px;border-radius:18px}.lth svg{width:28px;height:28px}
+.lst{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;flex:none;background:var(--fill);color:var(--text2)}
+.lst.using{background:rgba(52,199,89,.15);color:var(--good)}
+.lst.wish{background:rgba(0,122,255,.12);color:var(--accent)}
+.lmeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}
+.lchip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--fill2);color:var(--text2)}
+.lsc{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:10px}
+.lsc>div{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--text2)}
+.lsc i{display:flex;gap:3px}
+.lsc b{width:8px;height:8px;border-radius:50%;background:var(--fill)}
+.lsc b.on{background:var(--s1)}
+.lsc.edit{grid-template-columns:1fr;gap:4px}
+.lsc.edit>div{font-size:14.5px;color:var(--text);padding:4px 0}
+.lsc.edit i{gap:6px}
+.lsc.edit b{width:26px;height:26px;cursor:pointer}
+.lpc{display:flex;gap:6px;font-size:13.5px;line-height:1.5;margin-top:8px}
+.lpc em{font-style:normal;font-weight:800;flex:none}
+.lpc em.p{color:var(--good)}.lpc em.c{color:var(--warn)}
+.luse{margin-top:10px;padding-top:10px;border-top:.5px solid var(--hair);font-size:12.5px;color:var(--text2)}
 .hero-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:12.5px;color:var(--text2)}
 
 </style>
@@ -466,6 +491,7 @@ const IC={
   search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
   book:'<path d="M5 4.8A1.8 1.8 0 0 1 6.8 3H19v15H6.8A1.8 1.8 0 0 0 5 19.8z"/><path d="M5 19.8A1.8 1.8 0 0 0 6.8 21.5H19"/><path d="M9 7.5h6"/>',
   photo:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-4.5-4.5-8.5 8"/>',
+  star:'<path d="M12 3.2l2.7 5.5 6 .9-4.35 4.25 1 6L12 17l-5.35 2.85 1-6L3.3 9.6l6-.9z"/>',
   bolt:'<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
   heart:'<path d="M19.5 12.6 12 20l-7.5-7.4A4.8 4.8 0 1 1 12 6.4a4.8 4.8 0 1 1 7.5 6.2z"/>',
   cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
@@ -511,7 +537,7 @@ const TYPES={
 function ti(type,cls='ti'){const T=TYPES[type];return `<span class="${cls}" style="--c:${T?T.c:'#8e8e93'}">${svg(type,2)}</span>`}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function defaults(){return {cats:[],records:[],foods:[],diary:[],settings:{litterDays:7,startDate:''},current:null}}
+function defaults(){return {cats:[],records:[],foods:[],diary:[],litters:[],settings:{litterDays:7,startDate:''},current:null}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE_KEY));if(d&&d.cats&&d.records)return Object.assign(defaults(),d)}catch(e){}return defaults()}
 let DB=load();
 let VER=0;
@@ -1076,6 +1102,8 @@ function renderSettings(){
   <div class="group glass">${DB.cats.length?DB.cats.map(c=>`<button class="row" data-edit="${c.id}">${avHTML(c,'av" style="width:36px;height:36px')}<div class="main"><div class="title">${esc(c.name)}</div><div class="desc">${c.birthday?ageText(c.birthday):'未填生日'}${c.breed?' · '+esc(c.breed):''}</div></div><span class="chev">${svg('chev',2.2)}</span></button>`).join(''):'<div class="empty">還沒有貓咪</div>'}</div>
   <div class="label" style="display:flex;justify-content:space-between"><span>食物清單</span><button class="link" id="addFood">新增</button></div>
   <div class="group glass">${(DB.foods||[]).length?DB.foods.map(f=>`<button class="row" data-fedit="${f.id}"><span class="initial">${esc((f.brand||f.name||'?').slice(0,1))}</span><div class="main"><div class="title">${esc(f.brand||f.name)}</div><div class="desc">${esc([f.brand?f.name:'',f.kind,f.meat].filter(Boolean).join(' · '))||'&nbsp;'}</div></div>${f.fav?`<span style="color:#ff2d55;width:16px;height:16px;flex:none">${svg('heart',2,'currentColor')}</span>`:''}<span class="chev">${svg('chev',2.2)}</span></button>`).join(''):'<div class="empty">記錄餵食時新增的食物會出現在這裡</div>'}</div>
+  <div class="label">筆記</div>
+  <div class="group glass"><button class="row" id="openLitter">${ti('litter')}<div class="main"><div class="title">貓砂筆記</div><div class="desc">${(DB.litters||[]).length?`${DB.litters.length} 款 · 使用中：${esc((DB.litters.filter(l=>l.status==='using').map(litterName)[0])||'—')}`:'記錄試過的貓砂牌子和心得'}</div></div><span class="chev">${svg('chev',2.2)}</span></button></div>
   <div class="label">偏好</div>
   <div class="card glass" style="padding:16px 16px 2px">
     <div class="field"><label>多久要全部換一次貓砂（天）</label><input type="number" id="litterDays" min="1" value="${DB.settings.litterDays||7}"></div>
@@ -1093,6 +1121,7 @@ function renderSettings(){
   const fdone=()=>{closeSheet();render()};
   $('#addFood').onclick=()=>openFoodForm(null,fdone);
   el.querySelectorAll('[data-fedit]').forEach(b=>b.onclick=()=>openFoodForm(foodById(b.dataset.fedit),fdone));
+  $('#openLitter').onclick=()=>openLitterNotes();
   el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openCatForm(catById(b.dataset.edit)));
   $('#litterDays').onchange=e=>{DB.settings.litterDays=Math.max(1,+e.target.value||7);save();toast('已儲存')};
   $('#startDate').onchange=e=>{DB.settings.startDate=e.target.value;save();toast('已儲存')};
@@ -1202,11 +1231,12 @@ function openTypeHistory(type){
     <div class="kpis">${kp.map(([l,v])=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b></div>`).join('')}</div>
     ${next?`<div class="row rem soon" style="background:var(--warn-bg);border-radius:14px;margin-bottom:12px">${ti(type)}<div class="main"><div class="title" style="font-size:15px">${type==='vet'?'下次回診':'下次施打 / 投藥'}</div><div class="desc">${fmtLong(next.next)}${next.kind?' · '+esc(next.kind):''}</div></div><span class="when">${diffDays(t,next.next)===0?'今天':diffDays(t,next.next)+' 天後'}</span></div>`:''}
     ${type==='weight'?`<div class="card glass" style="padding:14px">${lineChart({pts:weightSeries(cat.id),fmt:v=>v.toFixed(2)+' kg',fmtAxis:v=>v.toFixed(1),h:150,empty:'還沒有體重紀錄'})}</div>`:''}
-    <button class="btn" id="hAdd">${svg('plus',2.4)}新增${T.name}</button>
+    ${type==='litter'?`<div class="btn-row" style="margin-top:0"><button class="btn ghost" id="hNotes">${svg('book',2)}貓砂筆記</button><button class="btn" id="hAdd">${svg('plus',2.4)}新增${T.name}</button></div>`:`<button class="btn" id="hAdd">${svg('plus',2.4)}新增${T.name}</button>`}
     ${rs.length?html:`<div class="empty" style="padding:28px 0">還沒有${T.name}的紀錄</div>`}`,{fresh:true});
   flushCharts();
   const sh=$('#sheet');
   $('#hAdd').onclick=()=>{RET=back;openRecordForm({type})};
+  const hn=$('#hNotes'); if(hn)hn.onclick=()=>openLitterNotes(back);
   sh.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>{RET=back;openRecordForm(DB.records.find(r=>r.id===b.dataset.rec))});
 }
 function openTypePicker(){
@@ -1219,7 +1249,10 @@ function openRecordForm(rec){
   if(rec.type==='feed')return openFeedFlow(rec.id?rec:null);
   const isNew=!rec.id, T=TYPES[rec.type], cat=curCat();
   rec=Object.assign({date:todayStr(),time:nowTime(),catId:cat?cat.id:''},rec);
-  const fieldHTML=f=>{
+  const lits=(DB.litters||[]).filter(l=>l.status!=='wish');
+  if(rec.type==='litter'&&isNew&&!rec.brand){const u=lits.find(l=>l.status==='using');if(u)rec.brand=litterName(u)}
+  const fieldHTML=f0=>{
+    const f=rec.type==='litter'&&f0.k==='brand'&&lits.length?Object.assign({},f0,{t:'seg',opts:lits.map(litterName)}):f0;
     const v=rec[f.k]??'';
     if(f.t==='seg')return `<div class="field"><label>${f.l}</label><div class="opts" data-seg="${f.k}">${f.opts.map(o=>`<button type="button" class="${v===o?'on':''}">${o}</button>`).join('')}</div>
       <input type="text" data-k="${f.k}" value="${esc(v)}" placeholder="或自行輸入" style="margin-top:8px"></div>`;
@@ -1468,7 +1501,7 @@ function openDiaryForm(entry,presetDate){
     DB.diary=DB.diary.filter(x=>x.id!==e.id); save(); closeSheet(); render(); toast('已刪除')};
 }
 // 清掉沒有被任何日記用到的照片（例如寫到一半關掉）
-setTimeout(async()=>{try{if(!(DB.diary||[]).length)return;const used=new Set(DB.diary.flatMap(e=>e.photos||[]));for(const k of await PH.keys())if(!used.has(k))await PH.del(k)}catch(e){}},4000);
+setTimeout(async()=>{try{if(!(DB.diary||[]).length&&!(DB.litters||[]).length)return;const used=new Set([...(DB.diary||[]).flatMap(e=>e.photos||[]),...(DB.litters||[]).map(l=>l.photo).filter(Boolean)]);for(const k of await PH.keys())if(!used.has(k))await PH.del(k)}catch(e){}},4000);
 
 /* ================= 餵食：食物、反應、時間 ================= */
 const REACT={love:{n:'超喜歡',c:'var(--s3)',s:4},ok:{n:'正常進食',c:'var(--s1)',s:3},meh:{n:'勉強吃了',c:'var(--s-other)',s:2},refuse:{n:'完全拒絕',c:'var(--s2)',s:1}};
@@ -1632,10 +1665,97 @@ function dietCard(cat){
   </div>`;
 }
 
+/* ================= 貓砂筆記 ================= */
+const LKINDS=['豆腐砂','礦砂','松木砂','水晶砂','紙砂','混合砂','其他'];
+const LSTATUS=[['using','使用中'],['tried','用過'],['wish','想試試']];
+const LSCORES=[['odor','除臭'],['clump','結團'],['dust','低粉塵'],['track','不帶砂'],['accept','貓咪接受度']];
+function litterName(l){return [l.brand,l.name].filter(Boolean).join(' ')}
+function litterUsage(l){
+  const nm=litterName(l), rs=DB.records.filter(r=>r.type==='litter'&&r.brand===nm).sort((a,b)=>a.date.localeCompare(b.date));
+  const full=rs.filter(r=>r.kind==='全部換新'), cost=rs.reduce((s,r)=>s+(+r.cost||0),0);
+  let avg=null; if(full.length>1)avg=Math.round(diffDays(full[0].date,full[full.length-1].date)/(full.length-1));
+  return {n:rs.length,avg,cost};
+}
+function stars(n,size=14){let h='';for(let i=1;i<=5;i++)h+=`<span style="display:inline-block;width:${size}px;height:${size}px;color:${i<=n?'#f5a623':'var(--fill)'}">${svg('star',1.4,'currentColor')}</span>`;return `<span style="display:inline-flex;gap:1px">${h}</span>`}
+let LFILTER='all';
+function openLitterNotes(back){
+  DB.litters=DB.litters||[];
+  const order={using:0,tried:1,wish:2};
+  let list=DB.litters.slice().sort((a,b)=>(order[a.status]??3)-(order[b.status]??3)||(b.rating||0)-(a.rating||0));
+  if(LFILTER!=='all')list=list.filter(l=>l.status===LFILTER);
+  const self=()=>openLitterNotes(back);
+  const card=l=>{
+    const u=litterUsage(l), st=(LSTATUS.find(s=>s[0]===l.status)||[])[1], ppk=+l.price>0&&+l.weight>0?Math.round(l.price/l.weight):null;
+    const sc=LSCORES.filter(([k])=>l.scores&&l.scores[k]);
+    return `<div class="card glass lnote" data-lid="${l.id}" role="button">
+      <div class="lh">${l.photo?`<span class="lth">${phImg(l.photo)}</span>`:`<span class="initial" style="width:46px;height:46px;border-radius:13px">${esc((l.brand||l.name||'?').slice(0,1))}</span>`}
+        <div style="flex:1;min-width:0"><b>${esc(l.brand||l.name)}</b>${l.brand&&l.name?`<span class="sub">${esc(l.name)}</span>`:''}</div>
+        ${st?`<span class="lst ${l.status}">${st}</span>`:''}</div>
+      ${l.rating||l.kind||ppk!=null?`<div class="lmeta">${l.rating?stars(l.rating):''}${l.kind?`<span class="lchip">${esc(l.kind)}</span>`:''}${ppk!=null?`<span class="lchip num">每公斤 $${ppk}</span>`:''}</div>`:''}
+      ${sc.length?`<div class="lsc">${sc.map(([k,n])=>`<div><span>${n}</span><i>${[1,2,3,4,5].map(i=>`<b class="${i<=l.scores[k]?'on':''}"></b>`).join('')}</i></div>`).join('')}</div>`:''}
+      ${l.pros?`<div class="lpc"><em class="p">＋</em><span>${esc(l.pros)}</span></div>`:''}${l.cons?`<div class="lpc"><em class="c">－</em><span>${esc(l.cons)}</span></div>`:''}
+      ${u.n?`<div class="luse">換了 ${u.n} 次${u.avg?` · 平均 ${u.avg} 天全部換一次`:''}${u.cost?` · 花了 ${money(u.cost)}`:''}</div>`:''}
+    </div>`;
+  };
+  openSheet('貓砂筆記',`
+    <div class="opts" id="lfil" style="margin-bottom:14px">${[['all','全部'],...LSTATUS].map(([k,t])=>`<button type="button" data-v="${k}" class="${LFILTER===k?'on':''}">${t}${k==='all'?'':` ${DB.litters.filter(x=>x.status===k).length}`}</button>`).join('')}</div>
+    <button class="btn" id="lAdd" style="margin-bottom:14px">${svg('plus',2.4)}新增貓砂</button>
+    ${list.length?list.map(card).join(''):`<div class="empty" style="padding:26px 0;line-height:1.7">${DB.litters.length?'這個分類還沒有貓砂':'把試過、正在用、想試試的貓砂都記在這裡<br>之後就能比較哪一款最適合'}</div>`}`,{back,fresh:!back});
+  hydratePhotos($('#sheet'));
+  $('#lfil').querySelectorAll('button').forEach(b=>b.onclick=()=>{LFILTER=b.dataset.v;self()});
+  $('#lAdd').onclick=()=>openLitterForm(null,self);
+  $('#sheet').querySelectorAll('[data-lid]').forEach(c=>c.onclick=()=>openLitterForm(DB.litters.find(x=>x.id===c.dataset.lid),self));
+}
+function openLitterForm(item,back){
+  const isNew=!item, oldName=item?litterName(item):'';
+  const l=Object.assign({brand:'',name:'',kind:'',status:'using',rating:0,scores:{},price:'',weight:'',from:isNew?todayStr():'',to:'',pros:'',cons:'',note:'',photo:''},item||{});
+  let kind=l.kind,status=l.status,rating=l.rating||0,scores=Object.assign({},l.scores),photo=l.photo||'',newPhoto=null,oldPhoto=null;
+  openSheet(isNew?'新增貓砂':'編輯貓砂',`
+    <div class="field photo-pick"><div class="lth big" id="lpv"></div><div style="flex:1"><button class="btn ghost" id="lpick" style="width:auto;height:38px;font-size:14px;padding:0 14px">${svg('camera',2)}拍包裝</button>
+      <button class="link hide" id="lrm" style="margin-left:8px">移除</button></div><input type="file" accept="image/*" id="lfile" class="hide"></div>
+    <div class="grid2"><div class="field"><label>品牌</label><input id="lb" value="${esc(l.brand)}" placeholder="例如 Pidan"></div>
+    <div class="field"><label>品名</label><input id="ln" value="${esc(l.name)}" placeholder="例如 混合貓砂"></div></div>
+    <div class="field"><label>類型</label><div class="opts" id="lk">${LKINDS.map(k=>`<button type="button" data-v="${k}" class="${kind===k?'on':''}">${k}</button>`).join('')}</div></div>
+    <div class="field"><label>狀態</label><div class="opts" id="ls">${LSTATUS.map(([k,t])=>`<button type="button" data-v="${k}" class="${status===k?'on':''}">${t}</button>`).join('')}</div></div>
+    <div class="field"><label>整體評分</label><div id="lr" style="display:flex;gap:6px">${[1,2,3,4,5].map(i=>`<button type="button" data-v="${i}" aria-label="${i} 顆星" style="width:36px;height:36px;color:${i<=rating?'#f5a623':'var(--fill)'}">${svg('star',1.4,'currentColor')}</button>`).join('')}</div></div>
+    <div class="field"><label>細項（點圓點打分數）</label><div class="lsc edit">${LSCORES.map(([k,n])=>`<div data-k="${k}"><span>${n}</span><i>${[1,2,3,4,5].map(i=>`<b data-v="${i}" class="${i<=(scores[k]||0)?'on':''}"></b>`).join('')}</i></div>`).join('')}</div></div>
+    <div class="grid2"><div class="field"><label>價格（元）</label><input type="number" inputmode="decimal" id="lp" value="${l.price}" placeholder="例如 450"></div>
+    <div class="field"><label>容量（公斤）</label><input type="number" inputmode="decimal" step="0.1" id="lw" value="${l.weight}" placeholder="例如 6"></div></div>
+    <div class="grid2"><div class="field"><label>開始使用</label><input type="date" id="lf" value="${l.from}"></div>
+    <div class="field"><label>停用</label><input type="date" id="lt" value="${l.to}"></div></div>
+    <div class="field"><label>優點</label><textarea id="lpro" placeholder="例如 結團快、幾乎沒味道">${esc(l.pros)}</textarea></div>
+    <div class="field"><label>缺點</label><textarea id="lcon" placeholder="例如 容易帶出砂盆">${esc(l.cons)}</textarea></div>
+    <div class="field"><label>備註</label><textarea id="lnote" placeholder="在哪買、有沒有折扣…">${esc(l.note)}</textarea></div>
+    <div class="btn-row">${isNew?'':'<button class="btn danger" id="ldel" style="flex:0 0 96px">刪除</button>'}<button class="btn" id="lsave">儲存</button></div>`,
+    {back,onClose:()=>{if(newPhoto)PH.del(newPhoto).catch(()=>{})}});
+  const pv=()=>{$('#lpv').innerHTML=photo?phImg(photo):svg('photo',1.6);hydratePhotos($('#lpv'));$('#lrm').classList.toggle('hide',!photo)};pv();
+  $('#lpick').onclick=()=>$('#lfile').click();
+  $('#lfile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+    try{const v=await processPhoto(f),id=uid();await PH.put(id,v);if(newPhoto)PH.del(newPhoto).catch(()=>{});else if(photo)oldPhoto=photo;newPhoto=id;photo=id;pv()}catch(err){toast('讀取照片失敗')}};
+  $('#lrm').onclick=()=>{if(newPhoto){PH.del(newPhoto).catch(()=>{});newPhoto=null}else if(photo)oldPhoto=photo;photo='';pv()};
+  singleOpts($('#lk'),kind,v=>kind=v); singleOpts($('#ls'),status,v=>status=v);
+  $('#lr').querySelectorAll('button').forEach(b=>b.onclick=()=>{const v=+b.dataset.v;rating=rating===v?0:v;$('#lr').querySelectorAll('button').forEach(x=>x.style.color=+x.dataset.v<=rating?'#f5a623':'var(--fill)')});
+  $('#sheet').querySelectorAll('.lsc.edit [data-k]').forEach(row=>row.querySelectorAll('b').forEach(d=>d.onclick=()=>{const k=row.dataset.k,v=+d.dataset.v;scores[k]=scores[k]===v?0:v;row.querySelectorAll('b').forEach(x=>x.classList.toggle('on',+x.dataset.v<=scores[k]))}));
+  $('#lsave').onclick=()=>{
+    const brand=$('#lb').value.trim(),name=$('#ln').value.trim(); if(!brand&&!name)return toast('請填品牌或品名');
+    const num=v=>v===''?'':+v;
+    const out=Object.assign(l,{id:l.id||uid(),brand,name,kind,status,rating,scores,photo,price:num($('#lp').value),weight:num($('#lw').value),
+      from:$('#lf').value,to:$('#lt').value,pros:$('#lpro').value.trim(),cons:$('#lcon').value.trim(),note:$('#lnote').value.trim()});
+    // 改了名字的話，舊的換貓砂紀錄跟著改，次數統計才不會斷掉
+    const newName=litterName(out); if(oldName&&oldName!==newName)DB.records.forEach(r=>{if(r.type==='litter'&&r.brand===oldName)r.brand=newName});
+    DB.litters=DB.litters||[]; const i=DB.litters.findIndex(x=>x.id===out.id); if(i>=0)DB.litters[i]=out; else DB.litters.push(out);
+    if(oldPhoto)PH.del(oldPhoto).catch(()=>{}); newPhoto=null;
+    save(); render(); toast(isNew?'已加入貓砂筆記':'已更新'); if(back)back(); else closeSheet();
+  };
+  const del=$('#ldel'); if(del)del.onclick=()=>{if(!confirm('刪除這款貓砂的筆記？（換貓砂紀錄會保留）'))return;
+    if(l.photo)PH.del(l.photo).catch(()=>{}); if(newPhoto)PH.del(newPhoto).catch(()=>{}); newPhoto=null;
+    DB.litters=DB.litters.filter(x=>x.id!==l.id); save(); render(); if(back)back(); else closeSheet()};
+}
+
 /* ================= 自動更新 =================
    主畫面 App 會沿用快取的舊頁面。每次打開或切回 App 時，向伺服器確認有沒有新版本；
    有的話就提示，點一下就更新（資料存在手機裡，更新不會不見）。 */
-const APP_VERSION='2026.11.06.7';
+const APP_VERSION='2026.11.11.1';
 let updateShown=false;
 async function checkUpdate(){
   if(updateShown||location.protocol==='file:')return;
